@@ -11,7 +11,7 @@ import { getLevel8 } from "./level8";
 import { getLevel9 } from "./level9";
 import { getLevel10 } from "./level10";
 import { Exit } from "../entities/Exit";
-import { Difficulty } from "../types"; // Adjusted import path
+import { Difficulty } from "../../types";
 
 export * from './types';
 

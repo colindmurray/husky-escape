@@ -1,0 +1,6 @@
+[mcp_servers.namecheap]
+command = "npx"
+args = ["-y", "mcp-remote@latest", "https://mcp.namecheap.com/mcp", "19986", "--host", "127.0.0.1", "--auth-timeout", "180"]
+
+[mcp_servers.cloudflare]
+url = "https://mcp.cloudflare.com/mcp"
