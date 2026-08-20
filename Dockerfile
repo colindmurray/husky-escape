@@ -1,33 +1,24 @@
-# Stage 1: Build the frontend, and install server dependencies
-FROM node:22 AS builder
+# Build the frontend.
+FROM node:22-alpine AS frontend
 
 WORKDIR /app
 
-# Copy all files from the current directory
+COPY package*.json ./
+RUN npm ci
 COPY . ./
-RUN echo "API_KEY=PLACEHOLDER" > ./.env
-RUN echo "GEMINI_API_KEY=PLACEHOLDER" >> ./.env
+RUN npm run build
 
-# Install server dependencies
-WORKDIR /app/server
-RUN npm install
-
-# Install dependencies and build the frontend
-WORKDIR /app
-RUN mkdir dist
-RUN bash -c 'if [ -f package.json ]; then npm install && npm run build; fi'
-
-
-# Stage 2: Build the final server image
-FROM node:22
+# Run the optional self-hosted server.
+FROM node:22-alpine
 
 WORKDIR /app
 
-#Copy server files
-COPY --from=builder /app/server .
-# Copy built frontend assets from the builder stage
-COPY --from=builder /app/dist ./dist
+COPY server/package*.json ./server/
+RUN cd server && npm install --omit=dev
+COPY server/server.js ./server/server.js
+COPY shared ./shared
+COPY --from=frontend /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "server/server.js"]

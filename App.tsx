@@ -4,7 +4,7 @@ import { GameEngine } from './game/GameEngine';
 import { GameState, Difficulty } from './types';
 import { audioManager } from './game/Audio';
 import { inputManager } from './game/Input';
-import { getHuskyWisdom } from './game/services/geminiService';
+import { getHuskyWisdom } from './game/services/openRouterService';
 
 export default function App() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
