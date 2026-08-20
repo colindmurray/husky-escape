@@ -1,0 +1,6 @@
+{
+  "name": "Husky Escape",
+  "description": "A platformer game where you help Onyx the Husky escape the pound and find his way home using agility and AI-driven determination.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
