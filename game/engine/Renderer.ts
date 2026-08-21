@@ -6,6 +6,7 @@ import { gfxSettings } from "../GfxSettings";
 import { EnhancedBackgrounds } from "./enhanced/EnhancedBackgrounds";
 import { ParticleSystem } from "./enhanced/ParticleSystem";
 import { PostFX } from "./enhanced/PostFX";
+import { drawMenuBackdrop as drawMenuBackdropScene } from "./enhanced/EnhancedSprites";
 
 export class Renderer {
     private ctx: CanvasRenderingContext2D;
@@ -826,6 +827,15 @@ export class Renderer {
                 ctx.strokeText("!", cx, cy - 120 - bounce);
             }
         }
+    }
+
+    private menuBackdropStartedAt = performance.now();
+
+    /** Animated title-screen scene for Enhanced mode (drawn during INTRO). */
+    public drawMenuBackdrop(width: number, height: number) {
+        const t = (performance.now() - this.menuBackdropStartedAt) / 1000;
+        this.enhancedBackgrounds; // (module already loaded)
+        drawMenuBackdropScene(this.ctx, width, height, t * 0.35 + 11);
     }
 
     /**

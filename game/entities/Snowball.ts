@@ -1,4 +1,6 @@
 import { Entity, GRAVITY } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawSnowballEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Snowball extends Entity {
     public origX: number;
@@ -65,6 +67,11 @@ export class Snowball extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         let x = this.x - camX + this.w/2;
         let y = this.y + this.h/2;
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawSnowballEnhanced(ctx, x, y, 40, this.angle, this.dir);
+            return;
+        }
 
         ctx.save();
         ctx.translate(x, y);

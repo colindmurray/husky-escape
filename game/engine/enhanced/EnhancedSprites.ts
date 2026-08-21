@@ -1704,3 +1704,293 @@ export function drawBossWolfEnhanced(
 
     ctx.restore();
 }
+
+// ===================== HAZARD & MISC SPRITES (Enhanced mode) ==================
+
+/** Rolling doom: packed-snow sphere with crystalline texture and speed streaks. */
+export function drawSnowballEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, r: number, angle: number, dir: number
+) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Motion streaks trailing behind (screen-aligned)
+    const streak = ctx.createLinearGradient(-dir * r * 1.1, 0, -dir * r * 2.3, 0);
+    streak.addColorStop(0, 'rgba(255,255,255,0.35)');
+    streak.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = streak;
+    for (const oy of [-r * 0.5, 0, r * 0.45]) {
+        ctx.beginPath();
+        ctx.roundRect(-dir * r * 1.05, oy - 2.4, r * 1.25, 4.8, 3);
+        ctx.fill();
+    }
+
+    // Ball body
+    const body = ctx.createRadialGradient(-r * 0.32, -r * 0.34, r * 0.15, 0, 0, r);
+    body.addColorStop(0, '#ffffff');
+    body.addColorStop(0.62, '#eef4f9');
+    body.addColorStop(0.88, '#cfdfe9');
+    body.addColorStop(1, '#a8bfce');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, TAU);
+    ctx.fill();
+
+    // Rotating packed-snow lumps + ice glints (fixed to ball rotation)
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.fillStyle = 'rgba(175,198,214,0.6)';
+    for (const [lx, ly, lr] of [[r*0.42, r*0.18, r*0.22], [-r*0.3, r*0.44, r*0.17], [-r*0.4, -r*0.34, r*0.2], [r*0.12, -r*0.52, r*0.14]] as const) {
+        ctx.beginPath();
+        ctx.arc(lx, ly, lr, 0, TAU);
+        ctx.fill();
+    }
+    // Crystalline sparkle chips
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * TAU;
+        const rr = r * (0.55 + ((i * 37) % 40) / 100);
+        const sxp = Math.cos(a) * rr;
+        const syp = Math.sin(a) * rr;
+        ctx.fillRect(sxp - 1.6, syp - 0.7, 3.2, 1.4);
+    }
+    ctx.restore();
+
+    // Rim shading + ground kiss
+    ctx.strokeStyle = 'rgba(140,170,190,0.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, r - 1.4, 0, TAU);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.92, r * 0.72, r * 0.16, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+/** Deadly water: depth gradient, living wave crests, foam and caustic light. */
+export function drawWaterEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    waveOffset: number, t: number
+) {
+    const depth = h + 50;
+
+    // Body gradient
+    const grad = ctx.createLinearGradient(0, y, 0, y + depth);
+    grad.addColorStop(0, 'rgba(64,164,224,0.78)');
+    grad.addColorStop(0.4, 'rgba(38,120,190,0.85)');
+    grad.addColorStop(1, 'rgba(16,60,110,0.95)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, depth);
+
+    // Sunken light shafts
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 3; i++) {
+        const shx = x + ((i + 0.5) * w) / 3 + Math.sin(t * 0.6 + i * 2) * 24;
+        const g = ctx.createLinearGradient(shx, y, shx + 30, y + depth * 0.7);
+        g.addColorStop(0, 'rgba(180,230,255,0.10)');
+        g.addColorStop(1, 'rgba(180,230,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(shx - 16, y);
+        ctx.lineTo(shx + 16, y);
+        ctx.lineTo(shx + 66, y + depth * 0.7);
+        ctx.lineTo(shx + 12, y + depth * 0.7);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Two-layer animated crest
+    for (const [amp, alpha, speed] of [[5, 0.75, 1], [3.2, 0.5, -0.7]] as const) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 8);
+        for (let i = 0; i <= w; i += 16) {
+            const wy = Math.sin(waveOffset * speed + i * 0.09) * amp + Math.sin(waveOffset * speed * 1.7 + i * 0.031) * amp * 0.4;
+            ctx.lineTo(x + i, y + wy);
+        }
+        ctx.lineTo(x + w, y + 12);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(235,248,255,${alpha})`;
+        ctx.fill();
+    }
+    // Foam flecks riding the crest
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for (let i = 0; i < w / 46; i++) {
+        const fx = x + ((i * 53 + Math.floor(t * 30)) % w);
+        const fy = y + Math.sin(waveOffset + fx * 0.09) * 5 - 2;
+        ctx.beginPath();
+        ctx.arc(fx, fy, 1.6 + ((i * 13) % 3) * 0.6, 0, TAU);
+        ctx.fill();
+    }
+}
+
+/**
+ * Animated title-screen backdrop (Enhanced mode only): Onyx on a hilltop,
+* gazing at the far-off city lights he must cross to reach home.
+ */
+export function drawMenuBackdrop(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
+    // Night-to-dawn sky
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#0b1026');
+    sky.addColorStop(0.5, '#1c2340');
+    sky.addColorStop(0.8, '#3a3050');
+    sky.addColorStop(1, '#594052');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, h);
+
+    // Stars with twinkle
+    for (let i = 0; i < 90; i++) {
+        const sxp = ((i * 173.3 + t * 3) % (w + 20)) - 10;
+        const syp = (i * 97.7) % (h * 0.55);
+        const tw = 0.3 + 0.7 * Math.abs(Math.sin(t * (0.4 + (i % 5) * 0.14) + i));
+        ctx.fillStyle = `rgba(220,228,255,${0.65 * tw})`;
+        ctx.fillRect(sxp, syp, 1.8, 1.8);
+    }
+
+    // Moon
+    const mx = w * 0.78, my = h * 0.2;
+    const halo = ctx.createRadialGradient(mx, my, 12, mx, my, 130);
+    halo.addColorStop(0, 'rgba(235,240,225,0.35)');
+    halo.addColorStop(1, 'rgba(235,240,225,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(mx - 140, my - 140, 280, 280);
+    ctx.fillStyle = '#ece8d4';
+    ctx.beginPath();
+    ctx.arc(mx, my, 38, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(175,172,150,0.5)';
+    ctx.beginPath(); ctx.arc(mx - 11, my - 9, 7, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(mx + 13, my + 12, 5, 0, TAU); ctx.fill();
+
+    // Drifting clouds
+    ctx.fillStyle = 'rgba(18,24,44,0.55)';
+    for (let i = 0; i < 6; i++) {
+        const cxp = ((i * 420 - t * 12) % (w + 500)) - 250;
+        const cyp = h * 0.32 + ((i * 67) % Math.floor(h * 0.2));
+        ctx.beginPath();
+        ctx.ellipse(cxp, cyp, 150, 26, 0, 0, TAU);
+        ctx.ellipse(cxp + 110, cyp + 12, 110, 20, 0, 0, TAU);
+        ctx.fill();
+    }
+
+    // Far city skyline with lit windows (his goal)
+    const skylineBase = h * 0.78;
+    ctx.fillStyle = 'rgba(10,13,22,0.96)';
+    for (let i = 0; i < w; i += 64) {
+        const bh2 = 70 + hash2(i, 5) * 150;
+        const bx2 = i + Math.sin(i * 0.01) * 14;
+        ctx.fillRect(bx2, skylineBase - bh2, 48, bh2);
+        for (let wy = skylineBase - bh2 + 10; wy < skylineBase - 10; wy += 17) {
+            for (let wx2 = bx2 + 7; wx2 < bx2 + 42; wx2 += 12) {
+                if (hash2(Math.floor(wx2), Math.floor(wy)) > 0.68) {
+                    const flick = hash2(Math.floor(wx2), Math.floor(wy) + Math.floor(t * 0.4)) > 0.08;
+                    if (flick) {
+                        ctx.fillStyle = `rgba(255,210,120,${0.3 + hash2(Math.floor(wx2), Math.floor(wy) + 7) * 0.35})`;
+                        ctx.fillRect(wx2, wy, 4, 6);
+                        ctx.fillStyle = 'rgba(10,13,22,0.96)';
+                    }
+                }
+            }
+        }
+    }
+
+    // Rolling hills between city and foreground hill
+    ctx.fillStyle = 'rgba(16,22,30,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let px = 0; px <= w; px += 30) {
+        ctx.lineTo(px, h * 0.84 + Math.sin(px * 0.004 + 2) * 26);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Foreground hill
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    ctx.quadraticCurveTo(w * 0.28, h * 0.68, w * 0.62, h * 0.86);
+    ctx.quadraticCurveTo(w * 0.82, h * 0.95, w, h * 0.93);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // A few blades of grass on the hill crest
+    ctx.strokeStyle = '#16241c';
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 40; i++) {
+        const gx = (i / 40) * w;
+        const gy = h * 0.68 + (gx / (w * 0.62)) * (h * 0.86 - h * 0.68) - 2;
+        if (gx > w * 0.62) break;
+        const lean = Math.sin(t * 1.4 + i) * 2;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy);
+        ctx.quadraticCurveTo(gx + lean, gy - 6, gx + lean * 1.8, gy - 10);
+        ctx.stroke();
+    }
+
+    // Onyx silhouette sitting on the hilltop, tail curled, gazing at the city
+    const ox = w * 0.27, oy = h * 0.78;
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.fillStyle = '#05070c';
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 26, 15, 0.06, 0, TAU);
+    ctx.fill();
+    // Head raised toward skyline
+    ctx.beginPath();
+    ctx.arc(27, -14, 11, 0, TAU);
+    ctx.fill();
+    // Snout
+    ctx.beginPath();
+    ctx.moveTo(34, -17); ctx.lineTo(43, -13); ctx.lineTo(33, -9);
+    ctx.closePath(); ctx.fill();
+    // Ears
+    ctx.beginPath();
+    ctx.moveTo(21, -22); ctx.lineTo(23.5, -32); ctx.lineTo(28, -22); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(29, -23); ctx.lineTo(33, -31); ctx.lineTo(36, -20); ctx.closePath(); ctx.fill();
+    // Front legs
+    ctx.fillRect(16, 6, 5, 14);
+    ctx.fillRect(24, 6, 5, 14);
+    // Curled tail with slow wag
+    ctx.strokeStyle = '#05070c';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-22, -2);
+    ctx.quadraticCurveTo(-34, -6 + Math.sin(t * 2.2) * 4, -30, -16 + Math.sin(t * 2.2) * 5);
+    ctx.stroke();
+    // Eye catch-light
+    ctx.fillStyle = 'rgba(120,180,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(30, -16, 1.6, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Fireflies drifting above the grass
+    for (let i = 0; i < 8; i++) {
+        const fx = (i * 197 + t * 14) % w;
+        const fy = h * 0.78 + Math.sin(t * 0.9 + i * 2.2) * 22 + (i % 3) * 12;
+        const glow = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.7 + i));
+        const g = ctx.createRadialGradient(fx, fy, 0.5, fx, fy, 7);
+        g.addColorStop(0, `rgba(200,255,140,${0.8 * glow})`);
+        g.addColorStop(1, 'rgba(200,255,140,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(fx, fy, 7, 0, TAU);
+        ctx.fill();
+    }
+
+    // Gentle vignette so UI text pops
+    const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(2,4,10,0.55)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, w, h);
+}

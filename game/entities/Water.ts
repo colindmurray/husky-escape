@@ -1,4 +1,6 @@
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawWaterEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Water extends Entity {
     public waveOffset = 0;
@@ -19,6 +21,11 @@ export class Water extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         let x = this.x - camX;
         let y = this.y;
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWaterEnhanced(ctx, x, y, this.w, this.h, this.waveOffset, Date.now() / 1000);
+            return;
+        }
 
         ctx.fillStyle = "rgba(52, 152, 219, 0.6)";
         ctx.fillRect(x, y, this.w, this.h + 50);

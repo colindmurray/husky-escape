@@ -333,7 +333,7 @@ export default function App() {
                 </div>
 
                 {gameState === GameState.INTRO && (
-                    <div className="absolute inset-0 bg-slate-800 text-white flex flex-col justify-center items-center z-30 pointer-events-auto">
+                    <div className={`absolute inset-0 text-white flex flex-col justify-center items-center z-30 pointer-events-auto ${visualMode === 'enhanced' ? 'bg-slate-950/55 backdrop-blur-[1.5px]' : 'bg-slate-800'}`}>
                         <h1 className="text-7xl text-blue-400 mb-6 font-bold drop-shadow-2xl">Husky Escape</h1>
                         {!modalData.showMenu ? ( <button onClick={startStory} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Start Journey</button> ) : (
                             <div className="bg-black/80 p-10 rounded-2xl border-4 border-blue-500 text-center scale-up max-w-lg">

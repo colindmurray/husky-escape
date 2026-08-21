@@ -4,6 +4,7 @@ import { audioManager } from "./Audio";
 import { Renderer } from "./engine/Renderer";
 import { World } from "./engine/World";
 import { CutsceneManager } from "./engine/CutsceneManager";
+import { gfxSettings } from "./GfxSettings";
 
 interface GameEngineOptions {
     onStateChange: (state: GameState, data?: any) => void;
@@ -53,6 +54,9 @@ export class GameEngine {
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        // Keep the render loop alive from boot so the Enhanced title backdrop
+        // animates behind the main menu (classic mode draws nothing here).
+        this.startLoop();
     }
 
     private resize() {
@@ -149,6 +153,11 @@ export class GameEngine {
             if (this.gameState === GameState.PLAYING) {
                 this.world.update();
                 this.renderer.drawGame(this.world);
+            } else if (this.gameState === GameState.INTRO) {
+                // Enhanced mode: animated title backdrop behind the React menu.
+                if (gfxSettings.visualMode === 'enhanced') {
+                    this.renderer.drawMenuBackdrop(this.world.width, this.world.height);
+                }
             } else if (this.gameState === GameState.CUTSCENE) {
                 this.cutsceneManager.update();
                 this.renderer.drawCutscene(this.cutsceneManager, this.world.width, this.world.height);
