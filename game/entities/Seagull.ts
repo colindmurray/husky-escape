@@ -1,5 +1,7 @@
 import { Entity } from "./Entity";
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawSeagullEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Seagull extends Enemy {
     public origY: number;
@@ -30,6 +32,12 @@ export class Seagull extends Enemy {
             ctx.translate(x + this.w / 2, y + this.h / 2);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -(y + this.h / 2));
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawSeagullEnhanced(ctx, x, y, this.w, this.h, this.flightTimer);
+            ctx.restore();
+            return;
         }
 
         // Body

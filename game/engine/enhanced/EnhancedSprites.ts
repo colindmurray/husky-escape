@@ -690,3 +690,561 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
 
     ctx.restore();
 }
+
+// ===================== ENEMY SPRITES (Enhanced mode) =====================
+// All drawn facing right; entity callers apply their own direction flip.
+
+/** The Pound's dog catcher: burly, uniformed, swinging his catch-net. */
+export function drawDogCatcherEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, walkAnim: number
+) {
+    const legOffset = Math.sin(walkAnim) * 4;
+    ctx.save();
+
+    // Feet shadow puddle
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 2, 16, 3.2, 0, 0, TAU);
+    ctx.fill();
+
+    // Legs (navy trousers + boots, walking cycle)
+    for (const [lx, off] of [[9, legOffset], [17, -legOffset]] as const) {
+        ctx.strokeStyle = '#2b3a4d';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + lx + 3, y + 34);
+        ctx.lineTo(x + lx + 3 + off, y + 46);
+        ctx.stroke();
+        // Boot
+        ctx.fillStyle = '#1a222c';
+        ctx.fillRect(x + lx + off - 1, y + 44, 10, 5);
+    }
+
+    // Torso: uniform shirt with shading + belt
+    const shirt = ctx.createLinearGradient(0, y + 14, 0, y + 36);
+    shirt.addColorStop(0, '#ef6153');
+    shirt.addColorStop(0.55, '#e74c3c');
+    shirt.addColorStop(1, '#b03226');
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.roundRect(x + 3, y + 14, 24, 22, [5, 5, 3, 3]);
+    ctx.fill();
+    // Belt
+    ctx.fillStyle = '#2b3a4d';
+    ctx.fillRect(x + 3, y + 31, 24, 4);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(x + 12, y + 31.5, 5, 3);
+    // Badge with glint
+    ctx.fillStyle = '#f1c40f';
+    ctx.beginPath();
+    ctx.arc(x + 8, y + 21, 3, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.arc(x + 7.2, y + 20.2, 1, 0, TAU);
+    ctx.fill();
+
+    // Head with jaw stubble shade
+    const skin = ctx.createLinearGradient(0, y, 0, y + 16);
+    skin.addColorStop(0, '#f4cba0');
+    skin.addColorStop(1, '#e0ac74');
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 8, 8.6, 0, TAU);
+    ctx.fill();
+    // Stubble
+    ctx.fillStyle = 'rgba(70,60,50,0.28)';
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 11.6, 6.6, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.fill();
+    // Angry eye + brow
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(x + 17.4, y + 6.4, 2.2, 2.4);
+    ctx.strokeStyle = '#3a2e26';
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + 16.2, y + 4.6); ctx.lineTo(x + 20, y + 6);
+    ctx.stroke();
+    // Grumpy mouth
+    ctx.beginPath();
+    ctx.moveTo(x + 18.4, y + 13.2); ctx.lineTo(x + 21.4, y + 12.4);
+    ctx.stroke();
+    // Ear
+    ctx.fillStyle = '#dca86e';
+    ctx.beginPath(); ctx.arc(x + 8.4, y + 8.6, 2, 0, TAU); ctx.fill();
+
+    // Cap with brim + emblem
+    const cap = ctx.createLinearGradient(0, y - 3, 0, y + 6);
+    cap.addColorStop(0, '#3a506b');
+    cap.addColorStop(1, '#22344a');
+    ctx.fillStyle = cap;
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 5.4, 8.8, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(x + 14.4, y + 4.6, 13.6, 3.2);
+    ctx.fillStyle = '#f1c40f';
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 1.6, 2.2, 0, TAU);
+    ctx.fill();
+
+    // Arm + pole + net (swinging as he walks)
+    ctx.save();
+    ctx.translate(x + 14, y + 19);
+    ctx.rotate(Math.sin(walkAnim) * 0.35 + 0.12);
+    // Sleeve + hand
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(-2, 1); ctx.lineTo(3, 7); ctx.stroke();
+    ctx.fillStyle = '#f1c27d';
+    ctx.beginPath(); ctx.arc(4, 9, 3.4, 0, TAU); ctx.fill();
+    // Pole
+    ctx.strokeStyle = '#79554a';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.moveTo(2, 8); ctx.lineTo(27, 12); ctx.stroke();
+    // Net hoop + mesh
+    const nx = 33, ny = 14;
+    ctx.strokeStyle = '#dfe6ea';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(nx, ny, 10.5, 0, TAU); ctx.stroke();
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 0.7;
+    for (let i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(nx + i * 3.2, ny - Math.sqrt(Math.max(0, 100 - i * i * 9)));
+        ctx.lineTo(nx + i * 3.2, ny + Math.sqrt(Math.max(0, 100 - i * i * 9)));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(nx - Math.sqrt(Math.max(0, 100 - i * i * 9)), ny + i * 3.2);
+        ctx.lineTo(nx + Math.sqrt(Math.max(0, 100 - i * i * 9)), ny + i * 3.2);
+        ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+
+    ctx.restore();
+}
+
+/** Mountain wolf: lean, dark-furred, amber-eyed, low stalking trot. */
+export function drawWolfEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, animTimer: number
+) {
+    const trot = Math.sin(animTimer);
+    ctx.save();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 2, 22, 3.4, 0, 0, TAU);
+    ctx.fill();
+
+    // Tail: bushy, raised slightly with motion
+    const tailGrad = ctx.createLinearGradient(x, y + 14, x - 12, y + 6);
+    tailGrad.addColorStop(0, '#3d3d42');
+    tailGrad.addColorStop(1, '#585860');
+    ctx.strokeStyle = tailGrad;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + 3, y + 16);
+    ctx.quadraticCurveTo(x - 8, y + 12 + trot, x - 13, y + 4 + trot * 1.5);
+    ctx.stroke();
+
+    // Body: sleek gradient with haunch shading
+    const body = ctx.createLinearGradient(0, y + 4, 0, y + 26);
+    body.addColorStop(0, '#5c5c66');
+    body.addColorStop(0.55, '#47474f');
+    body.addColorStop(1, '#33333a');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.ellipse(x + 20, y + 15, 18, 10.5, 0, 0, TAU);
+    ctx.fill();
+    // Fur ruff along back
+    ctx.strokeStyle = '#616169';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+        const fx = x + 8 + i * 5;
+        ctx.beginPath();
+        ctx.moveTo(fx, y + 7);
+        ctx.lineTo(fx + 1.5, y + 4 - (i % 2));
+        ctx.stroke();
+    }
+    // Chest fur (lighter)
+    ctx.fillStyle = '#8a8a94';
+    ctx.beginPath();
+    ctx.ellipse(x + 36, y + 18, 5.5, 7, 0.2, 0, TAU);
+    ctx.fill();
+
+    // Legs: 4-point stalking gait
+    const legDraw = (lx: number, ph: number, col: string) => {
+        const sw = trot * ph * 3.4;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 4.4;
+        ctx.beginPath();
+        ctx.moveTo(x + lx, y + 23);
+        ctx.lineTo(x + lx + sw, y + 29.6);
+        ctx.stroke();
+        ctx.fillStyle = '#2c2c32';
+        ctx.beginPath();
+        ctx.ellipse(x + lx + sw, y + 29.4, 2.6, 1.8, 0, 0, TAU);
+        ctx.fill();
+    };
+    legDraw(9, -1, '#3a3a41');
+    legDraw(30, 1, '#3a3a41');
+    legDraw(13, 1, '#50505a');
+    legDraw(27, -1, '#50505a');
+
+    // Head: angular muzzle
+    const head = ctx.createRadialGradient(x + 38, y + 6, 2, x + 41, y + 11, 13);
+    head.addColorStop(0, '#63636d');
+    head.addColorStop(1, '#43434b');
+    ctx.fillStyle = head;
+    ctx.beginPath();
+    ctx.arc(x + 40, y + 11, 11, 0, TAU);
+    ctx.fill();
+    // Snout
+    ctx.fillStyle = '#57575f';
+    ctx.beginPath();
+    ctx.moveTo(x + 46, y + 9);
+    ctx.lineTo(x + 55, y + 13);
+    ctx.lineTo(x + 45.5, y + 17.4);
+    ctx.closePath();
+    ctx.fill();
+    // Nose
+    ctx.fillStyle = '#17171b';
+    ctx.beginPath();
+    ctx.arc(x + 54.6, y + 13, 1.9, 0, TAU);
+    ctx.fill();
+    // Teeth hint
+    ctx.fillStyle = '#e8e8ea';
+    ctx.beginPath();
+    ctx.moveTo(x + 49.4, y + 16.4); ctx.lineTo(x + 51, y + 19); ctx.lineTo(x + 52.4, y + 16.6);
+    ctx.closePath(); ctx.fill();
+
+    // Ears: tall, alert
+    for (const [ex, ew] of [[35, 4], [43.5, 4.6]] as const) {
+        ctx.fillStyle = '#4a4a52';
+        ctx.beginPath();
+        ctx.moveTo(x + ex - ew, y + 4);
+        ctx.lineTo(x + ex, y - 9.5);
+        ctx.lineTo(x + ex + ew, y + 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#2c2c32';
+        ctx.beginPath();
+        ctx.moveTo(x + ex - ew * 0.4, y + 2.6);
+        ctx.lineTo(x + ex, y - 6);
+        ctx.lineTo(x + ex + ew * 0.4, y + 2.6);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Amber eye with slit pupil + brow ridge
+    ctx.fillStyle = '#e8a02c';
+    ctx.beginPath();
+    ctx.ellipse(x + 43.4, y + 9.4, 2.5, 1.9, -0.12, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#14100a';
+    ctx.beginPath();
+    ctx.ellipse(x + 44, y + 9.4, 0.9, 1.5, 0, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = '#2c2c32';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x + 40.6, y + 6.2); ctx.lineTo(x + 46.4, y + 7.6);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+/** Beach crab: glossy shell on stalk-eyes, snapping claws, scuttling legs. */
+export function drawCrabEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, clawAnim: number, dir: number
+) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(120,80,30,0.28)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 1.5, 18, 2.8, 0, 0, TAU);
+    ctx.fill();
+
+    // Legs (scuttling behind/front)
+    ctx.strokeStyle = '#b03226';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    const legPhase = Math.sin(clawAnim * 2) * 2;
+    for (const lx of [12, 18, 24, 30]) {
+        ctx.beginPath();
+        ctx.moveTo(x + lx, y + 20);
+        ctx.lineTo(x + lx + (lx < 21 ? -3 : 3) + legPhase * (lx % 2 === 0 ? 1 : -1), y + 25);
+        ctx.stroke();
+    }
+
+    // Shell: gradient dome with highlights + spots
+    const shell = ctx.createLinearGradient(0, y, 0, y + 20);
+    shell.addColorStop(0, '#ff7a5c');
+    shell.addColorStop(0.45, '#e74c3c');
+    shell.addColorStop(1, '#a82f22');
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    ctx.ellipse(x + 20, y + 14, 15.5, 9.5, 0, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(x + 4.5, y + 14, 31, 5.5);
+    // Shell sheen
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x + 14, y + 8.6, 5.5, 2.4, -0.4, 0, TAU);
+    ctx.fill();
+    // Spots
+    ctx.fillStyle = 'rgba(150,40,25,0.65)';
+    ctx.beginPath();
+    ctx.arc(x + 24, y + 10, 1.4, 0, TAU);
+    ctx.arc(x + 29, y + 13, 1.1, 0, TAU);
+    ctx.arc(x + 11, y + 13, 1.1, 0, TAU);
+    ctx.fill();
+
+    // Eyestalks + eyes tracking movement direction
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 2;
+    for (const sx of [15, 25]) {
+        ctx.beginPath();
+        ctx.moveTo(x + sx, y + 7);
+        ctx.lineTo(x + sx + dir * 0.8, y + 2);
+        ctx.stroke();
+    }
+    for (const sx of [15, 25]) {
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(x + sx + dir * 0.8, y + 1.4, 3.2, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = '#17171b';
+        ctx.beginPath();
+        ctx.arc(x + sx + dir * 1.4, y + 1.4, 1.5, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath();
+        ctx.arc(x + sx + dir * 1 - 0.6, y + 0.6, 0.6, 0, TAU);
+        ctx.fill();
+    }
+
+    // Claws: big pincer arms that snap open/closed
+    const snap = Math.abs(Math.sin(clawAnim)) * 4;
+    const drawClaw = (sideX: number, sideDir: number) => {
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 3.2;
+        ctx.beginPath();
+        ctx.moveTo(x + sideX, y + 15);
+        ctx.quadraticCurveTo(x + sideX + sideDir * 8, y + 12, x + sideX + sideDir * 12, y + 5 - snap * 0.3);
+        ctx.stroke();
+        // Pincer (two lobes with gap animating)
+        ctx.fillStyle = '#e05545';
+        ctx.save();
+        ctx.translate(x + sideX + sideDir * 13.5, y + 3 - snap * 0.3);
+        ctx.rotate(sideDir * (0.2 + snap * 0.06));
+        ctx.beginPath();
+        ctx.ellipse(sideDir * 2.4, -1.8, 5, 3.6, sideDir * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(sideDir * 1.4, 2.6, 4, 3, sideDir * -0.3, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+    };
+    drawClaw(9, -1);
+    drawClaw(31, 1);
+
+    // Mouth parts
+    ctx.strokeStyle = '#8a2418';
+    ctx.lineWidth = 1.2;
+    for (const mx of [17, 20, 23]) {
+        ctx.beginPath();
+        ctx.moveTo(x + mx, y + 19.4);
+        ctx.lineTo(x + mx, y + 21.4);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+/** Porcupine: round body under a full quill fan, waddling feet. */
+export function drawPorcupineEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, walkAnim: number
+) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(90,70,40,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 1.5, 22, 3, 0, 0, TAU);
+    ctx.fill();
+
+    // Quill fan: layered spines with pale tips
+    for (let i = 0; i < 11; i++) {
+        const ang = Math.PI + (i / 10) * Math.PI; // fan over the back
+        const qx = x + 24 + Math.cos(ang) * 20;
+        const qy = y + 20 + Math.sin(ang) * 20;
+        const tipX = x + 24 + Math.cos(ang) * 30;
+        const tipY = y + 20 + Math.sin(ang) * 30;
+        const grad = ctx.createLinearGradient(qx, qy, tipX, tipY);
+        grad.addColorStop(0, '#4a3220');
+        grad.addColorStop(0.7, '#8a7a5e');
+        grad.addColorStop(1, '#e8e0cc');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(qx, qy);
+        ctx.lineTo(tipX, tipY);
+        ctx.stroke();
+    }
+
+    // Body
+    const body = ctx.createLinearGradient(0, y + 6, 0, y + 30);
+    body.addColorStop(0, '#7a5a3e');
+    body.addColorStop(0.6, '#5d4037');
+    body.addColorStop(1, '#43302a');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.arc(x + 22, y + 20, 15, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + 22, y + 21.5, 16, 8, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.fillRect(x + 6, y + 20, 32, 6);
+
+    // Head
+    ctx.fillStyle = '#7a5a40';
+    ctx.beginPath();
+    ctx.arc(x + 41, y + 24, 8.4, 0, TAU);
+    ctx.fill();
+    // Snout + nose
+    ctx.fillStyle = '#5d4037';
+    ctx.beginPath();
+    ctx.ellipse(x + 47.4, y + 26, 4.4, 3.4, 0.2, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#20161a';
+    ctx.beginPath();
+    ctx.arc(x + 50.6, y + 25.6, 1.8, 0, TAU);
+    ctx.fill();
+    // Eye + shine
+    ctx.fillStyle = '#1c1c1c';
+    ctx.beginPath();
+    ctx.arc(x + 43, y + 21.6, 1.9, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(x + 42.4, y + 20.9, 0.6, 0, TAU);
+    ctx.fill();
+    // Little ear
+    ctx.fillStyle = '#6a4c38';
+    ctx.beginPath();
+    ctx.arc(x + 37.4, y + 17, 2.6, 0, TAU);
+    ctx.fill();
+
+    // Waddling feet
+    const step = Math.sin(walkAnim) * 2.6;
+    ctx.fillStyle = '#33241e';
+    for (const [fx, off] of [[16, step], [24, -step], [34, step]] as const) {
+        ctx.beginPath();
+        ctx.ellipse(x + fx + off, y + 28.4, 3, 2.2, 0, 0, TAU);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+/** Seagull: white gull with shaded wings, spread feathers, angry brow. */
+export function drawSeagullEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, flightTimer: number
+) {
+    const flap = Math.sin(flightTimer * 10);
+    ctx.save();
+
+    // Far wing (behind body, darker)
+    ctx.strokeStyle = '#b9c2c9';
+    ctx.lineWidth = 4.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + 18, y + 6);
+    ctx.quadraticCurveTo(x + 8, y - 4 + flap * -8, x + 2, y - 8 + flap * -11);
+    ctx.stroke();
+
+    // Body: white with grey wing shading
+    const bodyG = ctx.createLinearGradient(0, y + 2, 0, y + 18);
+    bodyG.addColorStop(0, '#ffffff');
+    bodyG.addColorStop(0.7, '#eceff1');
+    bodyG.addColorStop(1, '#cfd6da');
+    ctx.fillStyle = bodyG;
+    ctx.beginPath();
+    ctx.ellipse(x + 20, y + 10, 14.5, 7.5, -0.08, 0, TAU);
+    ctx.fill();
+    // Wing fold detail on body
+    ctx.strokeStyle = '#b9c2c9';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + 12, y + 9);
+    ctx.quadraticCurveTo(x + 20, y + 13.4, x + 30, y + 9.4);
+    ctx.stroke();
+    // Tail feathers
+    ctx.fillStyle = '#dfe5e8';
+    ctx.beginPath();
+    ctx.moveTo(x + 7, y + 9);
+    ctx.lineTo(x - 2, y + 6.4);
+    ctx.lineTo(x - 1, y + 12.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Near wing (flapping, two-segment)
+    const wingA = flap * 10;
+    ctx.strokeStyle = '#e8edf0';
+    ctx.lineWidth = 4.6;
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + 6);
+    ctx.quadraticCurveTo(x + 28, y - 2 + wingA * -0.8, x + 34, y - 6 + wingA * -1.1);
+    ctx.stroke();
+    // Feather tips
+    ctx.strokeStyle = '#b9c2c9';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(x + 34, y - 6 + wingA * -1.1);
+    ctx.lineTo(x + 39, y - 7.4 + wingA * -1.2);
+    ctx.stroke();
+
+    // Head
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x + 32, y + 6.4, 5.6, 0, TAU);
+    ctx.fill();
+    // Angry brow
+    ctx.strokeStyle = '#5a5a5a';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x + 28.6, y + 2.6); ctx.lineTo(x + 33.6, y + 4.4);
+    ctx.stroke();
+    // Eye
+    ctx.fillStyle = '#f2b01e';
+    ctx.beginPath();
+    ctx.arc(x + 31.4, y + 5.6, 1.7, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#17171b';
+    ctx.beginPath();
+    ctx.arc(x + 31.8, y + 5.7, 0.85, 0, TAU);
+    ctx.fill();
+    // Beak: orange with lower mandible
+    ctx.fillStyle = '#f1a02c';
+    ctx.beginPath();
+    ctx.moveTo(x + 36.4, y + 4.6);
+    ctx.lineTo(x + 45, y + 7.4);
+    ctx.lineTo(x + 36.6, y + 8.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#d1801e';
+    ctx.beginPath();
+    ctx.moveTo(x + 36.6, y + 8.6);
+    ctx.lineTo(x + 42.4, y + 8.2);
+    ctx.lineTo(x + 36.6, y + 10.2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}

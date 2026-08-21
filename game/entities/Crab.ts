@@ -1,4 +1,6 @@
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawCrabEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Crab extends Entity {
     public origX: number;
@@ -22,7 +24,12 @@ export class Crab extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         let x = this.x - camX;
         let y = this.y;
-        
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawCrabEnhanced(ctx, x, y, this.w, this.h, this.clawAnim, this.dir);
+            return;
+        }
+
         ctx.fillStyle = "#e74c3c";
         ctx.beginPath();
         ctx.ellipse(x + 20, y + 15, 15, 10, 0, 0, Math.PI * 2);

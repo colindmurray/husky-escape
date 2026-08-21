@@ -1,5 +1,7 @@
 
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawWolfEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Wolf extends Entity {
     public origX: number;
@@ -29,6 +31,12 @@ export class Wolf extends Entity {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWolfEnhanced(ctx, x, y, this.w, this.h, this.animTimer);
+            ctx.restore();
+            return;
         }
 
         ctx.fillStyle = "#4d4d4d"; // Darker Grey

@@ -1,5 +1,7 @@
 
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawDogCatcherEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Enemy extends Entity {
     public origX: number;
@@ -29,6 +31,12 @@ export class Enemy extends Entity {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawDogCatcherEnhanced(ctx, x, y, this.w, this.h, this.walkAnim);
+            ctx.restore();
+            return;
         }
 
         // --- Draw Human Dog Catcher ---

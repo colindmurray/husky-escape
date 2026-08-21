@@ -1,4 +1,6 @@
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawPorcupineEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Porcupine extends Entity {
     public origX: number;
@@ -28,6 +30,12 @@ export class Porcupine extends Entity {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawPorcupineEnhanced(ctx, x, y, this.w, this.h, this.walkAnim);
+            ctx.restore();
+            return;
         }
 
         // Body
