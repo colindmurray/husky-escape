@@ -1,5 +1,7 @@
 
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawExitEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Exit extends Entity {
     public locked = false;
@@ -18,6 +20,12 @@ export class Exit extends Entity {
 
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         const x = this.x - camX;
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawExitEnhanced(ctx, x, this.y, this.w, this.h, this.locked, Date.now() / 1000);
+            return;
+        }
+
         ctx.fillStyle = "#bdc3c7";
         ctx.fillRect(x-5, this.y-5, this.w+10, this.h+5);
         ctx.fillStyle = this.locked ? "#555" : this.color;

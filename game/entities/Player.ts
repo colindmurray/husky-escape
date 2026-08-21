@@ -7,6 +7,8 @@ import { SkiJump } from "./SkiJump";
 import { Shark } from "./Shark";
 import { UmbrellaPickup } from "./UmbrellaPickup";
 import { audioManager } from "../Audio";
+import { gfxSettings } from "../GfxSettings";
+import { drawHuskyEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Player extends Entity {
     public facingRight = true;
@@ -277,6 +279,21 @@ export class Player extends Entity {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        // Enhanced mode: fully redrawn animated husky (purely visual)
+        if (gfxSettings.visualMode === 'enhanced') {
+            if (this.hasUmbrella && this.facingRight) this.drawHeldUmbrella(ctx, x, y);
+            drawHuskyEnhanced(ctx, x, y, {
+                velX: this.velX,
+                velY: this.velY,
+                grounded: this.grounded,
+                level: currentLevel,
+                t: Date.now() / 1000,
+            });
+            if (this.hasUmbrella && !this.facingRight) this.drawHeldUmbrella(ctx, x, y);
+            ctx.restore();
+            return;
         }
 
         if (this.hasUmbrella && this.facingRight) {

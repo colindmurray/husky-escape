@@ -1,5 +1,7 @@
 
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawPlatformEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Platform extends Entity {
     public dx = 0;
@@ -9,7 +11,7 @@ export class Platform extends Entity {
     constructor(x: number, y: number, w: number, h: number, color?: string) {
         super(x, y, w, h, color || '#7f8c8d');
     }
-    
+
     update() {
         this.dx = 0;
         this.dy = 0;
@@ -23,6 +25,12 @@ export class Platform extends Entity {
         if (this.isShaking) {
             drawX += (Math.random() - 0.5) * 3;
             drawY += (Math.random() - 0.5) * 3;
+        }
+
+        // Enhanced mode: material-aware rendering (purely visual)
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawPlatformEnhanced(ctx, drawX, drawY, this.w, this.h, currentLevel);
+            return;
         }
 
         if (currentLevel === 4) {

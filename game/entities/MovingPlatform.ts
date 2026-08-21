@@ -1,4 +1,6 @@
 import { Platform } from "./Platform";
+import { gfxSettings } from "../GfxSettings";
+import { drawLogEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class MovingPlatform extends Platform {
     constructor(x: number, y: number, w: number, h: number, public minX: number, public maxX: number, public speed: number) {
@@ -16,7 +18,12 @@ export class MovingPlatform extends Platform {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
          let x = this.x - camX;
          let y = this.y;
-         
+
+         if (gfxSettings.visualMode === 'enhanced') {
+             drawLogEnhanced(ctx, x, y, this.w, this.h);
+             return;
+         }
+
          // Draw Log Texture
          ctx.fillStyle = "#5d4037"; // Wood
          ctx.fillRect(x, y, this.w, this.h);

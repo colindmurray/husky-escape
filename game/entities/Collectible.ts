@@ -1,4 +1,6 @@
 import { Entity } from "./Entity";
+import { gfxSettings } from "../GfxSettings";
+import { drawBoneEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class Collectible extends Entity {
     public floatY = 0;
@@ -6,7 +8,7 @@ export class Collectible extends Entity {
     constructor(x: number, y: number) {
         super(x, y, 20, 10, '#fff');
     }
-    
+
     update() {
         this.floatY = Math.sin(Date.now() / 200) * 5;
     }
@@ -14,7 +16,12 @@ export class Collectible extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         let x = this.x - camX;
         let y = this.y + this.floatY;
-        
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawBoneEnhanced(ctx, x, y, Date.now() / 1000);
+            return;
+        }
+
         ctx.fillStyle = "#ecf0f1";
         ctx.beginPath();
         ctx.moveTo(x + 5, y);
