@@ -1,4 +1,6 @@
 import { Platform } from "./Platform";
+import { gfxSettings } from "../GfxSettings";
+import { drawControlPanelPolish } from "../engine/enhanced/EnhancedSprites";
 import { audioManager } from "../Audio";
 import { SoundType } from "../../types";
 
@@ -89,5 +91,9 @@ export class ControlPanel extends Platform {
         ctx.font = "bold 8px monospace";
         ctx.textAlign = "center";
         ctx.fillText("PAW", x + this.w / 2, y + 11);
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawControlPanelPolish(ctx, x, y, this.w, this.pressed, Date.now() / 1000);
+        }
     }
 }

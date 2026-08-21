@@ -1,5 +1,7 @@
 
 import { Platform } from "./Platform";
+import { gfxSettings } from "../GfxSettings";
+import { drawBossWallEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class BossWall extends Platform {
     public isActive = false;
@@ -35,7 +37,12 @@ export class BossWall extends Platform {
     draw(ctx: CanvasRenderingContext2D, camX: number, currentLevel: number) {
         let x = this.x - camX;
         let y = this.y;
-        
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawBossWallEnhanced(ctx, x, y, this.w, this.h);
+            return;
+        }
+
         // Iron gate look
         ctx.fillStyle = "#2c3e50";
         ctx.fillRect(x, y, this.w, this.h);

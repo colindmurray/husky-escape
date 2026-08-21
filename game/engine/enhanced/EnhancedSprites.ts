@@ -2090,3 +2090,138 @@ export function drawExcavatorPolish(
 
     ctx.restore();
 }
+
+// ===================== SMALL MACHINES & GATES ===============================
+
+/** Arena gate: massive riveted iron shutter with hazard base and warning lamp. */
+export function drawBossWallEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number
+) {
+    const body = ctx.createLinearGradient(x, 0, x + w, 0);
+    body.addColorStop(0, '#39434f');
+    body.addColorStop(0.5, '#4a5561');
+    body.addColorStop(1, '#2c3540');
+    ctx.fillStyle = body;
+    ctx.fillRect(x, y, w, h);
+
+    // Shutter slats
+    ctx.fillStyle = 'rgba(16,22,30,0.75)';
+    for (let sy = y + 8; sy < y + h - 6; sy += 26) {
+        ctx.fillRect(x + 4, sy, w - 8, 9);
+        // slat highlight
+        ctx.fillStyle = 'rgba(160,172,184,0.28)';
+        ctx.fillRect(x + 4, sy - 2, w - 8, 2);
+        ctx.fillStyle = 'rgba(16,22,30,0.75)';
+    }
+    // Vertical guide rails
+    ctx.fillStyle = '#202832';
+    ctx.fillRect(x, y, 7, h);
+    ctx.fillRect(x + w - 7, y, 7, h);
+    // Rivets along rails
+    ctx.fillStyle = 'rgba(180,190,200,0.5)';
+    for (let ry = y + 12; ry < y + h - 8; ry += 24) {
+        ctx.beginPath();
+        ctx.arc(x + 3.5, ry, 1.7, 0, TAU);
+        ctx.arc(x + w - 3.5, ry, 1.7, 0, TAU);
+        ctx.fill();
+    }
+    // Hazard base stripe
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y + h - 10, w, 10);
+    ctx.clip();
+    ctx.fillStyle = '#c9970c';
+    ctx.fillRect(x, y + h - 10, w, 10);
+    ctx.fillStyle = '#1b222c';
+    for (let hx = -8; hx < w; hx += 18) {
+        ctx.beginPath();
+        ctx.moveTo(x + hx, y + h);
+        ctx.lineTo(x + hx + 9, y + h);
+        ctx.lineTo(x + hx + 15, y + h - 10);
+        ctx.lineTo(x + hx + 6, y + h - 10);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Warning beacon at top center
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 220);
+    ctx.fillStyle = `rgba(255,70,55,${0.45 + pulse * 0.45})`;
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + 10, 4.2, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,70,55,${0.14 * pulse})`;
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + 10, 11, 0, TAU);
+    ctx.fill();
+}
+
+/** Boost ramp: icy-slick surface, chevron arrows, boost shimmer. */
+export function drawSkiJumpEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, t: number
+) {
+    // Ramp body
+    const body = ctx.createLinearGradient(x, y, x + w, y + h);
+    body.addColorStop(0, '#e05545');
+    body.addColorStop(0.55, '#d84a38');
+    body.addColorStop(1, '#a82f22');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fill();
+    // Frost sheen along the slope face
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+    // Chevron arrows flowing up the ramp
+    const phase = (t * 60) % 46;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < Math.floor(w / 46); i++) {
+        const d = i * 46 + phase;
+        if (d > w - 20) continue;
+        const axp = x + d;
+        const ayp = y + h * (1 - d / w);
+        const s = 8;
+        ctx.beginPath();
+        ctx.moveTo(axp - s, ayp + s * 0.4);
+        ctx.lineTo(axp + s * 0.4, ayp - s * 0.2);
+        ctx.stroke();
+    }
+    // Launch sparkle at the tip
+    const sp = 0.5 + 0.5 * Math.sin(t * 6);
+    ctx.fillStyle = `rgba(255,255,255,${0.25 + sp * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(x + w - 3, y + 2, 4 + sp * 2, 0, TAU);
+    ctx.fill();
+}
+
+/** Paw button panel: glowing bezel, status light, pressed animation handled by classic art beneath. */
+export function drawControlPanelPolish(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, pressed: boolean, t: number
+) {
+    ctx.save();
+    const pulse = 0.5 + 0.5 * Math.sin(t * (pressed ? 2 : 5));
+    const col = pressed ? '120,255,170' : '255,110,90';
+    // Status glow halo
+    const g = ctx.createRadialGradient(x + w / 2, y + 5, 2, x + w / 2, y + 5, 22);
+    g.addColorStop(0, `rgba(${col},${0.3 * (pressed ? 1 : pulse)})`);
+    g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x + w / 2 - 24, y - 18, 48, 44);
+    // Bezel shine
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y + 4);
+    ctx.lineTo(x + 2, y + 13);
+    ctx.stroke();
+    ctx.restore();
+}

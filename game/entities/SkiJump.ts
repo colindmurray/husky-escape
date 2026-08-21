@@ -1,4 +1,6 @@
 import { Platform } from "./Platform";
+import { gfxSettings } from "../GfxSettings";
+import { drawSkiJumpEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class SkiJump extends Platform {
     constructor(x: number, y: number) {
@@ -8,6 +10,11 @@ export class SkiJump extends Platform {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         let x = this.x - camX;
         let y = this.y;
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawSkiJumpEnhanced(ctx, x, y, this.w, this.h, Date.now() / 1000);
+            return;
+        }
 
         // Ramp Shape
         ctx.fillStyle = "#e74c3c";
