@@ -7,6 +7,7 @@ import { EnhancedBackgrounds } from "./enhanced/EnhancedBackgrounds";
 import { ParticleSystem } from "./enhanced/ParticleSystem";
 import { PostFX } from "./enhanced/PostFX";
 import { drawMenuBackdrop as drawMenuBackdropScene } from "./enhanced/EnhancedSprites";
+import { drawEnhancedCutscene } from "./enhanced/EnhancedCutscenes";
 
 export class Renderer {
     private ctx: CanvasRenderingContext2D;
@@ -421,6 +422,13 @@ export class Renderer {
     public drawCutscene(manager: CutsceneManager, width: number, height: number) {
         const { frame, step, currentType } = manager;
         const ctx = this.ctx;
+
+        // Enhanced mode: fully composed cinematic scenes (classic art preserved below)
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawEnhancedCutscene(ctx, currentType, step, width, height, frame);
+            return;
+        }
+
         const cx = width / 2;
         const cy = height / 2;
 

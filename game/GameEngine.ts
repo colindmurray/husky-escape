@@ -15,7 +15,7 @@ interface GameEngineOptions {
 export class GameEngine {
     private renderer: Renderer;
     public world: World;
-    private cutsceneManager: CutsceneManager;
+    public cutsceneManager: CutsceneManager;
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
