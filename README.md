@@ -2,6 +2,18 @@
 
 A React/Vite platformer where you help Onyx the Husky escape the pound and find her way home. The game includes short, optional AI reactions after important gameplay events.
 
+## Classic / Enhanced presentation toggle
+
+The game ships with two presentation layers, switchable live from the ⚙️ settings panel (Visuals and Audio each have a Classic / Enhanced switch; choices persist in `localStorage`):
+
+- **Classic** — the original rendering and chiptune audio, fully preserved.
+- **Enhanced** — the modern presentation: multi-layer parallax backgrounds for all 10 zones, an animated title screen, fully composed cinematic cutscene scenes, redrawn sprites (Onyx, every enemy, bosses, platforms, hazards, machines), a particle system, per-level color grading/vignette/glow passes, and layered music (detuned doubles, sub-octave, echo, tempo-locked percussion) plus re-synthesized SFX.
+
+Switching is seamless — even mid-level or mid-jump — because Enhanced layers only *draw around* the untouched classic logic; world state is never touched, so gameplay is identical in either mode. Reference comparisons live under `design-ref/`.
+
+Controls: Arrows **or** WASD to move; Space/W to jump; double jump for height.
+
+
 ## Local development
 
 ```bash
