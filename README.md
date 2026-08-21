@@ -37,6 +37,18 @@ npm run dsh:headless -- "Use Playwright MCP to open http://127.0.0.1:5173, take 
 The `dsh-ox` launcher reads the existing local OpenRouter key at runtime. No
 credential is stored in this repository.
 
+Cloudflare MCP uses a local OAuth grant with Pages read/write permissions. On
+a new machine, authorize it once and stop the command after it reports that the
+proxy was established:
+
+```bash
+npm run cloudflare:mcp:login
+```
+
+Subsequent `dsh-ox` sessions start and stop both Playwright MCP and Cloudflare
+MCP automatically. OAuth state remains local under `~/.mcp-auth/` and is not
+committed.
+
 The browser game works without the AI endpoint; it displays a local fallback quote if the endpoint is unavailable. To exercise the server-side AI locally, build the app and run the Pages Functions emulator with an untracked `.dev.vars` file:
 
 ```text

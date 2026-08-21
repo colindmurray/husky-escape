@@ -1,3 +1,4 @@
+# Project-scoped MCP servers loaded automatically by dsh-ox.
 - insert:
     - id: mcp-playwright
       name: '@deepseek-ai/dsh-mcp-client'
@@ -24,6 +25,29 @@
           - '52428800'
           - --console-level
           - warning
+        cwd: !!js process.env.DSH_PROJECT_ROOT ?? process.cwd()
+        toolCallTimeoutMs: 120000
+        failOnStartupError: true
+
+    - id: mcp-cloudflare
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: cloudflare
+        transport: stdio
+        command: npx
+        args:
+          - --yes
+          - 'mcp-remote@0.1.38'
+          - 'https://mcp.cloudflare.com/mcp'
+          - '19987'
+          - --host
+          - 127.0.0.1
+          - --auth-timeout
+          - '180'
+          - --transport
+          - http-only
+          - --static-oauth-client-metadata
+          - '{"scope":"page.read page.write pages.metadata_read"}'
         cwd: !!js process.env.DSH_PROJECT_ROOT ?? process.cwd()
         toolCallTimeoutMs: 120000
         failOnStartupError: true
