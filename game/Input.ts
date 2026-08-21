@@ -13,15 +13,27 @@ export class InputManager {
         this.addListeners();
     }
 
+    // WASD -> arrow-key aliases, so both control schemes drive the same
+    // InputState flags and gameplay code stays untouched.
+    private static readonly KEY_ALIASES: Record<string, keyof InputState> = {
+        KeyW: 'ArrowUp',
+        KeyA: 'ArrowLeft',
+        KeyS: 'ArrowDown',
+        KeyD: 'ArrowRight',
+        Space: 'ArrowUp',
+    };
+
     private addListeners() {
         window.addEventListener('keydown', (e) => {
             if (this.keys.hasOwnProperty(e.code)) (this.keys as any)[e.code] = true;
-            if (e.code === 'Space') this.keys['ArrowUp'] = true;
+            const alias = InputManager.KEY_ALIASES[e.code];
+            if (alias) this.keys[alias] = true;
         });
 
         window.addEventListener('keyup', (e) => {
             if (this.keys.hasOwnProperty(e.code)) (this.keys as any)[e.code] = false;
-            if (e.code === 'Space') this.keys['ArrowUp'] = false;
+            const alias = InputManager.KEY_ALIASES[e.code];
+            if (alias) this.keys[alias] = false;
         });
     }
 

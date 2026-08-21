@@ -84,7 +84,7 @@ export default function App() {
         engineRef.current = engine;
         // Dev/testing hook: lets the visual harness inspect world state and flip
         // presentation settings live. Not used by gameplay code.
-        (window as any).__husky = { engine, gfxSettings };
+        (window as any).__husky = { engine, gfxSettings, inputManager };
         return () => engine.stop();
     }, []);
 
@@ -338,7 +338,7 @@ export default function App() {
                         {!modalData.showMenu ? ( <button onClick={startStory} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Start Journey</button> ) : (
                             <div className="bg-black/80 p-10 rounded-2xl border-4 border-blue-500 text-center scale-up max-w-lg">
                                 <h2 className="text-3xl mb-4">Ready for Adventure?</h2>
-                                <p className="mb-4 text-gray-300">Arrows to move • Double jump for height</p>
+                                <p className="mb-4 text-gray-300">Arrows / WASD to move • Double jump for height</p>
                                 <div className="text-sm bg-slate-800 p-3 rounded mb-6 text-gray-400">
                                     Current Mode: <span className={`font-bold ${difficulty === Difficulty.HARDCORE ? 'text-red-400' : (difficulty === Difficulty.HARD ? 'text-orange-400' : 'text-green-400')}`}>{difficulty}</span>
                                     <br/>
