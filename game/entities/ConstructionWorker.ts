@@ -1,4 +1,7 @@
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawWorkerPolish } from "../engine/enhanced/EnhancedSprites";
+
 
 export class ConstructionWorker extends Enemy {
     constructor(x: number, y: number, patrolDist: number, speed = 1.6) {
@@ -87,6 +90,10 @@ export class ConstructionWorker extends Enemy {
         ctx.fill();
         
         ctx.restore();
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWorkerPolish(ctx, x, y, this.w, this.h, '#f1c40f');
+        }
 
         ctx.restore();
     }

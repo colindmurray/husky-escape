@@ -1,4 +1,6 @@
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawExcavatorPolish } from "../engine/enhanced/EnhancedSprites";
 import { Exit } from "./Exit";
 import { BossWall } from "./BossWall";
 import { Platform } from "./Platform";
@@ -479,6 +481,10 @@ export class BossExcavator extends Enemy {
         ctx.strokeStyle = "white";
         ctx.lineWidth = 1.2;
         ctx.strokeRect(hpX, hpY, hpBarW, hpBarH);
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawExcavatorPolish(ctx, x, y, this.w, this.h, this.speed !== 0 ? Math.sign(this.speed) : 0, time);
+        }
 
         ctx.restore();
     }

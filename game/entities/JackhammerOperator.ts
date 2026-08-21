@@ -1,4 +1,7 @@
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawWorkerPolish } from "../engine/enhanced/EnhancedSprites";
+
 
 export class JackhammerOperator extends Enemy {
     public isDrilling = true;
@@ -125,6 +128,10 @@ export class JackhammerOperator extends Enemy {
             ctx.fillStyle = "rgba(255, 63, 52, 0.7)";
             ctx.font = "bold 9px monospace";
             ctx.fillText("DRILLING!", x - 10, y - 10);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWorkerPolish(ctx, x, y, this.w, this.h, '#f1c40f');
         }
 
         ctx.restore();

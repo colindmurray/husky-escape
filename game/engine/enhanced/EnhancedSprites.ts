@@ -1994,3 +1994,99 @@ export function drawMenuBackdrop(ctx: CanvasRenderingContext2D, w: number, h: nu
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, w, h);
 }
+
+/**
+ * Additive polish for the construction crew (drawn over their classic art in
+ * Enhanced mode): grounding shadow, helmet specular glint, hi-vis sheen.
+ */
+export function drawWorkerPolish(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, hatColor: string
+) {
+    ctx.save();
+    // Grounding shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.26)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 2, 15, 3, 0, 0, TAU);
+    ctx.fill();
+    // Helmet glint arc
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + 7, 8.4, -Math.PI * 0.82, -Math.PI * 0.5);
+    ctx.stroke();
+    // Hi-vis vest sheen (diagonal light band)
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + 36);
+    ctx.lineTo(x + 14, y + 15);
+    ctx.lineTo(x + 19, y + 15);
+    ctx.lineTo(x + 13, y + 36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // Hat rim shade for depth
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + 7, 9.4, Math.PI * 0.15, Math.PI * 0.5);
+    ctx.stroke();
+    void hatColor;
+    ctx.restore();
+}
+
+/**
+ * Additive polish for the excavator boss: track grounding shadow, body
+ * specular sheen, and dust kicked up behind the treads while it moves.
+ */
+export function drawExcavatorPolish(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    movingDir: number, time: number
+) {
+    ctx.save();
+
+    // Heavy grounding shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x + 85, y + 133, 85, 8, 0, 0, TAU);
+    ctx.fill();
+
+    // Specular sheen across the yellow body panels
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(x + 26, y + 20);
+    ctx.lineTo(x + 44, y + 20);
+    ctx.lineTo(x + 30, y + 80);
+    ctx.lineTo(x + 20, y + 80);
+    ctx.closePath();
+    ctx.fill();
+    // Cab window reflection streak
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath();
+    ctx.moveTo(x + 90, y + 15);
+    ctx.lineTo(x + 98, y + 15);
+    ctx.lineTo(x + 88, y + 37);
+    ctx.lineTo(x + 82, y + 37);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Dust kicked up behind the treads
+    if (movingDir !== 0) {
+        for (let i = 0; i < 4; i++) {
+            const dx = x + 10 - movingDir * (14 + i * 13 + Math.sin(time * 9 + i * 2) * 5);
+            const dy = y + 126 - i * 3.4;
+            const dr = 4 + i * 2.2;
+            ctx.fillStyle = `rgba(120,105,90,${0.22 - i * 0.04})`;
+            ctx.beginPath();
+            ctx.arc(dx, dy, dr, 0, TAU);
+            ctx.fill();
+        }
+    }
+
+    ctx.restore();
+}

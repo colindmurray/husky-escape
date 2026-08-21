@@ -1,4 +1,7 @@
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawWorkerPolish } from "../engine/enhanced/EnhancedSprites";
+
 import { FallingDebris } from "./FallingDebris";
 
 export class Supervisor extends Enemy {
@@ -156,6 +159,10 @@ export class Supervisor extends Enemy {
         ctx.fillRect(5, 4, 12, 1);
         
         ctx.restore();
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWorkerPolish(ctx, x, y, this.w, this.h, '#f1c40f');
+        }
 
         ctx.restore();
 

@@ -1,4 +1,7 @@
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawWorkerPolish } from "../engine/enhanced/EnhancedSprites";
+
 import { FallingDebris } from "./FallingDebris";
 
 export class LunchboxThrower extends Enemy {
@@ -84,6 +87,10 @@ export class LunchboxThrower extends Enemy {
             // Hanging arms
             ctx.fillStyle = "#f1c27d";
             ctx.fillRect(x + 24, y + 22, 5, 12);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawWorkerPolish(ctx, x, y, this.w, this.h, '#ffffff');
         }
 
         ctx.restore();
