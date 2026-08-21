@@ -1248,3 +1248,459 @@ export function drawSeagullEnhanced(
 
     ctx.restore();
 }
+
+// ===================== BOSS SPRITES (Enhanced mode) ========================
+
+/** Alpha Pound boss: a hulking catcher with a huge net and a mean streak. */
+export function drawBossCatcherEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    animTimer: number, isStunned: boolean
+) {
+    const legOffset = Math.sin(animTimer) * 8;
+    ctx.save();
+
+    // Heavy ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 3, 52, 7, 0, 0, TAU);
+    ctx.fill();
+
+    // Legs: thick strides + heavy boots
+    for (const [lx, off] of [[24, legOffset], [58, -legOffset]] as const) {
+        const trouser = ctx.createLinearGradient(0, y + 95, 0, y + 140);
+        trouser.addColorStop(0, '#33455c');
+        trouser.addColorStop(1, '#1e2d3f');
+        ctx.strokeStyle = trouser;
+        ctx.lineWidth = 17;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + lx + 9, y + 98);
+        ctx.lineTo(x + lx + 9 + off, y + 138);
+        ctx.stroke();
+        // Boot
+        ctx.fillStyle = '#141b25';
+        ctx.beginPath();
+        ctx.roundRect(x + lx + off - 2, y + 134, 24, 12, [4, 6, 3, 3]);
+        ctx.fill();
+        ctx.fillStyle = '#2a3644';
+        ctx.fillRect(x + lx + off - 2, y + 138, 24, 2);
+    }
+
+    // Torso: broad uniform with shoulder pads + belt
+    const shirt = ctx.createLinearGradient(0, y + 34, 0, y + 102);
+    shirt.addColorStop(0, '#ef6a5a');
+    shirt.addColorStop(0.5, '#d84a38');
+    shirt.addColorStop(1, '#9c2e22');
+    ctx.fillStyle = shirt;
+    ctx.beginPath();
+    ctx.roundRect(x + 8, y + 36, 84, 68, [10, 10, 5, 5]);
+    ctx.fill();
+    // Shoulder pads
+    ctx.fillStyle = '#2b3a4d';
+    ctx.beginPath();
+    ctx.ellipse(x + 14, y + 42, 11, 8, -0.2, 0, TAU);
+    ctx.ellipse(x + 86, y + 42, 11, 8, 0.2, 0, TAU);
+    ctx.fill();
+    // Belt + buckle
+    ctx.fillStyle = '#222f3e';
+    ctx.fillRect(x + 8, y + 88, 84, 9);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(x + 41, y + 88.5, 18, 8);
+    ctx.fillStyle = '#a8820b';
+    ctx.fillRect(x + 46, y + 90.5, 8, 4);
+
+    // Big badge with star + glint
+    const bg = ctx.createRadialGradient(x + 48, y + 56, 2, x + 50, y + 58, 13);
+    bg.addColorStop(0, '#ffe98a');
+    bg.addColorStop(0.75, '#f1c40f');
+    bg.addColorStop(1, '#c9970c');
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.arc(x + 50, y + 58, 12, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#8a6a08';
+    // tiny star
+    ctx.save();
+    ctx.translate(x + 50, y + 58);
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i * TAU) / 5;
+        ctx.lineTo(Math.cos(a) * 5.4, Math.sin(a) * 5.4);
+        const a2 = a + TAU / 10;
+        ctx.lineTo(Math.cos(a2) * 2.3, Math.sin(a2) * 2.3);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.arc(x + 45.4, y + 53.4, 2.4, 0, TAU);
+    ctx.fill();
+
+    // Head: big jaw, stubble, sneer
+    const skinG = ctx.createRadialGradient(x + 44, y + 14, 4, x + 50, y + 24, 34);
+    skinG.addColorStop(0, '#f6cf9f');
+    skinG.addColorStop(1, '#dfa26a');
+    ctx.fillStyle = skinG;
+    ctx.beginPath();
+    ctx.arc(x + 50, y + 23, 29, 0, TAU);
+    ctx.fill();
+    // Stubble jaw
+    ctx.fillStyle = 'rgba(60,50,40,0.3)';
+    ctx.beginPath();
+    ctx.arc(x + 50, y + 31, 21, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.fill();
+    // Gritted teeth
+    ctx.fillStyle = '#f4f4ee';
+    ctx.beginPath();
+    ctx.roundRect(x + 38, y + 30, 24, 6.4, 2);
+    ctx.fill();
+    ctx.strokeStyle = '#8a7a66';
+    ctx.lineWidth = 1;
+    for (let tx2 = 43; tx2 < 62; tx2 += 5) {
+        ctx.beginPath();
+        ctx.moveTo(x + tx2, y + 30);
+        ctx.lineTo(x + tx2, y + 36.4);
+        ctx.stroke();
+    }
+
+    if (isStunned) {
+        // X X eyes + orbiting stars
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        for (const ex of [37, 63]) {
+            ctx.beginPath();
+            ctx.moveTo(x + ex - 7, y + 12); ctx.lineTo(x + ex + 7, y + 24);
+            ctx.moveTo(x + ex + 7, y + 12); ctx.lineTo(x + ex - 7, y + 24);
+            ctx.stroke();
+        }
+        for (let s = 0; s < 3; s++) {
+            const sa = animTimer * 3 + (s * TAU) / 3;
+            const stx = x + 50 + Math.cos(sa) * 42;
+            const sty = y + 16 + Math.sin(sa) * 14;
+            ctx.save();
+            ctx.translate(stx, sty);
+            ctx.rotate(sa);
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const a = -Math.PI / 2 + (i * TAU) / 5;
+                ctx.lineTo(Math.cos(a) * 7, Math.sin(a) * 7);
+                const a2 = a + TAU / 10;
+                ctx.lineTo(Math.cos(a2) * 3, Math.sin(a2) * 3);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    } else {
+        // Eyes: whites tracking forward, angry pupils
+        for (const ex of [38, 62]) {
+            ctx.fillStyle = '#fdfdfd';
+            ctx.beginPath();
+            ctx.ellipse(x + ex, y + 19, 8.4, 7.4, 0, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = '#2a2016';
+            ctx.beginPath();
+            ctx.arc(x + ex + 2.4, y + 20, 3.2, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.beginPath();
+            ctx.arc(x + ex + 1.2, y + 18, 1.1, 0, TAU);
+            ctx.fill();
+        }
+        // Heavy V brows
+        ctx.fillStyle = '#2c2118';
+        ctx.beginPath();
+        ctx.moveTo(x + 27, y + 7); ctx.lineTo(x + 47, y + 15.4); ctx.lineTo(x + 47, y + 9.4); ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + 73, y + 7); ctx.lineTo(x + 53, y + 15.4); ctx.lineTo(x + 53, y + 9.4); ctx.closePath();
+        ctx.fill();
+    }
+
+    // Peaked cap with gold emblem + brim shine
+    if (true) {
+        const capG = ctx.createLinearGradient(0, y - 52, 0, y - 4);
+        capG.addColorStop(0, '#3a506b');
+        capG.addColorStop(1, '#20304a');
+        ctx.fillStyle = capG;
+        ctx.beginPath();
+        ctx.roundRect(x + 20, y - 52, 60, 46, [8, 8, 3, 3]);
+        ctx.fill();
+        // Brim
+        ctx.fillStyle = '#16202e';
+        ctx.beginPath();
+        ctx.roundRect(x + 8, y - 10, 84, 9, [4, 4, 2, 2]);
+        ctx.fill();
+        // Band + emblem
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(x + 20, y - 16, 60, 5);
+        ctx.beginPath();
+        ctx.arc(x + 50, y - 28, 6.4, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = '#20304a';
+        ctx.beginPath();
+        ctx.arc(x + 50, y - 28, 3.4, 0, TAU);
+        ctx.fill();
+    }
+
+    // Arm + GIANT net on pole (swings with stride)
+    ctx.save();
+    ctx.translate(x + 82, y + 48);
+    ctx.rotate(Math.sin(animTimer * 0.9) * 0.22 + 0.1);
+    // Sleeve
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 15;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-4, 2); ctx.lineTo(14, 14);
+    ctx.stroke();
+    // Hand
+    ctx.fillStyle = '#eab072';
+    ctx.beginPath();
+    ctx.arc(18, 18, 7, 0, TAU);
+    ctx.fill();
+    // Pole
+    ctx.strokeStyle = '#6a4c40';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(12, 14); ctx.lineTo(64, 30);
+    ctx.stroke();
+    // Net hoop + mesh
+    const nx = 80, ny = 36;
+    ctx.strokeStyle = '#e6ecf0';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(nx, ny, 30, 0, TAU);
+    ctx.stroke();
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    for (let i = -4; i <= 4; i++) {
+        const off2 = i * 8;
+        const half = Math.sqrt(Math.max(0, 900 - off2 * off2));
+        ctx.beginPath();
+        ctx.moveTo(nx + off2, ny - half); ctx.lineTo(nx + off2, ny + half);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(nx - half, ny + off2); ctx.lineTo(nx + half, ny + off2);
+        ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+
+    ctx.restore();
+}
+
+/** Alpha Wolf boss: a battle-scarred giant with a burning red gaze. */
+export function drawBossWolfEnhanced(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    animTimer: number, isStunned: boolean, hasHat: boolean
+) {
+    const trot = Math.sin(animTimer);
+    ctx.save();
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + h + 3, 55, 8, 0, 0, TAU);
+    ctx.fill();
+
+    // Tail: huge, lashing
+    const tailG = ctx.createLinearGradient(x, y + 40, x - 30, y + 20);
+    tailG.addColorStop(0, '#3a3a42');
+    tailG.addColorStop(1, '#5c5c66');
+    ctx.strokeStyle = tailG;
+    ctx.lineWidth = 20;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y + 44);
+    ctx.quadraticCurveTo(x - 16, y + 34 + trot * 6, x - 28, y + 16 + trot * 12);
+    ctx.stroke();
+    // Tail tip highlight
+    ctx.strokeStyle = '#77777f';
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(x - 20, y + 26 + trot * 10);
+    ctx.lineTo(x - 27, y + 17 + trot * 12);
+    ctx.stroke();
+
+    // Hindquarters: raised haunch
+    const body = ctx.createLinearGradient(0, y + 16, 0, y + h);
+    body.addColorStop(0, '#60606a');
+    body.addColorStop(0.5, '#494951');
+    body.addColorStop(1, '#303038');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.arc(x + 32, y + h - 34, 27, 0, TAU);
+    ctx.fill();
+    // Torso: deep chest tapering to shoulders, slight back arch
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + h - 44);
+    ctx.quadraticCurveTo(x + 44, y + 26, x + 74, y + 38);
+    ctx.quadraticCurveTo(x + 88, y + 46, x + 88, y + h - 22);
+    ctx.lineTo(x + 20, y + h - 22);
+    ctx.closePath();
+    ctx.fill();
+    // Belly light
+    ctx.fillStyle = 'rgba(150,150,160,0.28)';
+    ctx.beginPath();
+    ctx.ellipse(x + 62, y + h - 26, 24, 8, 0, 0, TAU);
+    ctx.fill();
+    // Scar across flank
+    ctx.strokeStyle = 'rgba(190,190,200,0.55)';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(x + 26, y + 34);
+    ctx.lineTo(x + 44, y + 52);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(190,190,200,0.4)';
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + 30 + i * 6, y + 39 + i * 3);
+        ctx.lineTo(x + 33 + i * 6, y + 44 + i * 3);
+        ctx.stroke();
+    }
+    // Back fur ridge
+    ctx.strokeStyle = '#6a6a74';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 7; i++) {
+        const fx = x + 14 + i * 9;
+        ctx.beginPath();
+        ctx.moveTo(fx, y + 22);
+        ctx.lineTo(fx + 2, y + 17 - (i % 2) * 2);
+        ctx.stroke();
+    }
+
+    // Legs: four heavy pillars mid-stride
+    const legDraw = (lx: number, ph: number, col: string, lw: number) => {
+        const sw = trot * ph * 8;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = lw;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + lx, y + h - 24);
+        ctx.lineTo(x + lx + sw, y + h - 3);
+        ctx.stroke();
+        ctx.fillStyle = '#202026';
+        ctx.beginPath();
+        ctx.ellipse(x + lx + sw, y + h - 2, lw * 0.72, 4.4, 0, 0, TAU);
+        ctx.fill();
+    };
+    legDraw(14, -1, '#38383f', 16);
+    legDraw(72, 1, '#38383f', 16);
+    legDraw(26, 1, '#52525c', 17);
+    legDraw(62, -1, '#52525c', 17);
+
+    // Head: huge skull with angular cheeks
+    const headG = ctx.createRadialGradient(x + w - 42, y + 24, 4, x + w - 30, y + 34, 42);
+    headG.addColorStop(0, '#67676f');
+    headG.addColorStop(1, '#43434b');
+    ctx.fillStyle = headG;
+    ctx.beginPath();
+    ctx.arc(x + w - 30, y + 33, 34, 0, TAU);
+    ctx.fill();
+    // Cheek fur spikes
+    ctx.fillStyle = '#55555e';
+    for (const [cx2, cy2] of [[x + w - 58, y + 44], [x + w - 52, y + 54], [x + w - 44, y + 61]] as const) {
+        ctx.beginPath();
+        ctx.moveTo(cx2 - 5, cy2);
+        ctx.lineTo(cx2 - 14, cy2 + 7);
+        ctx.lineTo(cx2 - 2, cy2 + 8);
+        ctx.closePath();
+        ctx.fill();
+    }
+    // Snout: heavy wedge
+    ctx.fillStyle = '#4c4c54';
+    ctx.beginPath();
+    ctx.moveTo(x + w - 16, y + 20);
+    ctx.lineTo(x + w + 16, y + 36);
+    ctx.lineTo(x + w - 12, y + 54);
+    ctx.closePath();
+    ctx.fill();
+    // Nose
+    ctx.fillStyle = '#131317';
+    ctx.beginPath();
+    ctx.ellipse(x + w + 12, y + 35, 5.4, 4.4, 0, 0, TAU);
+    ctx.fill();
+    // Fangs
+    ctx.fillStyle = '#eceff1';
+    for (const fx of [x + w - 2, x + w + 6]) {
+        ctx.beginPath();
+        ctx.moveTo(fx, y + 46);
+        ctx.lineTo(fx + 3.4, y + 57);
+        ctx.lineTo(fx + 6.8, y + 46);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Ears: torn and tall (set wide so the ranger hat sits between them)
+    for (const [ex, ew] of [[x + w - 62, 10], [x + w - 4, 11]] as const) {
+        ctx.fillStyle = '#4a4a52';
+        ctx.beginPath();
+        ctx.moveTo(ex - ew, y + 8);
+        ctx.lineTo(ex, y - 24);
+        ctx.lineTo(ex + ew, y + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#2a2a30';
+        ctx.beginPath();
+        ctx.moveTo(ex - ew * 0.4, y + 4);
+        ctx.lineTo(ex + 1, y - 15);
+        ctx.lineTo(ex + ew * 0.4, y + 4);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    if (isStunned) {
+        // X eye
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x + w - 42, y + 24); ctx.lineTo(x + w - 26, y + 38);
+        ctx.moveTo(x + w - 26, y + 24); ctx.lineTo(x + w - 42, y + 38);
+        ctx.stroke();
+    } else {
+        // Burning red eye with glow + pupil slit
+        const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 180);
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const glow = ctx.createRadialGradient(x + w - 32, y + 30, 2, x + w - 32, y + 30, 26);
+        glow.addColorStop(0, `rgba(255,60,40,${0.35 + pulse * 0.25})`);
+        glow.addColorStop(1, 'rgba(255,60,40,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(x + w - 60, y + 4, 56, 54);
+        ctx.restore();
+        ctx.fillStyle = '#ff3b26';
+        ctx.beginPath();
+        ctx.ellipse(x + w - 32, y + 29, 7.4, 5.6, -0.1, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = '#1a0503';
+        ctx.beginPath();
+        ctx.ellipse(x + w - 30, y + 29, 1.7, 4.2, 0, 0, TAU);
+        ctx.fill();
+    }
+
+    // Ranger hat (kept from classic design)
+    if (hasHat) {
+        ctx.fillStyle = '#4a3526';
+        ctx.beginPath();
+        ctx.ellipse(x + w - 33, y + 4, 34, 10, 0, 0, TAU);
+        ctx.fill();
+        const topG = ctx.createLinearGradient(0, y - 30, 0, y + 4);
+        topG.addColorStop(0, '#6a4c34');
+        topG.addColorStop(1, '#4a3526');
+        ctx.fillStyle = topG;
+        ctx.beginPath();
+        ctx.roundRect(x + w - 52, y - 28, 38, 30, [6, 6, 2, 2]);
+        ctx.fill();
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(x + w - 52, y - 8, 38, 6);
+    }
+
+    ctx.restore();
+}

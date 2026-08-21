@@ -1,5 +1,7 @@
 
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawBossWolfEnhanced } from "../engine/enhanced/EnhancedSprites";
 import { Exit } from "./Exit";
 import { BossWall } from "./BossWall";
 import { audioManager } from "../Audio";
@@ -131,6 +133,12 @@ export class BossWolf extends Enemy {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawBossWolfEnhanced(ctx, x, y, this.w, this.h, this.animTimer, this.isStunned, this.hasHat);
+            ctx.restore();
+            return;
         }
 
         // --- DRAW GIANT WOLF ---

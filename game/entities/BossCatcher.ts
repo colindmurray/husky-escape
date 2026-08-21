@@ -1,5 +1,7 @@
 
 import { Enemy } from "./Enemy";
+import { gfxSettings } from "../GfxSettings";
+import { drawBossCatcherEnhanced } from "../engine/enhanced/EnhancedSprites";
 import { Exit } from "./Exit";
 import { BossWall } from "./BossWall";
 import { audioManager } from "../Audio";
@@ -132,6 +134,12 @@ export class BossCatcher extends Enemy {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);
             ctx.translate(-(x + this.w / 2), -y);
+        }
+
+        if (gfxSettings.visualMode === 'enhanced') {
+            drawBossCatcherEnhanced(ctx, x, y, this.w, this.h, this.animTimer, this.isStunned);
+            ctx.restore();
+            return;
         }
 
         // --- DRAW BOSS ---
