@@ -20,6 +20,7 @@ dist-ssr
 .secrets/
 .wrangler/
 coverage/
+.playwright-mcp/
 *.tsbuildinfo
 *.pem
 *.key

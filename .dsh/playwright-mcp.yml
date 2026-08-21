@@ -1,0 +1,29 @@
+- insert:
+    - id: mcp-playwright
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: playwright
+        transport: stdio
+        command: npx
+        args:
+          - --yes
+          - '@playwright/mcp@0.0.79'
+          - --headless
+          - --isolated
+          - --browser
+          - chrome
+          - --caps
+          - vision
+          - --image-responses
+          - allow
+          - --viewport-size
+          - 1440x900
+          - --output-dir
+          - .playwright-mcp
+          - --output-max-size
+          - '52428800'
+          - --console-level
+          - warning
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 120000
+        failOnStartupError: true

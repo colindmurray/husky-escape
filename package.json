@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "dsh:headless": "dsh-ox --patch .dsh/playwright-mcp.yml --profile headless",
+    "dsh:web": "dsh-ox --patch .dsh/playwright-mcp.yml web",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -13,6 +15,7 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
+    "@playwright/mcp": "0.0.79",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",

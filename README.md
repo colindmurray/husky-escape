@@ -9,6 +9,34 @@ npm install
 npm run dev
 ```
 
+## Visual testing with DeepSeek Harness
+
+This repository includes a project-scoped Playwright MCP configuration for
+DeepSeek Harness. It runs an isolated, headless Chrome session at 1440×900 and
+keeps generated screenshots and traces under the ignored `.playwright-mcp/`
+directory.
+
+Start the app in one terminal:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Then start the Harness browser UI in another terminal:
+
+```bash
+npm run dsh:web
+```
+
+For a one-shot visual check:
+
+```bash
+npm run dsh:headless -- "Use Playwright MCP to open http://127.0.0.1:5173, take a screenshot, and visually inspect the game."
+```
+
+The `dsh-ox` launcher reads the existing local OpenRouter key at runtime. No
+credential is stored in this repository.
+
 The browser game works without the AI endpoint; it displays a local fallback quote if the endpoint is unavailable. To exercise the server-side AI locally, build the app and run the Pages Functions emulator with an untracked `.dev.vars` file:
 
 ```text
