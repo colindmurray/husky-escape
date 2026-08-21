@@ -24,6 +24,6 @@
           - '52428800'
           - --console-level
           - warning
-        cwd: !!js process.cwd()
+        cwd: !!js process.env.DSH_PROJECT_ROOT ?? process.cwd()
         toolCallTimeoutMs: 120000
         failOnStartupError: true

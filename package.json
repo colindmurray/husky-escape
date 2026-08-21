@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "dsh:headless": "dsh-ox --patch .dsh/playwright-mcp.yml --profile headless",
-    "dsh:web": "dsh-ox --patch .dsh/playwright-mcp.yml web",
+    "dsh:headless": "dsh-ox --profile headless",
+    "dsh:web": "dsh-ox web",
     "preview": "vite preview"
   },
   "dependencies": {
