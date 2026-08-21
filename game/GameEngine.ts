@@ -13,7 +13,7 @@ interface GameEngineOptions {
 
 export class GameEngine {
     private renderer: Renderer;
-    private world: World;
+    public world: World;
     private cutsceneManager: CutsceneManager;
     private frameId: number = 0;
     private options: GameEngineOptions;
@@ -152,6 +152,7 @@ export class GameEngine {
             } else if (this.gameState === GameState.CUTSCENE) {
                 this.cutsceneManager.update();
                 this.renderer.drawCutscene(this.cutsceneManager, this.world.width, this.world.height);
+                this.renderer.drawCinematicOverlay(this.cutsceneManager, this.world.width, this.world.height);
             }
             this.frameId = requestAnimationFrame(loop);
         };

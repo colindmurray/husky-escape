@@ -55,6 +55,12 @@ export class CutsceneManager {
     }
 
     start(type: CutsceneType = 'intro') {
+        // Bug fix: clear any pending line timer from a previous run so
+        // restarting a cutscene can't run two timer chains in parallel.
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
         this.currentType = type;
         this.step = 0;
         this.frame = 0;

@@ -5,6 +5,7 @@ import { GameState, Difficulty } from './types';
 import { audioManager } from './game/Audio';
 import { inputManager } from './game/Input';
 import { getHuskyWisdom } from './game/services/openRouterService';
+import { gfxSettings, PresentationMode } from './game/GfxSettings';
 
 export default function App() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,6 +24,11 @@ export default function App() {
     const [volume, setVolume] = useState(0.3); // Default volume
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
     const [devMode, setDevMode] = useState(false);
+    // Presentation toggles: flip between the preserved Classic presentation and
+    // the Enhanced one. Both apply live — even mid-level — without touching
+    // world state, so gameplay is identical in either mode.
+    const [visualMode, setVisualMode] = useState<PresentationMode>(gfxSettings.visualMode);
+    const [audioMode, setAudioMode] = useState<PresentationMode>(gfxSettings.audioMode);
 
     // Using a ref to track time for AI context without triggering re-renders of the whole engine
     const timeLeftRef = useRef(300);
@@ -76,6 +82,9 @@ export default function App() {
             }
         });
         engineRef.current = engine;
+        // Dev/testing hook: lets the visual harness inspect world state and flip
+        // presentation settings live. Not used by gameplay code.
+        (window as any).__husky = { engine, gfxSettings };
         return () => engine.stop();
     }, []);
 
@@ -91,6 +100,16 @@ export default function App() {
     const changeDifficulty = (diff: Difficulty) => {
         setDifficulty(diff);
         // If changing mid-game, it will apply on next level load/restart
+    };
+
+    const changeVisualMode = (mode: PresentationMode) => {
+        setVisualMode(mode);
+        gfxSettings.setVisualMode(mode);
+    };
+
+    const changeAudioMode = (mode: PresentationMode) => {
+        setAudioMode(mode);
+        gfxSettings.setAudioMode(mode);
     };
 
     const startStory = () => { 
@@ -274,7 +293,25 @@ export default function App() {
                                         <div className={`w-3 h-3 bg-white rounded-full transition ${sfxOn ? 'translate-x-5' : ''}`} />
                                     </button>
                                 </div>
-                                
+
+                                <div className="border-t border-slate-600 pt-3 mb-3">
+                                    <p className="text-xs text-gray-400 mb-2 uppercase">Presentation</p>
+                                    <div className="mb-2">
+                                        <span className="text-xs text-gray-300 block mb-1">Visuals</span>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => changeVisualMode('classic')} className={`flex-1 text-xs py-1 px-2 rounded border transition ${visualMode === 'classic' ? 'bg-slate-500 border-slate-300 text-white' : 'bg-slate-700 border-slate-600 text-gray-400 hover:text-white'}`}>Classic</button>
+                                            <button onClick={() => changeVisualMode('enhanced')} className={`flex-1 text-xs py-1 px-2 rounded border transition ${visualMode === 'enhanced' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-700 border-slate-600 text-gray-400 hover:text-white'}`}>Enhanced</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-300 block mb-1">Audio</span>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => changeAudioMode('classic')} className={`flex-1 text-xs py-1 px-2 rounded border transition ${audioMode === 'classic' ? 'bg-slate-500 border-slate-300 text-white' : 'bg-slate-700 border-slate-600 text-gray-400 hover:text-white'}`}>Classic</button>
+                                            <button onClick={() => changeAudioMode('enhanced')} className={`flex-1 text-xs py-1 px-2 rounded border transition ${audioMode === 'enhanced' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-700 border-slate-600 text-gray-400 hover:text-white'}`}>Enhanced</button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="border-t border-slate-600 pt-3 mb-3">
                                     <p className="text-xs text-gray-400 mb-2 uppercase">Difficulty</p>
                                     <div className="flex flex-col gap-2">

@@ -2,9 +2,16 @@
 import { World } from "./World";
 import { CutsceneManager } from "./CutsceneManager";
 import { drawHuskyFace } from "../Utils";
+import { gfxSettings } from "../GfxSettings";
+import { EnhancedBackgrounds } from "./enhanced/EnhancedBackgrounds";
+import { ParticleSystem } from "./enhanced/ParticleSystem";
+import { PostFX } from "./enhanced/PostFX";
 
 export class Renderer {
     private ctx: CanvasRenderingContext2D;
+    private enhancedBackgrounds = new EnhancedBackgrounds();
+    private particles = new ParticleSystem();
+    private postFX = new PostFX();
 
     constructor(canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext('2d')!;
@@ -17,10 +24,15 @@ export class Renderer {
 
     public drawGame(world: World) {
         const { width, height, cameraX, currentLevel } = world;
+        const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
-        
-        this.drawBackground(world);
-        
+
+        if (enhanced) {
+            this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel);
+        } else {
+            this.drawBackground(world);
+        }
+
         this.ctx.save();
         world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
         world.waters.forEach(w => w.draw(this.ctx, cameraX));
@@ -30,8 +42,15 @@ export class Renderer {
         if (world.player) world.player.draw(this.ctx, cameraX, currentLevel);
         this.ctx.restore();
 
-        // --- LEVEL 9: ATMOSPHERIC OVERLAY ---
-        if (currentLevel === 9) {
+        // --- ENHANCED: particles + glow + grade (drawn last, purely cosmetic) ---
+        if (enhanced) {
+            this.particles.updateAndDraw(this.ctx, world);
+            this.postFX.drawGlows(this.ctx, world);
+            this.postFX.apply(this.ctx, world);
+        }
+
+        // --- LEVEL 9: ATMOSPHERIC OVERLAY (classic only — enhanced has its own storm) ---
+        if (!enhanced && currentLevel === 9) {
             this.drawPierAtmosphere(world);
         }
     }
@@ -796,7 +815,7 @@ export class Renderer {
         else if (step === 5) {
             let zoom = 1 + (frame % 100) * 0.01;
             drawHuskyFace(ctx, cx, cy, 2 * zoom, 'determined');
-            
+
             if (frame > 5) {
                 ctx.fillStyle = "#f1c40f";
                 ctx.font = "bold 120px Fredoka One";
@@ -807,5 +826,68 @@ export class Renderer {
                 ctx.strokeText("!", cx, cy - 120 - bounce);
             }
         }
+    }
+
+    /**
+     * Enhanced-mode-only cinematic layer drawn AFTER the classic cutscene art.
+     * Letterbox bars, per-scene color mood, soft vignette and light film grain
+     * make every cutscene feel like a staged shot without altering its content,
+     * timing or text.
+     */
+    private grainCache: HTMLCanvasElement | null = null;
+
+    public drawCinematicOverlay(manager: CutsceneManager, width: number, height: number) {
+        if (gfxSettings.visualMode !== 'enhanced') return;
+        const ctx = this.ctx;
+        const t = performance.now() / 1000;
+
+        // Per-cutscene color mood
+        let tint: [number, number, number, number] = [20, 30, 60, 0.12];
+        switch (manager.currentType) {
+            case 'pier_intro': tint = [10, 20, 50, 0.2]; break;
+            case 'underwater_intro': tint = [20, 80, 140, 0.16]; break;
+            case 'chase': tint = [90, 10, 10, 0.1]; break;
+            case 'pound_escape': tint = [40, 20, 70, 0.12]; break;
+        }
+        const grad = ctx.createLinearGradient(0, 0, 0, height);
+        grad.addColorStop(0, `rgba(${tint[0]},${tint[1]},${tint[2]},${tint[3]})`);
+        grad.addColorStop(1, `rgba(${Math.min(255, tint[0] + 30)},${tint[1]},${tint[2]},${tint[3] * 0.7})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Vignette (cached)
+        this.postFX.applyVignettePublic(ctx, width, height, 0.42);
+
+        // Cinematic letterbox bars
+        const barH = Math.max(28, height * 0.055);
+        ctx.fillStyle = "rgba(0,0,0,0.88)";
+        ctx.fillRect(0, 0, width, barH);
+        ctx.fillRect(0, height - barH, width, barH);
+
+        // Light film grain (cheap tiled noise, jittered each frame)
+        if (!this.grainCache) {
+            const g = document.createElement('canvas');
+            g.width = 128; g.height = 128;
+            const gctx = g.getContext('2d')!;
+            const img = gctx.createImageData(128, 128);
+            for (let i = 0; i < img.data.length; i += 4) {
+                const v = Math.floor(Math.random() * 255);
+                img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v; img.data[i + 3] = 14;
+            }
+            gctx.putImageData(img, 0, 0);
+            this.grainCache = g;
+        }
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        const ox = Math.floor(Math.random() * 128);
+        const oy = Math.floor(Math.random() * 128);
+        for (let y = -oy; y < height; y += 128) {
+            for (let x = -ox; x < width; x += 128) {
+                ctx.drawImage(this.grainCache, x, y);
+            }
+        }
+        ctx.restore();
+
+        void t;
     }
 }
