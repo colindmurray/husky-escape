@@ -1,4 +1,20 @@
 
+function moonHalo(ctx: CanvasRenderingContext2D, x: number, y: number) {
+    const halo = ctx.createRadialGradient(x, y, 12, x, y, 120);
+    halo.addColorStop(0, "rgba(230,225,245,0.4)");
+    halo.addColorStop(1, "rgba(230,225,245,0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(x - 130, y - 130, 260, 260);
+    ctx.fillStyle = "#e8e2f2";
+    ctx.beginPath();
+    ctx.arc(x, y, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(160,150,185,0.5)";
+    ctx.beginPath(); ctx.arc(x - 10, y - 8, 6.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 12, y + 10, 4.4, 0, Math.PI * 2); ctx.fill();
+}
+
+
 // Enhanced per-level parallax backgrounds.
 //
 // Purely presentational: reads only (width, height, cameraX, currentLevel, time)
@@ -23,6 +39,7 @@ export class EnhancedBackgrounds {
             case 8: this.drawUnderwater(ctx, width, height, cameraX, t); break;
             case 9: this.drawPier(ctx, width, height, cameraX, t); break;
             case 10: this.drawConstruction(ctx, width, height, cameraX, t); break;
+            case 11: this.drawNeonMetropolis(ctx, width, height, cameraX, t); break;
         }
     }
 
@@ -854,4 +871,114 @@ export class EnhancedBackgrounds {
             ctx.fill();
         }
     }
+
+    // ------------------------------------------------------------------ //
+    // LEVEL 11: NEON METROPOLIS — purple night, glowing towers, signs
+    // ------------------------------------------------------------------ //
+    private drawNeonMetropolis(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, t: number) {
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, "#0d0918");
+        sky.addColorStop(0.45, "#1c1233");
+        sky.addColorStop(0.78, "#2e1b44");
+        sky.addColorStop(1, "#3a2050");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Stars
+        for (let i = 0; i < 70; i++) {
+            const sxp = (((i * 181.7 - camX * 0.02) % (w + 40)) + (w + 40)) % (w + 40) - 20;
+            const syp = hash1(i + 9) * h * 0.5;
+            const tw = 0.35 + 0.65 * Math.abs(Math.sin(t * (0.4 + hash1(i) * 0.8) + i));
+            ctx.fillStyle = `rgba(225,215,255,${0.6 * tw})`;
+            ctx.fillRect(sxp, syp, 1.8, 1.8);
+        }
+
+        // Moon
+        const mx = w * 0.72 - ((camX * 0.03) % (w * 2));
+        moonHalo(ctx, mx, h * 0.18);
+
+        // Three parallax tower layers with randomly flickering windows
+        const layers = [
+            { p: 0.08, col: "rgba(28,20,52,0.85)", step: 150, hMin: 200, hMax: 380 },
+            { p: 0.18, col: "rgba(18,13,36,0.92)", step: 190, hMin: 280, hMax: 500 },
+            { p: 0.34, col: "#0f0a20", step: 240, hMin: 360, hMax: 640 },
+        ];
+        for (const L of layers) {
+            for (let i = 0; i < w + camX * L.p; i += L.step) {
+                let x = (((i - camX * L.p) % (w + L.step * 2)) + (w + L.step * 2)) % (w + L.step * 2) - L.step / 2;
+                const seed = Math.floor(i / L.step);
+                const bw = 66 + rand2(seed, L.p * 91, 0, 46);
+                const bh = L.hMin + hash1(seed * 3 + L.p * 17) * (L.hMax - L.hMin);
+                const byy = h - bh;
+                ctx.fillStyle = L.col;
+                ctx.fillRect(x, byy, bw, bh);
+                // Rooftop antenna on some
+                if (hash1(seed + 77) > 0.72) {
+                    ctx.fillRect(x + bw / 2 - 2, byy - 34, 4, 34);
+                    const blink = Math.sin(t * 2.4 + seed) > 0.55;
+                    ctx.fillStyle = blink ? "rgba(255,60,60,0.95)" : "rgba(255,60,60,0.15)";
+                    ctx.beginPath();
+                    ctx.arc(x + bw / 2, byy - 37, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = L.col;
+                }
+                // Windows: grid with deterministic random lighting + slow flicker
+                for (let wy = byy + 14; wy < h - 30; wy += 22) {
+                    for (let wx = x + 8; wx < x + bw - 12; wx += 16) {
+                        const lit = hash2(Math.floor(wx), Math.floor(wy)) > 0.62;
+                        if (!lit) continue;
+                        const seedW = Math.floor(wx) * 7 + Math.floor(wy);
+                        // Random slow toggling: each window flips state occasionally
+                        const phase = Math.sin(t * 0.35 + seedW) ;
+                        const visible = phase > -0.86 || hash2(seedW, 3) > 0.5;
+                        if (!visible) continue;
+                        const warm = hash2(seedW, 11);
+                        const a = 0.22 + warm * 0.4;
+                        ctx.fillStyle = warm > 0.75
+                            ? `rgba(140,235,255,${a})`
+                            : `rgba(255,214,130,${a})`;
+                        ctx.fillRect(wx, wy, 7, 9);
+                    }
+                }
+            }
+        }
+
+        // Neon billboards (glowing rectangles with color cycling)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const signColors = [[255, 70, 160], [80, 240, 220], [255, 170, 60], [150, 110, 255]];
+        for (let i = 0; i < 7; i++) {
+            const sxp = (((i * 530 - camX * 0.42) % (w + 600)) + (w + 600)) % (w + 600) - 300;
+            const seed = Math.floor(i * 13.7);
+            const syp = h * (0.32 + hash1(seed + 5) * 0.3);
+            const swp = 70 + hash1(seed + 21) * 70;
+            const shp = 26 + hash1(seed + 33) * 30;
+            const c = signColors[i % 4];
+            // Flicker: occasional dropouts
+            const flick = Math.sin(t * 9 + seed) > -0.85 ? 1 : 0.15;
+            const pulse = 0.7 + 0.3 * Math.sin(t * 3 + seed);
+            const g = ctx.createRadialGradient(sxp + swp / 2, syp + shp / 2, 4, sxp + swp / 2, syp + shp / 2, swp);
+            g.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${0.30 * flick})`);
+            g.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]},0)`);
+            ctx.fillStyle = g;
+            ctx.fillRect(sxp - swp / 2, syp - shp, swp * 2, shp * 2);
+            ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${(0.75 * pulse) * flick})`;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(sxp, syp, swp, shp);
+            // Sign bars (abstract glyph rows)
+            ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${0.5 * flick})`;
+            for (let gy = syp + 6; gy < syp + shp - 5; gy += 8) {
+                ctx.fillRect(sxp + 7, gy, swp - 14, 3);
+            }
+        }
+        ctx.restore();
+
+        // Street haze at the bottom
+        const haze = ctx.createLinearGradient(0, h * 0.86, 0, h);
+        haze.addColorStop(0, "rgba(90,40,110,0)");
+        haze.addColorStop(1, "rgba(120,50,130,0.28)");
+        ctx.fillStyle = haze;
+        ctx.fillRect(0, h * 0.86, w, h * 0.14);
+    }
+
 }

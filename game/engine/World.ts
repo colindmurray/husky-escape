@@ -1,5 +1,5 @@
 
-import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator } from "../entities/index";
+import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone } from "../entities/index";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -26,6 +26,7 @@ export class World {
     public enemies: Entity[] = [];
     public collectibles: Collectible[] = [];
     public waters: Water[] = [];
+    public props: Entity[] = [];
     public exit: Exit | null = null;
 
     private events: WorldEvents;
@@ -49,6 +50,7 @@ export class World {
         this.enemies = data.enemies;
         this.collectibles = data.collectibles;
         this.waters = data.waters;
+        this.props = data.props || [];
         this.exit = data.exit;
 
         // Reset timer - Level 3 is now long, so give it more time (400)
@@ -76,6 +78,7 @@ export class World {
             case 8: track = SoundType.THEME_UNDERWATER; break;
             case 9: track = SoundType.THEME_PIER; break;
             case 10: track = SoundType.THEME_CONSTRUCTION; break;
+            case 11: track = SoundType.THEME_NEON; break;
         }
         audioManager.playMusic(track);
     }
@@ -102,6 +105,7 @@ export class World {
                 p.update();
             }
         });
+        this.props.forEach(pr => pr.update(this.player));
         this.waters.forEach(w => w.update());
         this.player.update(this.platforms, inputManager.keys, this.height, this.currentLevel);
 
@@ -155,7 +159,9 @@ export class World {
                     }
                 }
 
-                if (enemy instanceof Jellyfish) {
+                if (enemy instanceof SecurityDrone) {
+                     this.triggerGameOver('droned', 'Busted by a security drone\'s patrol light');
+                } else if (enemy instanceof Jellyfish) {
                      if (this.player.ridingShark) {
                          this.player.ridingShark.markedForDeletion = true;
                          this.player.ridingShark = null;
@@ -238,6 +244,7 @@ export class World {
         }
 
         this.platforms = this.platforms.filter(p => !p.markedForDeletion);
+        this.props = this.props.filter(pr => !pr.markedForDeletion);
         this.enemies = this.enemies.filter(e => !e.markedForDeletion);
         this.collectibles = this.collectibles.filter(c => !c.markedForDeletion);
     }
@@ -245,7 +252,7 @@ export class World {
     private triggerLevelComplete() {
         audioManager.stopMusic();
         audioManager.playSFX(SoundType.WIN_SHORT);
-        if (this.currentLevel < 10) {
+        if (this.currentLevel < 11) {
             this.events.onLevelComplete(this.currentLevel, this.player?.bonesCollected || 0);
         } else {
             this.events.onGameWon(this.player?.bonesCollected || 0);

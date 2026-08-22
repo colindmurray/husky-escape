@@ -33,6 +33,10 @@ export enum SoundType {
     WOLF_HOWL = 'wolf_howl',
     WOLF_GROWL = 'wolf_growl',
     
+    // Zone 11 SFX
+    MEOW = 'meow',
+    DRONE_ALERT = 'drone_alert',
+    
     // MUSIC TRACKS
     THEME_MENU = 'theme_menu',
     THEME_POUND = 'theme_pound',
@@ -47,7 +51,8 @@ export enum SoundType {
     THEME_BOSS = 'theme_boss',
     THEME_BOSS_WOLF = 'theme_boss_wolf',
     THEME_CONSTRUCTION = 'theme_construction',
-    THEME_BOSS_EXCAVATOR = 'theme_boss_excavator'
+    THEME_BOSS_EXCAVATOR = 'theme_boss_excavator',
+    THEME_NEON = 'theme_neon'
 }
 
 export interface GameStats {

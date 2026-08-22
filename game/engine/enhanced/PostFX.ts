@@ -24,6 +24,7 @@ const GRADES: Record<number, Grade> = {
     8: { top: [90, 200, 255, 0.10], bottom: [10, 40, 90, 0.22], mode: 'multiply', alpha: 1 },
     9: { top: [15, 25, 60, 0.18], bottom: [5, 10, 25, 0.2], mode: 'multiply', alpha: 1 },
     10: { top: [40, 30, 90, 0.12], bottom: [255, 140, 60, 0.10], mode: 'screen', alpha: 1 },
+    11: { top: [60, 20, 110, 0.16], bottom: [180, 60, 220, 0.08], mode: 'screen', alpha: 1 },
 };
 
 export class PostFX {

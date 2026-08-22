@@ -247,6 +247,61 @@ export function drawPlatformEnhanced(
             ctx.fillRect(x, y, w, 3);
             break;
         }
+        case 11: {
+            // Neon Metropolis: dark rooftops with neon edge strips
+            const body = ctx.createLinearGradient(0, y, 0, y + h);
+            body.addColorStop(0, '#3c3448');
+            body.addColorStop(0.25, '#2a2436');
+            body.addColorStop(1, '#181422');
+            ctx.fillStyle = body;
+            ctx.fillRect(x, y, w, h);
+            // Tar & gravel roof flecks
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            for (let i = 0; i < w / 16; i++) {
+                const fx2 = hash2(seedBase + i, 81) * w;
+                const fy2 = y + 12 + hash2(seedBase + i, 83) * Math.max(4, h - 16);
+                ctx.beginPath(); ctx.arc(x + fx2, fy2, 1.4, 0, TAU); ctx.fill();
+            }
+            // Neon edge strip: color varies per platform (cyan/magenta/pink)
+            const huePick = hash2(seedBase, 87);
+            const nc = huePick > 0.66 ? '80,240,220' : (huePick > 0.33 ? '255,70,170' : '170,110,255');
+            const flicker = Math.sin(Date.now() / 130 + seedBase) > -0.92 ? 1 : 0.25;
+            ctx.fillStyle = `rgba(${nc},${0.85 * flicker})`;
+            ctx.fillRect(x, y, w, 4);
+            // Under-glow
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const ug = ctx.createLinearGradient(0, y + 4, 0, y + 26);
+            ug.addColorStop(0, `rgba(${nc},${0.28 * flicker})`);
+            ug.addColorStop(1, `rgba(${nc},0)`);
+            ctx.fillStyle = ug;
+            ctx.fillRect(x, y + 4, w, 22);
+            ctx.restore();
+            // Fire-escape railings on narrow platforms
+            if (w < 160) {
+                ctx.strokeStyle = 'rgba(150,140,165,0.7)';
+                ctx.lineWidth = 2;
+                for (let rx = x + 8; rx < x + w - 4; rx += Math.max(18, w / 4)) {
+                    ctx.beginPath();
+                    ctx.moveTo(rx, y - 14);
+                    ctx.lineTo(rx, y);
+                    ctx.stroke();
+                }
+                ctx.beginPath();
+                ctx.moveTo(x + 4, y - 13);
+                ctx.lineTo(x + w - 4, y - 13);
+                ctx.stroke();
+            } else {
+                // AC units on wide roofs
+                for (let ax = x + 30; ax < x + w - 40; ax += 120) {
+                    ctx.fillStyle = '#454055';
+                    ctx.fillRect(ax, y - 10, 26, 10);
+                    ctx.fillStyle = 'rgba(210,200,230,0.35)';
+                    ctx.fillRect(ax + 3, y - 13, 20, 3);
+                }
+            }
+            break;
+        }
         case 10: {
             // Construction site: steel scaffolding plating
             const body = ctx.createLinearGradient(0, y, 0, y + h);
@@ -2223,5 +2278,217 @@ export function drawControlPanelPolish(
     ctx.moveTo(x + 2, y + 4);
     ctx.lineTo(x + 2, y + 13);
     ctx.stroke();
+    ctx.restore();
+}
+
+// ===================== ZONE 11: NEON METROPOLIS ============================
+
+/** Industrial fan: dark housing, spinning blade cluster, cyan neon ring, rising air streaks. */
+export function drawFanNeon(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    t: number, power: number
+) {
+    ctx.save();
+
+    // Housing with gradient + bolts
+    const body = ctx.createLinearGradient(0, y, 0, y + h);
+    body.addColorStop(0, '#3a4356');
+    body.addColorStop(0.5, '#282f3d');
+    body.addColorStop(1, '#171c26');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 7);
+    ctx.fill();
+    ctx.strokeStyle = '#0e1219';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Neon ring around the intake (brightness follows power)
+    const ringCol = power > 0.4 ? '80,240,220' : '255,110,90';
+    const pulse = 0.55 + 0.45 * Math.sin(t * 6);
+    ctx.strokeStyle = `rgba(${ringCol},${0.5 * power + 0.15 * pulse})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(x + 5, y + 4, w - 10, h - 8, 5);
+    ctx.stroke();
+
+    // Blades
+    const spin = t * (power * 17 + 0.6);
+    const cx2 = x + w / 2;
+    const cy2 = y + h / 2;
+    ctx.save();
+    ctx.translate(cx2, cy2);
+    ctx.rotate(spin);
+    for (let i = 0; i < 3; i++) {
+        ctx.rotate((Math.PI * 2) / 3);
+        const bladeG = ctx.createLinearGradient(0, -16, 0, 2);
+        bladeG.addColorStop(0, '#9fb0bd');
+        bladeG.addColorStop(1, '#5a6875');
+        ctx.fillStyle = bladeG;
+        ctx.beginPath();
+        ctx.ellipse(0, -9.5, 4.6, 10, 0, 0, TAU);
+        ctx.fill();
+    }
+    ctx.restore();
+    // Hub
+    ctx.fillStyle = '#aebcc6';
+    ctx.beginPath();
+    ctx.arc(cx2, cy2, 4.4, 0, TAU);
+    ctx.fill();
+    // Grill
+    ctx.strokeStyle = 'rgba(14,18,25,0.85)';
+    ctx.lineWidth = 1.8;
+    for (let gx = x + 14; gx < x + w - 8; gx += 15) {
+        ctx.beginPath();
+        ctx.moveTo(gx, y + 4);
+        ctx.lineTo(gx, y + h - 4);
+        ctx.stroke();
+    }
+    // Status LED
+    if (power < 0.99) {
+        const on = power > 0.4;
+        ctx.fillStyle = on ? 'rgba(90,255,150,0.95)' : 'rgba(255,90,70,0.95)';
+        ctx.beginPath();
+        ctx.arc(x + w - 10, y + h / 2, 3, 0, TAU);
+        ctx.fill();
+    }
+
+    // Rising air streaks above the fan when blowing
+    if (power > 0.1) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 6; i++) {
+            const prog = ((t * (0.9 + (i % 3) * 0.22) * power) + (i * 0.167)) % 1;
+            const sxp = cx2 + Math.sin(i * 2.4 + t * 3) * (w * 0.32);
+            const syp = y - 12 - prog * 120;
+            const alpha = Math.sin(prog * Math.PI) * 0.3 * power;
+            ctx.fillStyle = `rgba(160,240,230,${alpha})`;
+            ctx.fillRect(sxp - 1.4, syp - 8, 2.8, 13);
+        }
+        ctx.restore();
+    }
+
+    ctx.restore();
+}
+
+/** Security drone: gunmetal body, rotor blur, red scan cone, alert state. */
+export function drawSecurityDroneNeon(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    t: number, alert: boolean, dir: number
+) {
+    ctx.save();
+
+    const midX = x + w / 2;
+
+    // Scan cone beneath (sweeps slightly; flares on alert)
+    const sweep = Math.sin(t * 1.6) * 14;
+    const coneAlpha = alert ? 0.3 + 0.14 * Math.sin(t * 22) : 0.14 + 0.05 * Math.sin(t * 2.2);
+    const col = alert ? '255,80,60' : '255,60,50';
+    const cone = ctx.createLinearGradient(midX, y + h, midX, y + h + 96);
+    cone.addColorStop(0, `rgba(${col},${coneAlpha})`);
+    cone.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo(midX - 7, y + h - 4);
+    ctx.lineTo(midX + 7, y + h - 4);
+    ctx.lineTo(midX + sweep + 34, y + h + 96);
+    ctx.lineTo(midX + sweep - 34, y + h + 96);
+    ctx.closePath();
+    ctx.fill();
+
+    // Rotor blur above
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#9fb0bd';
+    ctx.lineWidth = 2;
+    const blur = Math.abs(Math.sin(t * 40)) * 20 + 8;
+    ctx.beginPath();
+    ctx.moveTo(midX - blur, y - 5);
+    ctx.lineTo(midX + blur, y - 5);
+    ctx.stroke();
+    ctx.restore();
+    // Mast
+    ctx.fillStyle = '#39424f';
+    ctx.fillRect(midX - 2.4, y - 7, 4.8, 8);
+
+    // Body: gunmetal gradient with panel line + warning chevrons
+    const body = ctx.createLinearGradient(0, y, 0, y + h);
+    body.addColorStop(0, '#66727f');
+    body.addColorStop(0.5, '#48525f');
+    body.addColorStop(1, '#2b333d');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h - 8, [10, 10, 7, 7]);
+    ctx.fill();
+    ctx.strokeStyle = '#141a22';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // Panel seam
+    ctx.strokeStyle = 'rgba(20,26,34,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + 12);
+    ctx.lineTo(x + w - 8, y + 12);
+    ctx.stroke();
+    // Side hazard stripes
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 3, y + h - 16, 9, 6);
+    ctx.rect(x + w - 12, y + h - 16, 9, 6);
+    ctx.clip();
+    ctx.fillStyle = '#c9970c';
+    ctx.fillRect(x + 3, y + h - 16, w - 6, 6);
+    ctx.fillStyle = '#1b222c';
+    for (let hx = x; hx < x + w; hx += 6) {
+        ctx.beginPath();
+        ctx.moveTo(hx, y + h - 10);
+        ctx.lineTo(hx + 3, y + h - 16);
+        ctx.lineTo(hx + 6, y + h - 16);
+        ctx.lineTo(hx + 3, y + h - 10);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Sensor eye lens tracking travel direction
+    const ex = midX + dir * 6;
+    ctx.fillStyle = '#10161d';
+    ctx.beginPath();
+    ctx.arc(ex, y + 11, 6.6, 0, TAU);
+    ctx.fill();
+    const eyePulse = 0.6 + 0.4 * Math.sin(t * (alert ? 18 : 3));
+    ctx.fillStyle = `rgba(${col},${eyePulse})`;
+    ctx.beginPath();
+    ctx.arc(ex + dir * 1.2, y + 11, 3, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath();
+    ctx.arc(ex - 1.4, y + 9.4, 1, 0, TAU);
+    ctx.fill();
+
+    // Belly light bar
+    ctx.fillStyle = `rgba(${col},${alert ? 0.95 : 0.55 + 0.35 * Math.sin(t * 4)})`;
+    ctx.fillRect(x + 8, y + h - 13, w - 16, 2.6);
+
+    // Antenna tip light
+    ctx.fillStyle = alert ? `rgba(${col},0.95)` : 'rgba(140,220,255,0.8)';
+    ctx.beginPath();
+    ctx.arc(midX, y - 9.4, 2.2, 0, TAU);
+    ctx.fill();
+    if (alert) {
+        ctx.strokeStyle = `rgba(${col},0.5)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(midX, y - 9.4, 5 + Math.sin(t * 14) * 2.4, 0, TAU);
+        ctx.stroke();
+    }
+
+    // Alert "!" marker
+    if (alert) {
+        ctx.fillStyle = '#ff5040';
+        ctx.font = 'bold 15px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', midX, y - 16 + Math.sin(t * 10) * 2);
+    }
+
     ctx.restore();
 }

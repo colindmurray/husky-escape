@@ -182,7 +182,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
-        if (isWin) return { title: "VICTORY!", desc: "You've successfully crossed the busy construction site, disabled the excavator, and made it home to your warm bed and family!" };
+        if (isWin) return { title: "VICTORY!", desc: "You've crossed the construction site, slipped through the Neon Metropolis, and made it home to your warm bed and family!" };
         if (isLevelComplete) {
             const congrats = [
                 "The pound breakout has begun!",
@@ -194,7 +194,8 @@ export default function App() {
                 "The pound can't catch a dog this fast!",
                 "You're a natural diver! Surfacing now...",
                 "The end is in sight!",
-                "You cleared the ultimate scaffolding obstacle!"
+                "You cleared the ultimate scaffolding obstacle!",
+                "Through the neon night — home is just ahead!"
             ];
             return { title: `ZONE ${level} CLEAR!`, desc: congrats[level-1] || "Great job!" };
         }
@@ -226,6 +227,7 @@ export default function App() {
         if (reason === 'stung') return { title: "ZAPPED!", desc: "The jellyfish sting paralyzed you! Watch for the purple glows." };
         if (reason === 'seagulled') return { title: "BIRD ATTACK!", desc: "The seagulls are dive-bombing to protect their pier!" };
         if (reason === 'snowballed') return { title: "SNOWED UNDER!", desc: "That giant snowball turned you into a husky-popsicle!" };
+        if (reason === 'droned') return { title: "SPOTTED!", desc: "A security drone's patrol light caught you! Stay out of the red scan." };
 
         return { title: "GAME OVER", desc: "The trail went cold. Try again, Onyx!" };
     };
@@ -237,7 +239,7 @@ export default function App() {
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
             <div className="flex gap-2 justify-center flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10].map(lvl => (
+                {[1,2,3,4,5,6,7,8,9,10,11].map(lvl => (
                     <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="w-8 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl}</button>
                 ))}
             </div>

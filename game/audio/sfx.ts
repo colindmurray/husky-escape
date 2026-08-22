@@ -192,6 +192,36 @@ export function playSoundEffect(type: SoundType, ctx: AudioContext, masterGain: 
             osc.stop(t + 2.6);
             break;
 
+        case SoundType.MEOW:
+            // Two-note "me-ow" chirp
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(700, t);
+            osc.frequency.linearRampToValueAtTime(500, t + 0.12);
+            osc.frequency.setValueAtTime(620, t + 0.14);
+            osc.frequency.linearRampToValueAtTime(380, t + 0.34);
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.12, t + 0.03);
+            gain.gain.setValueAtTime(0.12, t + 0.22);
+            gain.gain.linearRampToValueAtTime(0, t + 0.36);
+            osc.start(t);
+            osc.stop(t + 0.38);
+            break;
+
+        case SoundType.DRONE_ALERT:
+            // Sharp double beep
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, t);
+            osc.frequency.setValueAtTime(0, t + 0.09);
+            osc.frequency.setValueAtTime(990, t + 0.14);
+            osc.frequency.setValueAtTime(0, t + 0.24);
+            gain.gain.setValueAtTime(0.09, t);
+            gain.gain.setValueAtTime(0, t + 0.09);
+            gain.gain.setValueAtTime(0.09, t + 0.14);
+            gain.gain.setValueAtTime(0, t + 0.26);
+            osc.start(t);
+            osc.stop(t + 0.28);
+            break;
+
         case SoundType.WOLF_GROWL:
             osc.type = 'sawtooth'; // Rough sound
             osc.frequency.setValueAtTime(80, t);

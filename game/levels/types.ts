@@ -7,4 +7,6 @@ export interface LevelData {
     waters: Water[];
     exit: Exit;
     playerStart: { x: number, y: number };
+    /** Optional decorative props (roof cats etc.): updated + drawn, never solid or lethal. */
+    props?: Entity[];
 }

@@ -6,6 +6,8 @@ import { Umbrella } from "./Umbrella";
 import { SkiJump } from "./SkiJump";
 import { Shark } from "./Shark";
 import { UmbrellaPickup } from "./UmbrellaPickup";
+import { Fan } from "./Fan";
+import { BoostPad } from "./NeonProps";
 import { audioManager } from "../Audio";
 import { gfxSettings } from "../GfxSettings";
 import { drawHuskyEnhanced } from "../engine/enhanced/EnhancedSprites";
@@ -218,6 +220,12 @@ export class Player extends Entity {
         this.standingOnShakingPlatform = false;
 
         platforms.forEach(platform => {
+            // Zone 11: industrial fans lift Onyx through their air column
+            if (platform instanceof Fan) {
+                platform.applyLift(this);
+                return;
+            }
+
             if (platform instanceof UmbrellaPickup) {
                 if (this.colCheck(platform)) {
                     this.hasUmbrella = true;
@@ -228,6 +236,17 @@ export class Player extends Entity {
             }
 
             const dir = this.colCheck(platform);
+
+            // Zone 11: neon dash pads fling Onyx across wide streets
+            if (platform instanceof BoostPad && dir === 'b') {
+                const pad = platform as BoostPad;
+                this.velX = pad.padDir * 12;
+                this.velY = -6;
+                this.grounded = false;
+                this.jumpsLeft = 2;
+                audioManager.playSFX(SoundType.BOOST);
+                return;
+            }
 
             if (platform instanceof SkiJump && dir) {
                 this.velY = -14; 

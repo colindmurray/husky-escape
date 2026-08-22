@@ -292,6 +292,55 @@ export function playSoundEffectEnhanced(type: SoundType, ctx: AudioContext, mast
             return true;
         }
 
+        case SoundType.MEOW: {
+            // Soft breathy two-syllable meow: formant-ish pair of sines
+            const notes = [[740, 520], [660, 400]];
+            let start = t;
+            notes.forEach(([f1, f2], i) => {
+                const dur = i === 0 ? 0.14 : 0.24;
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                const vib = ctx.createOscillator();
+                const vibG = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f1, start);
+                osc.frequency.exponentialRampToValueAtTime(f2, start + dur);
+                vib.frequency.value = 17;
+                vibG.gain.value = 9;
+                vib.connect(vibG).connect(osc.frequency);
+                g.gain.setValueAtTime(0.0001, start);
+                g.gain.linearRampToValueAtTime(i === 0 ? 0.07 : 0.05, start + 0.03);
+                g.gain.linearRampToValueAtTime(0.0001, start + dur);
+                osc.connect(g).connect(masterGain);
+                vib.start(start); vib.stop(start + dur);
+                osc.start(start); osc.stop(start + dur + 0.02);
+                start += dur - 0.02;
+            });
+            return true;
+        }
+
+        case SoundType.DRONE_ALERT: {
+            // Metallic double klaxon with ring modulation edge
+            for (let i = 0; i < 2; i++) {
+                const start = t + i * 0.16;
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                const ring = ctx.createOscillator();
+                const ringG = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = i === 0 ? 900 : 1010;
+                ring.frequency.value = 46;
+                ringG.gain.value = 0.04;
+                ring.connect(ringG).connect(g.gain);
+                g.gain.setValueAtTime(0.07, start);
+                g.gain.exponentialRampToValueAtTime(0.001, start + 0.13);
+                osc.connect(g).connect(masterGain);
+                ring.start(start); ring.stop(start + 0.14);
+                osc.start(start); osc.stop(start + 0.15);
+            }
+            return true;
+        }
+
         default:
             // Not enhanced yet — caller should fall back to the classic effect.
             return false;

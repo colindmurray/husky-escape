@@ -32,3 +32,6 @@ export * from './JackhammerOperator';
 export * from './FallingDebris';
 export * from './LunchboxThrower';
 
+export * from './Fan';
+export * from './SecurityDrone';
+export * from './NeonProps';

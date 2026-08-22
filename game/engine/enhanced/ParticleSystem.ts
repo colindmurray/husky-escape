@@ -131,6 +131,7 @@ export class ParticleSystem {
             case 8: this.emitAmbient(w, h, camX, 0.55, (x, y) => this.bubble(x, y)); break;
             case 9: this.emitAmbient(w, h, camX, 1.6, (x, y) => this.rainDrop(x, y)); break;
             case 10: this.emitAmbient(w, h, camX, 0.4, (x, y) => this.ember(x, y)); break;
+            case 11: this.emitAmbient(w, h, camX, 0.5, (x, y) => this.neonMote(x, y)); break;
         }
 
         // ---- Update & draw ----
@@ -227,6 +228,7 @@ export class ParticleSystem {
             case 3: return '#4a3b2c';
             case 8: return 'rgba(180,220,255,0.8)';
             case 10: return '#6b5646';
+            case 11: return '#9a86b8';
             default: return '#9aa4ad';
         }
     }
@@ -299,6 +301,17 @@ export class ParticleSystem {
             size: 1,
             color: '',
             gravity: 0.12, drag: 1, kind: 'rain',
+        };
+    }
+
+private neonMote(x: number, y: number): Particle {
+        const pink = Math.random() > 0.5;
+        return {
+            x, y: y * 0.9, vx: (Math.random() - 0.5) * 0.4, vy: -(0.15 + Math.random() * 0.35),
+            life: 0, maxLife: 130 + Math.random() * 100,
+            size: 1 + Math.random() * 1.6,
+            color: pink ? 'rgba(255,110,190,0.75)' : 'rgba(110,240,225,0.75)',
+            gravity: -0.001, drag: 0.995, kind: 'glow',
         };
     }
 

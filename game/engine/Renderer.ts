@@ -36,6 +36,7 @@ export class Renderer {
         }
 
         this.ctx.save();
+        (world as any).props?.forEach?.((pr: any) => pr.draw?.(this.ctx, cameraX));
         world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
         world.waters.forEach(w => w.draw(this.ctx, cameraX));
         if (world.exit) world.exit.draw(this.ctx, cameraX);
@@ -415,6 +416,27 @@ export class Renderer {
                  ctx.restore();
             }
             
+            ctx.restore();
+        } else if (currentLevel === 11) {
+            // Neon Metropolis (classic look)
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            skyGrad.addColorStop(0, "#14102A");
+            skyGrad.addColorStop(1, "#241A38");
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.save();
+            ctx.fillStyle = "#191430";
+            for(let i=0; i < width + cameraX; i += 90) {
+                 let renderX = i - (cameraX * 0.25);
+                 let xPos = (renderX % (width + 180)) - 90;
+                 let bHeight = 120 + Math.random() * 220;
+                 ctx.fillRect(xPos, height - bHeight, 64, bHeight);
+                 ctx.fillStyle = "rgba(255, 220, 100, 0.5)";
+                 for(let wy = height - bHeight + 12; wy < height - 16; wy += 26) {
+                     if (Math.random() > 0.6) ctx.fillRect(xPos + 10, wy, 8, 10);
+                 }
+                 ctx.fillStyle = "#191430";
+            }
             ctx.restore();
         }
     }
