@@ -8,59 +8,130 @@ import { drawSecurityDroneNeon } from "../engine/enhanced/EnhancedSprites";
 
 /**
  * Zone 11 security drone. Hovers on a horizontal patrol with a bobbing sine,
- * sweeping a red scan cone beneath it. If Onyx strays into its detection zone
- * the drone chirps an alarm and bursts toward him for a short pursuit before
- * giving up and returning to patrol speed.
+ * sweeping a red scan cone beneath it.
+ *
+ * AI is a three-state leash loop:
+ *   PATROL — sweeps its beat until Onyx enters the detection cone.
+ *   CHASE  — aggressive 2-axis pursuit (faster than patrol, but always a bit
+ *            slower than Onyx's top speed, so a full sprint escapes it). It
+ *            gives up as soon as Onyx leaves the leash radius around the
+ *            drone's SPAWN point.
+ *   RETURN — flies back home to its spawn, ignoring everything unless Onyx
+ *            practically bumps into it, then resumes patrolling.
  */
 export class SecurityDrone extends Enemy {
     public origY: number;
     public alertTimer = 0;
     private alertCooldown = 0;
-    private baseSpeed: number;
+
+    private state: 'patrol' | 'chase' | 'return' = 'patrol';
+    /** Pursuit speed. Player tops out at 3.5 px/frame — this stays below it. */
+    private readonly chaseSpeed: number;
+    /** Chase gives up when Onyx gets this far from the drone's spawn point. */
+    private readonly leashRange = 520;
+    /** While flying home, only re-detects Onyx this close. */
+    private readonly returnDetectRange = 110;
 
     constructor(x: number, y: number, patrolDist: number, aggression: number = 1) {
         super(x, y, patrolDist, 1.5);
         this.w = 46;
         this.h = 26;
         this.origY = y;
-        // Gentler pursuit on lower difficulties
-        this.baseSpeed = this.speed * aggression;
+        // Chase speed scales with difficulty as a fraction of Onyx's top
+        // running speed (3.5 px/frame): EASY ~30% (slow, easy shake), HARD
+        // ~70% (pressuring but still outrunnable).
+        const PLAYER_MAX_SPEED = 3.5;
+        const norm = Math.max(0, Math.min(1, (aggression - 0.55) / 0.45));
+        this.chaseSpeed = PLAYER_MAX_SPEED * (0.30 + 0.40 * norm);
         this.detectRange = 250 * aggression;
     }
 
     public detectRange = 250;
 
     update(platforms?: Entity[], player?: Entity) {
-        // Patrol
-        this.x += this.speed * this.dir;
-        if (Math.abs(this.x - this.origX) > this.patrolDist) {
-            this.dir *= -1;
-        }
-        // Hover bob
-        this.y = this.origY + Math.sin(Date.now() / 620 + this.origX * 0.01) * 13;
-        this.walkAnim += this.alertTimer > 0 ? 0.3 : 0.12;
-
-        // Detection + pursuit burst
         if (this.alertCooldown > 0) this.alertCooldown--;
-        if (this.alertTimer > 0) {
-            this.alertTimer--;
-            if (player) {
-                this.x += Math.sign(player.x - this.x) * this.baseSpeed * 0.85;
-                if (Math.abs(player.x - this.x) > 520) this.alertTimer = 0;
+
+        if (this.state === 'patrol') {
+            // Sweep the beat
+            this.x += this.speed * this.dir;
+            if (Math.abs(this.x - this.origX) > this.patrolDist) {
+                this.dir *= -1;
             }
-        } else if (player && this.alertCooldown <= 0 && !player.markedForDeletion) {
-            const dx = player.x - this.x;
-            const dy = player.y - this.y;
-            if (Math.abs(dx) < this.detectRange && dy > -40 && dy < 150) {
-                this.alertTimer = 100;
-                this.dir = Math.sign(dx) || this.dir;
-                this.alertCooldown = 260;
+            // Hover bob
+            this.y = this.origY + Math.sin(Date.now() / 620 + this.origX * 0.01) * 13;
+            if (this.alertTimer > 0) this.alertTimer--;
+            this.walkAnim += 0.12;
+
+            // Detection cone
+            if (player && this.alertCooldown <= 0 && !player.markedForDeletion) {
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                if (Math.abs(dx) < this.detectRange && dy > -40 && dy < 150) {
+                    this.state = 'chase';
+                    this.alertTimer = 100000; // stays hot while chasing
+                    this.dir = Math.sign(dx) || this.dir;
+                    audioManager.playSFX(SoundType.DRONE_ALERT);
+                }
+            }
+            return;
+        }
+
+        if (this.state === 'chase') {
+            this.walkAnim += 0.3;
+            if (!player || player.markedForDeletion) {
+                this.giveUp();
+                return;
+            }
+            const px = player.x + player.w / 2;
+            const py = player.y + player.h / 2;
+            const dx = px - (this.x + this.w / 2);
+            const dy = py - (this.y + this.h / 2);
+
+            // Leash: too far from spawn -> shake him off and go home
+            if (Math.hypot(player.x - this.origX, player.y - this.origY) > this.leashRange) {
+                this.giveUp();
+                return;
+            }
+
+            const d = Math.hypot(dx, dy);
+            if (d > 4) {
+                const sp = Math.min(this.chaseSpeed, d);
+                this.x += (dx / d) * sp;
+                this.y += (dy / d) * sp;
+            }
+            this.dir = Math.sign(dx) || this.dir;
+            return;
+        }
+
+        // RETURN: fly home; only notices Onyx right under its nose
+        this.walkAnim += 0.18;
+        const dx = this.origX - this.x;
+        const dy = this.origY - this.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 6) {
+            this.x = this.origX;
+            this.y = this.origY;
+            this.state = 'patrol';
+            this.alertTimer = 0;
+            this.alertCooldown = 180; // brief scan-recalibration before spotting again
+        } else {
+            const sp = Math.min(2.2, d);
+            this.x += (dx / d) * sp;
+            this.y += (dy / d) * sp;
+            this.dir = Math.sign(dx) || this.dir;
+            if (this.alertTimer > 0) this.alertTimer--;
+            if (player && !player.markedForDeletion && this.alertCooldown <= 0 &&
+                Math.hypot(player.x - this.x, player.y - this.y) < this.returnDetectRange) {
+                this.state = 'chase';
                 audioManager.playSFX(SoundType.DRONE_ALERT);
             }
         }
+    }
 
-        // Face travel direction
-        if (this.speed !== 0) this.dir = this.dir;
+    private giveUp() {
+        this.state = 'return';
+        this.alertCooldown = 140;
+        if (this.alertTimer > 60) this.alertTimer = 40; // blink down, don't flash forever
     }
 
     draw(ctx: CanvasRenderingContext2D, camX: number) {
