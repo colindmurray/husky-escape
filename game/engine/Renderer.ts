@@ -25,17 +25,20 @@ export class Renderer {
     }
 
     public drawGame(world: World) {
-        const { width, height, cameraX, currentLevel } = world;
+        const { width, height, cameraX, cameraY, currentLevel } = world;
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
         if (enhanced) {
-            this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel);
+            this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel, cameraY);
         } else {
             this.drawBackground(world);
         }
 
         this.ctx.save();
+        // Vertical scrolling (Zone 11): shift the whole world layer up/down.
+        // Entities draw in world coords, so a single translate covers them all.
+        if (cameraY) this.ctx.translate(0, -cameraY);
         (world as any).props?.forEach?.((pr: any) => pr.draw?.(this.ctx, cameraX));
         world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
         world.waters.forEach(w => w.draw(this.ctx, cameraX));
@@ -418,13 +421,15 @@ export class Renderer {
             
             ctx.restore();
         } else if (currentLevel === 11) {
-            // Neon Metropolis (classic look)
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            // Neon Metropolis (classic look) — with vertical parallax
+            const shift = Math.max(0, -world.cameraY) * 0.25;
+            ctx.save();
+            ctx.translate(0, shift);
+            const skyGrad = ctx.createLinearGradient(0, -shift, 0, height);
             skyGrad.addColorStop(0, "#14102A");
             skyGrad.addColorStop(1, "#241A38");
             ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, width, height);
-            ctx.save();
+            ctx.fillRect(0, -shift, width, height);
             ctx.fillStyle = "#191430";
             for(let i=0; i < width + cameraX; i += 90) {
                  let renderX = i - (cameraX * 0.25);

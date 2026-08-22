@@ -18,6 +18,14 @@ export class World {
     public height: number;
     public currentLevel: number = 1;
     public cameraX: number = 0;
+    /**
+     * Vertical camera: world-y currently at the viewport's TOP edge.
+     * 0 = ground view (default for levels without vertical scrolling);
+     * negative = scrolled up. Clamped to [height - worldHeight, 0].
+     */
+    public cameraY: number = 0;
+    /** Total vertical span of the current level's world (defaults to viewport height). */
+    private worldHeight: number = 0;
     public timeLeft: number = 300;
     private frameCounter: number = 0;
 
@@ -40,6 +48,8 @@ export class World {
     public resize(w: number, h: number) {
         this.width = w;
         this.height = h;
+        // Keep the vertical camera inside the (possibly resized) world bounds
+        this.clampCameraY();
     }
 
     public loadLevel(level: number, persistBones: boolean = true, difficulty: Difficulty = Difficulty.EASY) {
@@ -52,6 +62,7 @@ export class World {
         this.waters = data.waters;
         this.props = data.props || [];
         this.exit = data.exit;
+        this.worldHeight = data.worldHeight ?? this.height;
 
         // Reset timer - Level 3 is now long, so give it more time (400)
         // Level 5 extended also needs more time
@@ -65,6 +76,7 @@ export class World {
         this.events.onScoreUpdate(currentBones);
 
         this.cameraX = 0;
+        this.cameraY = 0;
 
         // Music Logic
         let track = SoundType.THEME_POUND;
@@ -117,6 +129,7 @@ export class World {
         const targetCamX = this.player.x - this.width / 3;
         this.cameraX += (targetCamX - this.cameraX) * 0.1;
         if(this.cameraX < 0) this.cameraX = 0;
+        this.updateCameraY();
 
         // Enemy Collisions
         this.enemies.forEach(enemy => {
@@ -247,6 +260,30 @@ export class World {
         this.props = this.props.filter(pr => !pr.markedForDeletion);
         this.enemies = this.enemies.filter(e => !e.markedForDeletion);
         this.collectibles = this.collectibles.filter(c => !c.markedForDeletion);
+    }
+
+    /**
+     * Vertical scrolling (Zone 11): soft center-follow. Onyx is kept inside a
+     * deadzone band around the middle of the screen; the camera eases toward
+     * true centering gently while he's inside the band and more firmly when he
+     * leaves it, so the motion is smooth both climbing up and dropping back
+     * down, but never rigidly locked.
+     */
+    private updateCameraY() {
+        if (this.worldHeight <= this.height) return; // no vertical scroll for flat levels
+        const desiredCamTop = (this.player.y + this.player.h / 2) - this.height / 2;
+        const screenY = this.player.y - this.cameraY;
+        const inDeadzone = screenY > this.height * 0.32 && screenY < this.height * 0.62;
+        const ease = inDeadzone ? 0.02 : 0.09;
+        this.cameraY += (desiredCamTop - this.cameraY) * ease;
+        this.clampCameraY();
+    }
+
+    private clampCameraY() {
+        if (this.worldHeight <= this.height) { this.cameraY = 0; return; }
+        const minTop = this.height - this.worldHeight;
+        if (this.cameraY < minTop) this.cameraY = minTop;
+        if (this.cameraY > 0) this.cameraY = 0;
     }
 
     private triggerLevelComplete() {

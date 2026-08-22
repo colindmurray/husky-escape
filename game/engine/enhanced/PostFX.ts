@@ -92,6 +92,8 @@ export class PostFX {
         const t = performance.now() / 1000;
 
         ctx.save();
+        // Vertical scrolling (Zone 11): glows live in world space
+        if (world.cameraY) ctx.translate(0, -world.cameraY);
         ctx.globalCompositeOperation = 'screen';
 
         // Bones: warm pulsing halo

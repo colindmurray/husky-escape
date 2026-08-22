@@ -35,7 +35,7 @@ export class ParticleSystem {
     private lastLevel = -1;
 
     public updateAndDraw(ctx: CanvasRenderingContext2D, world: World) {
-        const { width: w, height: h, cameraX: camX, currentLevel: level } = world;
+        const { width: w, height: h, cameraX: camX, cameraY: camY, currentLevel: level } = world;
         const p = world.player;
 
         if (level !== this.lastLevel) {
@@ -53,7 +53,7 @@ export class ParticleSystem {
                     const dir = i % 2 === 0 ? 1 : -1;
                     this.particles.push({
                         x: p.x - camX + p.w / 2 + dir * (4 + Math.random() * 12),
-                        y: p.y + p.h - 2,
+                        y: p.y - camY + p.h - 2,
                         vx: dir * (0.6 + Math.random() * 1.8),
                         vy: -(0.3 + Math.random() * 0.9),
                         life: 0, maxLife: 26 + Math.random() * 16,
@@ -70,7 +70,7 @@ export class ParticleSystem {
                     const dir = i % 2 === 0 ? 1 : -1;
                     this.particles.push({
                         x: p.x - camX + p.w / 2 + dir * 6,
-                        y: p.y + p.h - 4,
+                        y: p.y - camY + p.h - 4,
                         vx: dir * (0.4 + Math.random()),
                         vy: 0.2 + Math.random() * 0.5,
                         life: 0, maxLife: 20,
@@ -88,7 +88,7 @@ export class ParticleSystem {
                     const spd = 1.2 + Math.random() * 1.6;
                     this.particles.push({
                         x: p.x - camX + p.w / 2,
-                        y: p.y + p.h / 2,
+                        y: p.y - camY + p.h / 2,
                         vx: Math.cos(ang) * spd,
                         vy: Math.sin(ang) * spd - 0.5,
                         life: 0, maxLife: 30 + Math.random() * 18,

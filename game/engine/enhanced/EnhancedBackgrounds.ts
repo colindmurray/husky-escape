@@ -26,7 +26,7 @@ import { hash1, hash2, rand2 } from "./Rng";
 
 export class EnhancedBackgrounds {
 
-    public draw(ctx: CanvasRenderingContext2D, width: number, height: number, cameraX: number, level: number) {
+    public draw(ctx: CanvasRenderingContext2D, width: number, height: number, cameraX: number, level: number, cameraY: number = 0) {
         const t = performance.now() / 1000;
         switch (level) {
             case 1:
@@ -39,7 +39,7 @@ export class EnhancedBackgrounds {
             case 8: this.drawUnderwater(ctx, width, height, cameraX, t); break;
             case 9: this.drawPier(ctx, width, height, cameraX, t); break;
             case 10: this.drawConstruction(ctx, width, height, cameraX, t); break;
-            case 11: this.drawNeonMetropolis(ctx, width, height, cameraX, t); break;
+            case 11: this.drawNeonMetropolis(ctx, width, height, cameraX, t, cameraY); break;
         }
     }
 
@@ -875,14 +875,18 @@ export class EnhancedBackgrounds {
     // ------------------------------------------------------------------ //
     // LEVEL 11: NEON METROPOLIS — purple night, glowing towers, signs
     // ------------------------------------------------------------------ //
-    private drawNeonMetropolis(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, t: number) {
-        const sky = ctx.createLinearGradient(0, 0, 0, h);
+    private drawNeonMetropolis(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, t: number, camY: number = 0) {
+        // Vertical parallax: as Onyx climbs, the skyline sinks away beneath him
+        const shift = Math.max(0, -camY) * 0.22;
+        ctx.save();
+        ctx.translate(0, shift);
+        const sky = ctx.createLinearGradient(0, -shift, 0, h);
         sky.addColorStop(0, "#0d0918");
         sky.addColorStop(0.45, "#1c1233");
         sky.addColorStop(0.78, "#2e1b44");
         sky.addColorStop(1, "#3a2050");
         ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(0, -shift, w, h);
 
         // Stars
         for (let i = 0; i < 70; i++) {
@@ -979,6 +983,7 @@ export class EnhancedBackgrounds {
         haze.addColorStop(1, "rgba(120,50,130,0.28)");
         ctx.fillStyle = haze;
         ctx.fillRect(0, h * 0.86, w, h * 0.14);
+        ctx.restore();
     }
 
 }
