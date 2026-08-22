@@ -13,6 +13,10 @@ Switching is seamless — even mid-level or mid-jump — because Enhanced layers
 
 Controls: Arrows **or** WASD to move; Space/W to jump; double jump for height.
 
+### Zones
+
+1–2 The Pound · 3 Dark Forest · 4 Beach · 5 Mountain · 6 Ski Slope · 7 The Chase · 8 Underwater Reef · 9 Stormy Pier · 10 Construction Site · **11 Neon Metropolis** — city night with industrial fan lifts (steady + pulsing), security drones with scan-and-chase AI, neon dash pads, roof cats, and a synthwave theme.
+
 
 ## Local development
 

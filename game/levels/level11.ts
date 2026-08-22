@@ -12,6 +12,8 @@ import { Difficulty } from "../../types";
  * streets. A few roof cats keep watch.
  */
 export function getLevel11(height: number, difficulty: Difficulty): LevelData {
+    // Drone pursuit gentleness scales with difficulty (EASY ~55%)
+    const aggro = difficulty === Difficulty.EASY ? 0.55 : 1;
     const platforms: any[] = [
         // Left boundary
         new Platform(-50, 0, 50, height),
@@ -22,13 +24,13 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         // Fan shaft #1 (steady): open alley column, lifts to the mid-tower
         new Platform(1020, height - 60, 250, 40),       // alley floor (safety net)
         new Fan(1120, height - 90, 'steady', 420),
-        new Platform(1052, height - 530, 26, 450),      // left guide wall
+        new Platform(1052, height - 520, 26, 320),      // left guide wall (doorway at street level)
         new Platform(1250, height - 430, 280, 55),      // landing tower (right of column)
 
         // Fire escape climb with a drone overhead
-        new Platform(1480, height - 500, 110, 20),
-        new Platform(1660, height - 570, 110, 20),
-        new SecurityDrone(1560, height - 660, 180),
+        new Platform(1470, height - 490, 150, 20),
+        new Platform(1690, height - 550, 150, 20),
+        new SecurityDrone(1560, height - 750, 120, aggro),
 
         // Mid-tower long roof + dash pad across the boulevard
         new Platform(1840, height - 500, 520, 60),
@@ -43,9 +45,9 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         new Platform(3440, height - 580, 160, 55),      // high tower RIGHT of column
         new Platform(3232, height - 700, 130, 20),      // sky perch above the column
 
-        new SecurityDrone(3320, height - 800, 160),
-        new Platform(3660, height - 640, 120, 20),      // fire escape hop
-        new Platform(3860, height - 700, 120, 20),
+        new SecurityDrone(3320, height - 800, 160, aggro),
+        new Platform(3650, height - 630, 160, 20),      // fire escape hop
+        new Platform(3870, height - 690, 160, 20),
 
         // --- Act 3: high run + big dash ---
         new Platform(4040, height - 640, 560, 60),
@@ -61,8 +63,8 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         new Platform(5740, height - 560, 200, 50),      // upper deck RIGHT
 
         // --- Final ascent to home suburb sign ---
-        new Platform(5980, height - 620, 140, 20),
-        new Platform(6180, height - 680, 140, 20),
+        new Platform(5970, height - 615, 170, 20),
+        new Platform(6180, height - 675, 170, 20),
         new Platform(6380, height - 730, 520, 60),      // summit roof
 
         // Right boundary wall
@@ -74,15 +76,15 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         platforms.push(new Platform(1240, height - 240, 160, 20)); // extra perch in shaft 1
     }
     const enemies: any[] = [
-        new SecurityDrone(760, height - 320, 160),
-        new SecurityDrone(1900, height - 620, 220),
-        new SecurityDrone(2960, height - 420, 150),
-        new SecurityDrone(4180, height - 760, 200),
-        new SecurityDrone(5250, height - 400, 170),
+        new SecurityDrone(850, height - 380, 120, aggro),
+        new SecurityDrone(1900, height - 620, 220, aggro),
+        new SecurityDrone(2960, height - 420, 150, aggro),
+        new SecurityDrone(4180, height - 760, 200, aggro),
+        new SecurityDrone(5250, height - 400, 170, aggro),
     ];
     if (difficulty !== Difficulty.EASY) {
-        enemies.push(new SecurityDrone(1120, height - 260, 120));
-        enemies.push(new SecurityDrone(5700, height - 660, 130));
+        enemies.push(new SecurityDrone(1120, height - 260, 120, 1));
+        enemies.push(new SecurityDrone(5700, height - 660, 130, 1));
     }
 
     const collectibles = [

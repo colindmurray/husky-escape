@@ -18,13 +18,17 @@ export class SecurityDrone extends Enemy {
     private alertCooldown = 0;
     private baseSpeed: number;
 
-    constructor(x: number, y: number, patrolDist: number) {
+    constructor(x: number, y: number, patrolDist: number, aggression: number = 1) {
         super(x, y, patrolDist, 1.5);
         this.w = 46;
         this.h = 26;
         this.origY = y;
-        this.baseSpeed = this.speed;
+        // Gentler pursuit on lower difficulties
+        this.baseSpeed = this.speed * aggression;
+        this.detectRange = 250 * aggression;
     }
+
+    public detectRange = 250;
 
     update(platforms?: Entity[], player?: Entity) {
         // Patrol
@@ -47,7 +51,7 @@ export class SecurityDrone extends Enemy {
         } else if (player && this.alertCooldown <= 0 && !player.markedForDeletion) {
             const dx = player.x - this.x;
             const dy = player.y - this.y;
-            if (Math.abs(dx) < 250 && dy > -40 && dy < 150) {
+            if (Math.abs(dx) < this.detectRange && dy > -40 && dy < 150) {
                 this.alertTimer = 100;
                 this.dir = Math.sign(dx) || this.dir;
                 this.alertCooldown = 260;
