@@ -515,6 +515,7 @@ export function drawEnhancedCutscene(
         case 'chase': this_chase(ctx, step, w, h, cx, ground, t); break;
         case 'underwater_intro': this_underwater(ctx, step, w, h, cx, ground, t); break;
         case 'pier_intro': this_pier(ctx, step, w, h, cx, ground, t); break;
+        case 'neon_intro': this_neon(ctx, step, w, h, cx, ground, t); break;
         default:
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(0, 0, w, h);
@@ -1242,5 +1243,121 @@ function this_pier(ctx: CanvasRenderingContext2D, step: number, w: number, h: nu
         }
         rain(ctx, w, h, t, 100);
         drawCineHusky(ctx, cx, ground - 36, 2.2, 'run', 'determined', t);
+    }
+}
+
+// ---- NEON INTRO: harbor → the city night ----
+function this_neon(ctx: CanvasRenderingContext2D, step: number, w: number, h: number, cx: number, ground: number, t: number) {
+    if (step === 1) {
+        // Harbor: dark water reflecting city lights across the bay
+        sky(ctx, w, h, [[0, '#0c0918'], [0.55, '#241a38'], [1, '#33204a']]);
+        stars(ctx, w, h, t, 50);
+        moon(ctx, w * 0.8, h * 0.16, 30);
+        citySkyline(ctx, w * 0.62, h * 0.52, t);
+        ctx.fillStyle = '#101c2e';
+        ctx.fillRect(0, h * 0.52, w, h * 0.48);
+        for (let i = 0; i < 22; i++) {
+            const rxp = w * 0.05 + i * 26 + Math.sin(t * 2 + i) * 7;
+            const ryp = h * 0.55 + (i % 6) * 34;
+            ctx.fillStyle = `rgba(255,214,130,${0.18 + 0.16 * Math.sin(t * 2.6 + i)})`;
+            ctx.fillRect(rxp, ryp, 3, 8);
+        }
+        ctx.fillStyle = '#17110b';
+        ctx.fillRect(0, ground + 14, w * 0.42, 20);
+        for (const pxp of [60, 200, 340]) {
+            ctx.fillRect(pxp, ground + 30, 14, h - ground);
+        }
+        drawCineHusky(ctx, w * 0.2, ground + 12, 2.2, 'stand', 'alert', t, -1);
+    } else if (step === 2) {
+        sky(ctx, w, h, [[0, '#0d0918'], [0.6, '#281a40'], [1, '#3a2450']]);
+        stars(ctx, w, h, t, 70);
+        moon(ctx, w * 0.16, h * 0.15, 28);
+        citySkyline(ctx, w, h * 0.66, t, 1);
+        ctx.fillStyle = '#120d1a';
+        ctx.fillRect(0, ground + 20, w, h - ground - 20);
+        drawCineHusky(ctx, w * 0.32, ground + 18, 2.6, 'sit', 'determined', t, -1);
+    } else if (step === 3) {
+        sky(ctx, w, h, [[0, '#08060f'], [1, '#160f22']]);
+        for (let i = 0; i < 4; i++) {
+            ctx.fillStyle = '#100b1c';
+            const tx2 = (i === 0 ? 0 : w * 0.78) + (i > 1 ? 90 : 0);
+            ctx.fillRect(tx2, h * 0.2 + (i % 2) * 60, w * 0.22, h);
+        }
+        const dxp = cx + Math.sin(t * 0.8) * 60;
+        const dyp = h * 0.36;
+        ctx.save();
+        ctx.translate(dxp, dyp);
+        ctx.scale(2.4, 2.4);
+        ctx.fillStyle = '#39424f';
+        ctx.beginPath(); ctx.roundRect(-23, -13, 46, 18, 8); ctx.fill();
+        ctx.fillStyle = '#10161d';
+        ctx.beginPath(); ctx.arc(0, -2, 6.6, 0, TAU); ctx.fill();
+        const eyeP = 0.6 + 0.4 * Math.sin(t * 6);
+        ctx.fillStyle = `rgba(255,60,50,${eyeP})`;
+        ctx.beginPath(); ctx.arc(1, -2, 3, 0, TAU); ctx.fill();
+        ctx.fillStyle = `rgba(255,60,50,${0.2 + 0.1 * Math.sin(t * 3)})`;
+        ctx.beginPath();
+        ctx.moveTo(-8, 4); ctx.lineTo(8, 4); ctx.lineTo(40, 90); ctx.lineTo(-40, 90);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+        drawCineHusky(ctx, cx - 320, ground + 10, 2.2, 'sit', 'alert', t);
+    } else if (step === 4) {
+        sky(ctx, w, h, [[0, '#0b0816'], [1, '#1c1230']]);
+        ctx.fillStyle = '#140f20';
+        ctx.fillRect(cx - 220, 0, 70, h);
+        ctx.fillRect(cx + 150, 0, 70, h);
+        ctx.fillStyle = '#0e0a18';
+        ctx.fillRect(cx - 150, 0, 300, h);
+        const fy = ground - 20;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const ringP = 0.6 + 0.4 * Math.sin(t * 6);
+        const rg = ctx.createRadialGradient(cx, fy, 8, cx, fy, 190);
+        rg.addColorStop(0, `rgba(80,240,220,${0.25 * ringP})`);
+        rg.addColorStop(1, 'rgba(80,240,220,0)');
+        ctx.fillStyle = rg;
+        ctx.fillRect(cx - 200, fy - 200, 400, 260);
+        ctx.restore();
+        ctx.fillStyle = '#282f3d';
+        ctx.beginPath();
+        ctx.roundRect(cx - 62, fy - 14, 124, 34, 9);
+        ctx.fill();
+        ctx.save();
+        ctx.translate(cx, fy + 2);
+        ctx.rotate(t * 14);
+        ctx.fillStyle = '#9fb0bd';
+        for (let i = 0; i < 3; i++) {
+            ctx.rotate((Math.PI * 2) / 3);
+            ctx.beginPath();
+            ctx.ellipse(0, -14, 6.4, 15, 0, 0, TAU);
+            ctx.fill();
+        }
+        ctx.restore();
+        for (let i = 0; i < 7; i++) {
+            const prog = ((t * 0.85 + i * 0.143) % 1);
+            const sxp = cx + Math.sin(i * 2.2 + t * 3) * 60;
+            const syp = fy - 20 - prog * (h - 120);
+            ctx.fillStyle = `rgba(160,240,230,${Math.sin(prog * Math.PI) * 0.35})`;
+            ctx.fillRect(sxp - 2, syp - 10, 4, 17);
+        }
+        drawCineHusky(ctx, cx - 330, ground, 2.4, 'run', 'determined', t);
+    } else {
+        sky(ctx, w, h, [[0, '#0d0918'], [0.6, '#221540'], [1, '#3a2050']]);
+        stars(ctx, w, h, t, 60);
+        citySkyline(ctx, w * 0.75, h * 0.6, t, 1);
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 12; i++) {
+            const ly = h * 0.25 + h2(i, 3) * h * 0.45;
+            const lx = ((i * 191 + t * 850) % (w + 300)) - 150;
+            ctx.beginPath();
+            ctx.moveTo(lx, ly); ctx.lineTo(lx - 170, ly);
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#141020';
+        ctx.fillRect(0, ground + 6, w, h - ground);
+        ctx.fillStyle = `rgba(255,70,170,${0.6 + 0.3 * Math.sin(t * 5)})`;
+        ctx.fillRect(0, ground, w, 4);
+        drawCineHusky(ctx, cx, ground, 2.8, 'run', 'determined', t);
     }
 }

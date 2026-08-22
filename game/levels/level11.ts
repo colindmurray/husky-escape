@@ -43,7 +43,7 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         new Platform(3440, height - 580, 160, 55),      // high tower RIGHT of column
         new Platform(3232, height - 700, 130, 20),      // sky perch above the column
 
-        new SecurityDrone(3320, height - 700, 160),
+        new SecurityDrone(3320, height - 800, 160),
         new Platform(3660, height - 640, 120, 20),      // fire escape hop
         new Platform(3860, height - 700, 120, 20),
 

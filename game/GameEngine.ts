@@ -19,7 +19,7 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' = 'intro';
+    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' = 'intro';
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
@@ -124,6 +124,15 @@ export class GameEngine {
         this.startLoop();
     }
     
+    public startNeonCutscene() {
+        this.currentCutscene = 'neon_intro';
+        this.gameState = GameState.CUTSCENE;
+        this.options.onStateChange(GameState.CUTSCENE, { text: "" });
+        audioManager.stopMusic();
+        this.cutsceneManager.start('neon_intro');
+        this.startLoop();
+    }
+
     public skipCutscene() {
         this.cutsceneManager.skip();
     }
@@ -144,6 +153,9 @@ export class GameEngine {
         } else if (this.currentCutscene === 'pier_intro') {
             // Start Level 9
             this.startLevel(9, this.difficulty);
+        } else if (this.currentCutscene === 'neon_intro') {
+            // Start Level 11: Neon Metropolis
+            this.startLevel(11, this.difficulty);
         }
     }
 

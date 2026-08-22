@@ -457,6 +457,31 @@ export class Renderer {
         ctx.fillStyle = "#2c3e50";
         ctx.fillRect(0, 0, width, height);
 
+        if (currentType === 'neon_intro') {
+             ctx.fillStyle = "#14102A";
+             ctx.fillRect(0, 0, width, height);
+             ctx.fillStyle = "#191430";
+             for(let i=0; i<width; i+=90) {
+                 const bH = 120 + ((i * 31) % 180);
+                 ctx.fillRect(i, height - bH, 64, bH);
+             }
+             if (step >= 3 && frame % 40 < 20) {
+                 ctx.fillStyle = "rgba(255,60,50,0.7)";
+                 ctx.beginPath();
+                 ctx.arc(cx + 100, cy - 60, 6, 0, Math.PI*2);
+                 ctx.fill();
+                 ctx.fillStyle = "rgba(255,60,50,0.15)";
+                 ctx.beginPath();
+                 ctx.moveTo(cx + 100, cy - 54);
+                 ctx.lineTo(cx + 60, cy + 120);
+                 ctx.lineTo(cx + 140, cy + 120);
+                 ctx.closePath();
+                 ctx.fill();
+             }
+             drawHuskyFace(ctx, cx, cy + 50, 2, step >= 4 ? 'determined' : (step === 3 ? 'sad' : 'happy'));
+             return;
+        }
+
         if (currentType === 'pier_intro') {
              ctx.fillStyle = "#1e272e";
              ctx.fillRect(0, 0, width, height);

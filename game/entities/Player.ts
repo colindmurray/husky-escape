@@ -26,6 +26,9 @@ export class Player extends Entity {
     public hasUmbrella = false;
     public isGliding = false;
 
+    // Zone 11: neon dash pads grant a short friction-free sprint
+    public dashFrames = 0;
+
     public standingOnShakingPlatform = false;
 
     constructor(x: number, y: number) {
@@ -206,6 +209,9 @@ export class Player extends Entity {
         if (currentLevel === 6) {
             if (this.grounded) this.velX *= 0.98;
             else this.velX *= 0.995;
+        } else if (this.dashFrames > 0) {
+            // Neon dash: hold speed for the burst window (all levels' friction skipped)
+            this.dashFrames--;
         } else if (this.standingOnShakingPlatform) {
             this.velX *= 0.978; // slippery sliding!
             // Dynamic jitter slide vibration factor
@@ -244,6 +250,7 @@ export class Player extends Entity {
                 this.velY = -6;
                 this.grounded = false;
                 this.jumpsLeft = 2;
+                this.dashFrames = 24;
                 audioManager.playSFX(SoundType.BOOST);
                 return;
             }

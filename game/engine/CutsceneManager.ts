@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro';
+type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro';
 
 export class CutsceneManager {
     public step = 0;
@@ -39,6 +39,13 @@ export class CutsceneManager {
             { text: "Unfortunately, the only way forward is underwater.", sound: null },
             { text: "Good thing you brought your snorkeling gear!", sound: SoundType.COLLECT },
             { text: "Swim for it, Onyx!", sound: SoundType.THEME_UNDERWATER }
+        ],
+        'neon_intro': [
+            { text: "You reached the harbor. The whole city glitters across the water...", sound: SoundType.SPLASH },
+            { text: "Home is somewhere beyond those lights.", sound: null },
+            { text: "But the city never sleeps -- and neither do its machines.", sound: SoundType.DRONE_ALERT },
+            { text: "Ride the rooftop fans. Dodge the drones.", sound: SoundType.BOOST },
+            { text: "Almost home, Onyx!", sound: SoundType.THEME_NEON }
         ],
         'pier_intro': [
             { text: "You surface from the deep ocean...", sound: SoundType.SPLASH },
@@ -94,6 +101,8 @@ export class CutsceneManager {
                 audioManager.playMusic(SoundType.THEME_FOREST);
             } else if (line.sound === SoundType.THEME_PIER) {
                 audioManager.playMusic(SoundType.THEME_PIER);
+            } else if (line.sound === SoundType.THEME_NEON) {
+                audioManager.playMusic(SoundType.THEME_NEON);
             } else {
                 audioManager.playSFX(line.sound);
             }

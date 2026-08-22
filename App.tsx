@@ -136,6 +136,7 @@ export default function App() {
         else if (currentLvl === 6) engineRef.current?.startChaseCutscene();
         else if (currentLvl === 7) engineRef.current?.startUnderwaterCutscene();
         else if (currentLvl === 8) engineRef.current?.startPierCutscene();
+        else if (currentLvl === 10) engineRef.current?.startNeonCutscene();
         else engineRef.current?.startLevel((currentLvl || 0) + 1, difficulty);
     };
 
@@ -173,6 +174,7 @@ export default function App() {
          else if (lvl === 7) engineRef.current?.startChaseCutscene();
          else if (lvl === 8) engineRef.current?.startUnderwaterCutscene();
          else if (lvl === 9) engineRef.current?.startPierCutscene();
+         else if (lvl === 11) engineRef.current?.startNeonCutscene();
          else engineRef.current?.startLevel(lvl, difficulty);
     };
 
