@@ -1,5 +1,5 @@
 import { Collectible, Exit, Water } from '../entities/index';
-import { CollapsingAwning, BandanaPickup, RollingApple, TownCyclist, TownTimedHazard, TownPedestrian, TownPlatform, TownScenery, YardDog } from '../entities/Town';
+import { MarchingBand, CollapsingAwning, BandanaPickup, RollingApple, TownCyclist, TownTimedHazard, TownPedestrian, TownPlatform, TownScenery, YardDog } from '../entities/Town';
 import { Difficulty } from '../../types';
 import type { LevelData } from './types';
 
@@ -9,7 +9,7 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
     const jetHeight = easy ? 155 : 220;
     const platforms = [
         new TownPlatform(-50, 0, 50, height, 'pavement'),
-        ...(easy ? [[0, 6940]] : [[0, 2980], [3620, 1410], [5340, 110], [5760, 120], [6300, 640]]).map(([x, w]) => new TownPlatform(x, floor, w, 100, 'pavement')),
+        ...(easy ? [[0, 6940]] : [[0, 2980], [3620, 3320]]).map(([x, w]) => new TownPlatform(x, floor, w, 100, 'pavement')),
         new TownPlatform(6940, 0, 50, height, 'pavement'),
         // Doorsteps introduce the upper route before the first delivery lane.
         new TownPlatform(470, floor - 45, 130, 18, 'bench'),
@@ -68,6 +68,9 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
             const p = platforms[i];
             if (p.kind === 'awning' && p.x < 3000) {
                 platforms.splice(i, 1, new CollapsingAwning(p.x, p.y, 160, p.color));
+            } else if (p.kind === 'bench' && p.x >= 4950) {
+                p.y = floor - 85;
+                if (p.x === 5360 || p.x === 5780) p.w = 80;
             } else if (p.kind === 'stone') {
                 p.w = 65;
                 p.minX = p.x; p.maxX = p.x + 70; p.dx = i % 2 ? 1.1 : -1.1;
@@ -89,10 +92,11 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         enemies.push(new TownCyclist(1040, 1700, floor - 62, 4.2, 115, 1));
         enemies.push(new YardDog(4470, 4660, floor - 36, 3.6, 70));
     }
-    for (let i = 0; i < (easy ? 8 : 6); i++) {
-        const x = easy ? 5030 + i * 165 : [4900, 4990, 5360, 5780, 6360, 6490][i];
-        enemies.push(new TownPedestrian(x, floor - 57, easy ? 50 : 12, easy ? 0.85 : 1.15, true, ['#d96252', '#258d91', '#8272ab'][i % 3]));
-    }
+    if (easy) {
+        for (let i = 0; i < 8; i++) {
+            enemies.push(new TownPedestrian(5030 + i * 165, floor - 57, 50, 0.85, true, ['#d96252', '#258d91', '#8272ab'][i % 3]));
+        }
+    } else enemies.push(new MarchingBand(5030, floor, 1270));
     if (!easy) {
         enemies.push(new RollingApple(2960, 2150, floor, 3.8, 350, 270));
         enemies.push(new TownPedestrian(1370, floor - 57, 85, 1.1, false, '#e4af46'));

@@ -33,7 +33,7 @@ export class Renderer {
         this.ctx.clearRect(0, 0, width, height);
 
         if (currentLevel === 13) {
-            drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, world.difficulty !== 'EASY', cameraY);
+            drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, cameraY);
         } else if (enhanced) {
             this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel, cameraY);
         } else {

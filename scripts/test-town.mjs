@@ -26,7 +26,7 @@ try {
         const { Player } = await import('/game/entities/Player.ts');
         const { inputManager } = await import('/game/Input.ts');
         const { getLevel13 } = await import('/game/levels/level13.ts');
-        const { TownPedestrian, TownCyclist, TownTimedHazard, YardDog, CollapsingAwning, BandanaPickup, TownPlatform } = await import('/game/entities/Town.ts');
+        const { MarchingBand, TownPedestrian, TownCyclist, TownTimedHazard, YardDog, CollapsingAwning, BandanaPickup, TownPlatform } = await import('/game/entities/Town.ts');
         const { Difficulty, SoundType } = await import('/types.ts');
         const { audioManager } = await import('/game/Audio.ts');
         const { gfxSettings } = await import('/game/GfxSettings.ts');
@@ -46,6 +46,9 @@ try {
         check(easy.props.filter(p => p instanceof BandanaPickup).length === 2 && hard.props.filter(p => p instanceof BandanaPickup).length === 1, 'Hard bandana requires the upper route');
         check(hard.platforms.filter(p => p.kind === 'float').every(p => p.w === 150), 'Hard parade requires narrow moving floats');
         check(easy.exit.locked && hard.exit.locked, 'Both routes require the parade pass to open home');
+        check(!easy.enemies.some(e => e instanceof MarchingBand) && hard.enemies.some(e => e instanceof MarchingBand && e.x === 5030 && e.w === 1270), 'Only Hard has a continuous packed band beneath all parade floats');
+        check(hard.platforms.some(p => p.x <= 5030 && p.x + p.w >= 6300 && p.kind === 'pavement'), 'Hard parade has an actual street beneath the band');
+
         check(easy.enemies.filter(e => e instanceof TownTimedHazard).every(e => e.h >= 155), 'Easy timed hazards reach beyond low obstacles');
         check(hard.enemies.filter(e => e instanceof TownTimedHazard).length > easy.enemies.filter(e => e instanceof TownTimedHazard).length, 'Hard adds a second parade roadwork post');
         check(JSON.stringify(getLevel13(720, Difficulty.HARDCORE)) === JSON.stringify(hard), 'Hardcore uses the hard layout');
@@ -121,6 +124,21 @@ try {
         check(!world.player.hasBandana && world.player.invincibleTimer > 0, 'Bandana saves one roadwork collision');
         world.player.invincibleTimer = 0; world.update();
         check(lost.at(-1) === 'roadwork', 'Raised roadwork post uses its own defeat reason');
+        for (const protectedByBandana of [false, true]) {
+            world.loadLevel(13, false, Difficulty.HARD);
+            world.enemies = world.enemies.filter(e => e instanceof MarchingBand);
+            world.player.x = 5400; world.player.y = 580; world.player.hasBandana = protectedByBandana;
+            world.player.invincibleTimer = protectedByBandana ? 100 : 0;
+            const beforeBand = lost.length; world.update();
+            check(lost.length === beforeBand + 1 && lost.at(-1) === 'parade', `Falling into the band loses even with protection=${protectedByBandana}`);
+        }
+        world.loadLevel(13, false, Difficulty.HARD);
+        world.enemies = world.enemies.filter(e => e instanceof MarchingBand);
+        const perch = world.platforms.find(p => p.x === 5360 && p.kind === 'bench');
+        world.player.x = perch.x + 15; world.player.y = perch.y - world.player.h;
+        const beforeWaiting = lost.length;
+        for (let f = 0; f < 300; f++) world.update();
+        check(world.player.grounded && lost.length === beforeWaiting, 'Raised parade bench gives a safe waiting spot above the band');
         world.loadLevel(12, false, Difficulty.EASY); world.enemies = [];
         world.exit.unlock(); world.player.x = world.exit.x; world.player.y = world.exit.y; world.update();
         check(completed.at(-1) === 12 && wins === 0, 'Bakery exit advances instead of ending the game');

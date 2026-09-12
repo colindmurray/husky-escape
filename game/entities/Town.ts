@@ -110,6 +110,52 @@ export class TownPedestrian extends Enemy {
     }
 }
 
+// The packed parade is one continuous hazard, so gaps between animated musicians are not safe pockets.
+export class MarchingBand extends Entity {
+    private frame = 0;
+    constructor(x: number, floorY: number, width: number) {
+        super(x, floorY - 57, width, 57, '#964954');
+    }
+    update(_platforms?: Entity[], player?: Player) {
+        this.frame++;
+        if (this.frame % 30 === 0 && player && player.x > this.x - 250 && player.x < this.x + this.w + 250) {
+            audioManager.playSFX(SoundType.LAND);
+        }
+    }
+    draw(ctx: CanvasRenderingContext2D, camX: number) {
+        const left = this.x - camX, right = left + this.w;
+        if (right < 0 || left > ctx.canvas.width) return;
+        const rich = gfxSettings.visualMode === 'enhanced';
+        ctx.save(); ctx.beginPath(); ctx.rect(left, this.y - 18, this.w, this.h + 22); ctx.clip();
+        // Two offset ranks keep the street visibly packed as the band marches past.
+        for (let row = 0; row < 2; row++) {
+            const offset = this.frame * 0.65 % 46 + row * 23;
+            const first = Math.floor((Math.max(0, left) - left - offset) / 46) - 1;
+            const last = Math.ceil((Math.min(ctx.canvas.width, right) - left - offset) / 46) + 1;
+            for (let i = first; i <= last; i++) {
+                const x = left + i * 46 + offset, y = this.y + (row ? 0 : -5);
+                const color = row ? '#a54751' : '#486878';
+                drawTownPerson(ctx, x, y, color, this.frame / 8 + row, false, 1);
+                townBox(ctx, x + 7, y - 7, 24, 10, color);
+                ctx.fillStyle = '#f4ce7e'; ctx.fillRect(x + 7, y, 26, 3);
+                ctx.strokeStyle = '#f4ddac'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 19, y - 7); ctx.lineTo(x + 23, y - 15); ctx.stroke();
+                ctx.strokeStyle = '#edcf8d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 9, y + 20); ctx.lineTo(x + 29, y + 37); ctx.stroke();
+                if (i % 2 === 0) {
+                    townBox(ctx, x + 23, y + 27, 24, 20, rich ? '#e8d7b1' : '#ead6a7');
+                    ctx.strokeStyle = '#ae714b'; ctx.lineWidth = 2; ctx.strokeRect(x + 24, y + 28, 22, 18);
+                    ctx.beginPath(); ctx.moveTo(x + 26, y + 28); ctx.lineTo(x + 43, y + 45); ctx.moveTo(x + 43, y + 28); ctx.lineTo(x + 26, y + 45); ctx.stroke();
+                    ctx.strokeStyle = '#f8e6bb'; ctx.beginPath(); ctx.moveTo(x + 30, y + 22); ctx.lineTo(x + 40, y + 27 + Math.sin(this.frame / 4) * 4); ctx.stroke();
+                } else {
+                    ctx.strokeStyle = '#eac15f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 28, y + 14); ctx.lineTo(x + 42, y + 20); ctx.lineTo(x + 47, y + 14); ctx.stroke();
+                    ctx.fillStyle = '#edcc74'; ctx.beginPath(); ctx.moveTo(x + 42, y + 14); ctx.lineTo(x + 51, y + 8); ctx.lineTo(x + 51, y + 24); ctx.closePath(); ctx.fill();
+                    if (rich) { ctx.fillStyle = '#9b6a33'; ctx.beginPath(); ctx.ellipse(x + 50, y + 16, 2, 6, 0, 0, TAU); ctx.fill(); }
+                }
+            }
+        }
+        ctx.restore();
+    }
+}
+
 export class TownCyclist extends Entity {
     public phase: 'waiting' | 'warning' | 'riding' = 'waiting';
     private timer = 0;

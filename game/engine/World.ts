@@ -1,6 +1,6 @@
 
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
-import { TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
+import { MarchingBand, TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -151,13 +151,17 @@ export class World {
             const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownTimedHazard || enemy instanceof YardDog;
             if (enemy instanceof RollingApple && !enemy.active) return;
             if ((enemy instanceof TownCyclist || enemy instanceof TownTimedHazard || enemy instanceof YardDog) && !enemy.dangerous) return;
-            const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian) ? 4 : 12;
+            const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian || enemy instanceof MarchingBand) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
                 this.player.x + this.player.w - pad > enemy.x + pad &&
                 this.player.y + pad < enemy.y + enemy.h - pad &&
                 this.player.y + this.player.h - pad > enemy.y + pad
             ) {
+                if (enemy instanceof MarchingBand) {
+                    this.triggerGameOver('parade', 'Swept into the marching band! Stay on the floats and raised benches.');
+                    return;
+                }
                 if (this.player.invincibleTimer > 0) return;
 
                 if (enemy instanceof TownPedestrian) {

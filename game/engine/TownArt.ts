@@ -65,7 +65,7 @@ export function drawTownPerson(ctx: CanvasRenderingContext2D, x: number, y: numb
     ctx.restore();
 }
 
-export function drawTownBackground(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, rich: boolean, t: number, hard = false, cameraY = 0) {
+export function drawTownBackground(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, rich: boolean, t: number, cameraY = 0) {
     ctx.save();
     const ground = h - 100 - cameraY;
     if (rich) {
@@ -156,17 +156,6 @@ export function drawTownBackground(ctx: CanvasRenderingContext2D, w: number, h: 
         const y = 165 + Math.sin(Math.max(0, x / w) * Math.PI) * 32;
         ctx.fillStyle = townColors[Math.abs(Math.floor((x + camX * 0.65) / 42)) % 4];
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 24, y + 2); ctx.lineTo(x + 12 + (rich ? Math.sin(t * 2 + x) * 3 : 0), y + 28); ctx.fill();
-    }
-    if (hard && ground < h) {
-        const x = 5030 - camX;
-        ctx.fillStyle = '#283e43'; ctx.fillRect(x, ground, 1270, h - ground);
-        ctx.fillStyle = '#162b35'; ctx.fillRect(x, ground + 25, 1270, Math.max(0, h - ground - 25));
-        ctx.strokeStyle = '#a79363'; ctx.lineWidth = 8;
-        ctx.beginPath(); ctx.moveTo(x, ground + 75); ctx.lineTo(x + 1270, ground + 75); ctx.stroke();
-        for (const edge of [x, x + 1270]) {
-            ctx.fillStyle = '#eac359'; ctx.fillRect(edge - 10, ground, 20, 40);
-            ctx.fillStyle = '#394341'; ctx.fillRect(edge - 10, ground + 10, 20, 8); ctx.fillRect(edge - 10, ground + 28, 20, 8);
-        }
     }
     ctx.restore();
 }
