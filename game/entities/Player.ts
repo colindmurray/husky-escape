@@ -286,6 +286,10 @@ export class Player extends Entity {
                 } 
                 else {
                     if (platform instanceof CollapsingAwning) platform.stepOn();
+                    if (platform instanceof TownPlatform && platform.kind === 'float' && !platform.boarded) {
+                        platform.boarded = true;
+                        audioManager.playSFX(SoundType.COLLECT);
+                    }
                     this.grounded = true;
                     this.velY = 0;
                     this.jumpsLeft = 2;

@@ -1,4 +1,5 @@
 
+import { TownPlatform } from "../entities/Town";
 import { drawTownBackground, drawTownPerson, townLabel } from "./TownArt";
 import { drawHuskyEnhanced } from "./enhanced/EnhancedSprites";
 import { World } from "./World";
@@ -62,6 +63,10 @@ export class Renderer {
         if (currentLevel === 13 && world.player) {
             const section = world.player.x < 1700 ? 'BAKERY LANE' : world.player.x < 3000 ? 'THE MARKET' : world.player.x < 3800 ? 'FOUNTAIN SQUARE' : world.player.x < 4870 ? 'QUIET GARDENS' : 'THE PARADE';
             townLabel(this.ctx, `13 • MARKET DAY (${world.difficulty}) / ${section}`, width / 2, 112);
+            if (world.player.x >= 4750) {
+                const stamps = world.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float' && p.boarded).length;
+                townLabel(this.ctx, stamps === 3 ? 'PARADE PASS COMPLETE • Home gate open →' : `PARADE PASS ${stamps}/3 • Land on each gold-marked float`, width / 2, height - 82);
+            }
             townLabel(this.ctx, world.player.hasBandana ? 'GOOD DOG BANDANA • Crowds yield • 1 shield' : 'Find a gold bandana: crowds yield + 1 shield', width / 2, height - 48);
         }
 

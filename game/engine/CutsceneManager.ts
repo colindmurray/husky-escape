@@ -51,7 +51,7 @@ export class CutsceneManager {
             { text: "Out of the bakery, into the sunshine... It's market day!", sound: SoundType.THEME_TOWN },
             { text: "So many shoes! Hop onto benches and market awnings to slip past the crowds.", sound: null },
             { text: "A golden Good Dog Bandana! People wave you through, and it saves you from one town hazard.", sound: SoundType.COLLECT },
-            { text: "Listen for bike bells and barks. Watch the water jets. Then catch the parade home!", sound: SoundType.BIKE_BELL }
+            { text: "Listen for bike bells and barks. Time the jets. Land on all three parade floats to open the home gate!", sound: SoundType.BIKE_BELL }
         ],
         'bakery_intro': [
             { text: "Past the neon roofs... wait. Do you smell that?", sound: SoundType.COLLECT },

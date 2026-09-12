@@ -45,6 +45,9 @@ try {
         check(hard.enemies.some(e => e instanceof TownCyclist && e.direction === 1), 'Hard has opposing delivery traffic');
         check(easy.props.filter(p => p instanceof BandanaPickup).length === 2 && hard.props.filter(p => p instanceof BandanaPickup).length === 1, 'Hard bandana requires the upper route');
         check(hard.platforms.filter(p => p.kind === 'float').every(p => p.w === 150), 'Hard parade requires narrow moving floats');
+        check(easy.exit.locked && hard.exit.locked, 'Both routes require the parade pass to open home');
+        check(easy.enemies.filter(e => e instanceof TownJet).every(e => e.h >= 155), 'Easy jets reach beyond low obstacles');
+        check(hard.enemies.filter(e => e instanceof TownJet).length > easy.enemies.filter(e => e instanceof TownJet).length, 'Hard adds a second parade jet');
         check(JSON.stringify(getLevel13(720, Difficulty.HARDCORE)) === JSON.stringify(hard), 'Hardcore uses the hard layout');
 
         const idle = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false, Space: false };
@@ -104,8 +107,21 @@ try {
         world.exit.unlock(); world.player.x = world.exit.x; world.player.y = world.exit.y; world.update();
         check(completed.at(-1) === 12 && wins === 0, 'Bakery exit advances instead of ending the game');
         world.loadLevel(13, false, Difficulty.EASY); world.enemies = [];
+        world.player.x = 4900; world.player.y = 580;
+        Object.assign(inputManager.keys, idle, { ArrowRight: true });
+        for (let f = 0; f < 750; f++) world.update();
+        Object.assign(inputManager.keys, idle);
+        check(world.player.x > world.exit.x && wins === 0 && world.exit.locked, 'Walking under all parade floats cannot win Easy');
+        const parade = world.platforms.filter(p => p.kind === 'float');
+        for (const [i, deck] of parade.entries()) {
+            world.player.x = deck.x + deck.w / 2; world.player.y = deck.y - world.player.h;
+            world.player.velX = 0; world.player.velY = 0; world.update();
+            check(deck.boarded && world.exit.locked === (i < 2), `Landing on float ${i + 1} advances the pass; only the third opens home`);
+        }
         world.player.x = world.exit.x; world.player.y = world.exit.y; world.update(); world.update();
-        check(wins === 1, 'Town exit wins exactly once');
+        check(wins === 1, 'Completed town pass wins exactly once');
+        world.loadLevel(13, false, Difficulty.EASY);
+        check(world.exit.locked && world.platforms.filter(p => p.kind === 'float').every(p => !p.boarded), 'Restart resets the parade pass and home gate');
 
         const float = new TownPlatform(100, 400, 200, 38, 'float', '#258d91', 80, 0.7);
         const rider = new Player(150, 360);
@@ -119,17 +135,37 @@ try {
             jumper.update([shelf], idle, 720, 13);
             check(jumper.velY < 0 && jumper.y < 420, `${kind} allows jumping through from below`);
         }
-        for (const [difficulty, period] of [[Difficulty.EASY, 55], [Difficulty.HARD, 52], [Difficulty.HARDCORE, 52]]) {
-            let death = '', won = false;
-            const run = new World(1280, 800, { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete() {}, onGameOver(reason) { death = reason; }, onGameWon() { won = true; } });
-            run.loadLevel(13, false, difficulty);
-            Object.assign(inputManager.keys, idle);
-            for (let f = 0; f < 3800 && !death && !won; f++) {
-                inputManager.keys.Space = run.player.x < 6610 && f % period === 0;
-                inputManager.keys.ArrowRight = run.player.x < 6655;
-                run.update();
+        // Use only player input: run the streets, then aim for each moving deck.
+        // Vary the second-jump height to cover a landing window, not a single exact timing.
+        for (const [difficulty, period] of [[Difficulty.EASY, 88], [Difficulty.HARD, 52], [Difficulty.HARDCORE, 52]]) {
+            for (const extraHeight of [10, 40, 70]) {
+                let death = '', won = false, previousJump = false;
+                const run = new World(1280, 800, { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete() {}, onGameOver(reason) { death = reason; }, onGameWon() { won = true; } });
+                run.loadLevel(13, false, difficulty);
+                const floats = run.platforms.filter(p => p.kind === 'float');
+                Object.assign(inputManager.keys, idle);
+                for (let f = 0; f < 3800 && !death && !won; f++) {
+                    const p = run.player, target = floats.find(deck => !deck.boarded);
+                    let jump = false;
+                    if (p.x < 4870) {
+                        jump = f % period === 0;
+                        inputManager.keys.ArrowRight = true; inputManager.keys.ArrowLeft = false;
+                    } else if (target) {
+                        const dx = target.x + target.w / 2 - p.x - p.w / 2;
+                        inputManager.keys.ArrowRight = dx > 8; inputManager.keys.ArrowLeft = dx < -8;
+                        const support = run.platforms.find(deck => p.x + p.w > deck.x && p.x < deck.x + deck.w && Math.abs(p.y + p.h - deck.y) < 2);
+                        if (p.grounded) jump = !support || support.kind === 'pavement' || (dx > 0 ? p.x + p.w >= support.x + support.w - 25 : p.x <= support.x + 25);
+                        else jump = p.velY > 0 && p.y + p.h > target.y - extraHeight && p.jumpsLeft === 1;
+                    } else {
+                        inputManager.keys.ArrowRight = p.x < 6655; inputManager.keys.ArrowLeft = false;
+                        jump = p.x < 6400 && f % period === 0;
+                    }
+                    inputManager.keys.Space = jump && !previousJump;
+                    previousJump = inputManager.keys.Space;
+                    run.update();
+                }
+                check(won && !death && floats.every(p => p.boarded), `${difficulty} completes with live hazards and double-jump margin ${extraHeight} (${death || 'survived'})`);
             }
-            check(won && !death, `${difficulty} completes from spawn using movement and jumps with all hazards live`);
         }
         Object.assign(inputManager.keys, idle);
 

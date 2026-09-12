@@ -1,6 +1,6 @@
 
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
-import { TownPedestrian, TownCyclist, RollingApple, TownJet, YardDog } from "../entities/Town";
+import { TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownJet, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -130,6 +130,11 @@ export class World {
 
         if (this.currentLevel === 8 && this.player.ridingShark && this.player.ridingShark.isGolden) {
             audioManager.playMusic(SoundType.THEME_GOLDEN_SHARK);
+        }
+
+        if (this.currentLevel === 13) {
+            const floats = this.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float') as TownPlatform[];
+            if (floats.length === 3 && floats.every(p => p.boarded)) this.exit.unlock();
         }
 
         // Camera

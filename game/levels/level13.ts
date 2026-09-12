@@ -6,6 +6,7 @@ import type { LevelData } from './types';
 export function getLevel13(height: number, difficulty: Difficulty): LevelData {
     const easy = difficulty === Difficulty.EASY;
     const floor = height - 100;
+    const jetHeight = easy ? 155 : 220;
     const platforms = [
         new TownPlatform(-50, 0, 50, height, 'pavement'),
         ...(easy ? [[0, 6940]] : [[0, 2980], [3620, 1410], [5340, 110], [5760, 120], [6300, 640]]).map(([x, w]) => new TownPlatform(x, floor, w, 100, 'pavement')),
@@ -51,12 +52,12 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         new TownPedestrian(2680, floor - 57, 90, 1, false, '#d96252'),
         new RollingApple(2960, 2150, floor, easy ? 2.8 : 3.8, easy ? 450 : 350, 0),
         new RollingApple(2960, 2150, floor, easy ? 2.8 : 3.8, easy ? 450 : 350, 165),
-        new TownJet(3160, floor, easy ? 330 : 265, easy ? 75 : 100, 0),
-        new TownJet(3350, floor, easy ? 330 : 265, easy ? 75 : 100, 110),
-        new TownJet(3540, floor, easy ? 330 : 265, easy ? 75 : 100, 220),
-        new TownJet(3930, floor, easy ? 340 : 280, easy ? 80 : 110, 80),
+        new TownJet(3160, floor, easy ? 330 : 265, easy ? 75 : 100, 0, jetHeight),
+        new TownJet(3350, floor, easy ? 330 : 265, easy ? 75 : 100, 110, jetHeight),
+        new TownJet(3540, floor, easy ? 330 : 265, easy ? 75 : 100, 220, jetHeight),
+        new TownJet(3930, floor, easy ? 340 : 280, easy ? 80 : 110, 80, jetHeight),
         new YardDog(4190, 4420, floor - 36, easy ? 2.7 : 3.8, easy ? 85 : 60),
-        new TownJet(4610, floor, easy ? 340 : 280, easy ? 80 : 110, 240),
+        new TownJet(4610, floor, easy ? 340 : 280, easy ? 80 : 110, 240, jetHeight),
     ];
     for (const [i, x] of [1850, 2180, 2510, 2860].entries()) {
         enemies.push(new TownPedestrian(x, floor - 57, 45, easy ? 0.65 : 1, false, ['#e4af46', '#8272ab'][i % 2]));
@@ -78,9 +79,9 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
             }
         }
         platforms.push(
-            new TownPlatform(2045, floor - 150, 85, 150, 'fence'),
-            new TownPlatform(2440, floor - 190, 110, 190, 'fence'),
-            new TownPlatform(2760, floor - 120, 100, 120, 'fence'),
+            new TownPlatform(2045, floor - 150, 85, 150, 'barrier'),
+            new TownPlatform(2440, floor - 190, 110, 190, 'barrier'),
+            new TownPlatform(2760, floor - 120, 100, 120, 'barrier'),
             new TownPlatform(2950, floor - 55, 75, 18, 'stone'),
             new TownPlatform(3550, floor - 40, 75, 18, 'stone'),
         );
@@ -107,7 +108,7 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         new TownScenery(3860, floor, 'garden'),
         new TownScenery(4190, floor, 'garden'),
         new TownScenery(4240, floor - 245, 'sign', 'WOOF! Wait for the dog to head home'),
-        new TownScenery(4880, floor - 210, 'sign', easy ? 'THE PARADE • Ride the floats!' : 'BROKEN PARADE ROUTE • Wait for your float'),
+        new TownScenery(4880, floor - 210, 'sign', easy ? 'PARADE PASS • Land on all 3 floats!' : 'PARADE PASS • 3 floats, broken road, timed jets'),
         new TownScenery(6620, floor, 'gate'),
         new TownScenery(290, floor, 'neighbor'),
         new TownScenery(3700, floor - 45, 'neighbor'),
@@ -118,6 +119,11 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         new TownScenery(3610, floor - 5, 'pigeon'),
         new TownScenery(6460, floor - 5, 'pigeon'),
     ];
+    for (const platform of platforms) platform.floorY = floor;
+    enemies.push(new TownJet(5600, floor, easy ? 340 : 280, easy ? 95 : 120, 160, easy ? 205 : 255));
+    if (!easy) enemies.push(new TownJet(6100, floor, 310, 110, 60, 205));
+    const exit = new Exit(6670, floor - 80);
+    exit.lock();
     const bones = [
         [285, 70], [505, 100], [1205, 120], [1780, 110], [1990, 185], [2370, 260], [2680, 205],
         [3075, 110], [3260, 180], [3440, 130], [4070, 145], [4310, 215], [4720, 100],
@@ -127,7 +133,7 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         platforms, enemies, props,
         collectibles: bones.map(([x, rise]) => new Collectible(x, floor - rise)),
         waters: easy ? [] : [new Water(2980, floor + 12, 640, 100)],
-        exit: new Exit(6670, floor - 80),
+        exit,
         playerStart: { x: 80, y: floor - 40 },
         // Keep upper routes visible on short landscape screens.
         worldHeight: Math.max(height, 600),
