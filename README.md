@@ -7,7 +7,7 @@ A React/Vite platformer where you help Onyx the Husky escape the pound and find 
 The game ships with two presentation layers, switchable live from the ⚙️ settings panel (Visuals and Audio each have a Classic / Enhanced switch; choices persist in `localStorage`):
 
 - **Classic** — the original rendering and chiptune audio, fully preserved.
-- **Enhanced** — the modern presentation: multi-layer parallax backgrounds for all 10 zones, an animated title screen, fully composed cinematic cutscene scenes, redrawn sprites (Onyx, every enemy, bosses, platforms, hazards, machines), a particle system, per-level color grading/vignette/glow passes, and layered music (detuned doubles, sub-octave, echo, tempo-locked percussion) plus re-synthesized SFX.
+- **Enhanced** — the modern presentation: multi-layer parallax backgrounds for all 13 zones, an animated title screen, fully composed cinematic cutscene scenes, redrawn sprites (Onyx, every enemy, bosses, platforms, hazards, machines), a particle system, per-level color grading/vignette/glow passes, and layered music (detuned doubles, sub-octave, echo, tempo-locked percussion) plus re-synthesized SFX.
 
 Switching is seamless — even mid-level or mid-jump — because Enhanced layers only *draw around* the untouched classic logic; world state is never touched, so gameplay is identical in either mode. Reference comparisons live under `design-ref/`.
 
@@ -15,8 +15,19 @@ Controls: Arrows **or** WASD to move; Space/W to jump; double jump for height.
 
 ### Zones
 
-1–2 The Pound · 3 Dark Forest · 4 Beach · 5 Mountain · 6 Ski Slope · 7 The Chase · 8 Underwater Reef · 9 Stormy Pier · 10 Construction Site · **11 Neon Metropolis** — city night with industrial fan lifts (steady + pulsing), security drones with scan-and-chase AI, neon dash pads, roof cats, and a synthwave theme.
+1–2 The Pound · 3 Dark Forest · 4 Beach · 5 Mountain · 6 Ski Slope · 7 The Chase · 8 Underwater Reef · 9 Stormy Pier · 10 Construction Site · **11 Neon Metropolis** — city night with industrial fan lifts (steady + pulsing), security drones with scan-and-chase AI, neon dash pads, roof cats, and a synthwave theme. **12 The Warm Bakery** — conveyor belts, falling pastries, and the Night Baker. **13 Market Day** — busy sidewalks, delivery bikes, market awnings, a fountain, garden dogs, and a parade home.
 
+
+## Market Day (level 13)
+
+The bakery exit leads to town; level 13 is also available through the Dev Mode warp selector. Classic and Enhanced visuals and audio switch live in settings. Both modes use the same collision shapes and timing.
+
+- **Easy:** solid street beneath optional awnings and floats, a shallow fountain, generous warning windows, and two Good Dog Bandanas.
+- **Hard / Hardcore:** road barriers force a market climb across frayed awnings that collapse after landing and reform after three seconds. Opposing delivery bikes, a deep fountain with moving stones, a second yard dog, and a broken parade street with narrow floats change the route. One bandana waits on the upper market path. Hardcore also retains its restart-from-level-1 rule.
+- **Good Dog Bandana:** walk into the gold pickup to wear it. Pedestrians stop and wave you through. It absorbs one bike, apple, jet, or yard-dog collision, then disappears. It does not protect against deep water, falls, or timeout. No extra button is needed.
+- Pedestrians bump rather than kill Onyx. Bells, barks, labels, and hissing jets warn before hazards activate. Benches, awnings, stones, and floats can be jumped through from below.
+
+Run `npm run test:town` after installing dependencies. It uses the existing Playwright installation and local Google Chrome, starts its own temporary Vite server, and checks mechanics, full playable routes with hazards active, both rendering modes, and synthesized audio.
 
 ## Local development
 

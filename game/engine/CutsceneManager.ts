@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro';
+type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro';
 
 export class CutsceneManager {
     public step = 0;
@@ -46,6 +46,12 @@ export class CutsceneManager {
             { text: "But the city never sleeps -- and neither do its machines.", sound: SoundType.DRONE_ALERT },
             { text: "Ride the rooftop fans. Dodge the drones.", sound: SoundType.BOOST },
             { text: "Almost home, Onyx!", sound: SoundType.THEME_NEON }
+        ],
+        'town_intro': [
+            { text: "Out of the bakery, into the sunshine... It's market day!", sound: SoundType.THEME_TOWN },
+            { text: "So many shoes! Hop onto benches and market awnings to slip past the crowds.", sound: null },
+            { text: "A golden Good Dog Bandana! People wave you through, and it saves you from one town hazard.", sound: SoundType.COLLECT },
+            { text: "Listen for bike bells and barks. Watch the water jets. Then catch the parade home!", sound: SoundType.BIKE_BELL }
         ],
         'bakery_intro': [
             { text: "Past the neon roofs... wait. Do you smell that?", sound: SoundType.COLLECT },
@@ -110,6 +116,8 @@ export class CutsceneManager {
                 audioManager.playMusic(SoundType.THEME_PIER);
             } else if (line.sound === SoundType.THEME_NEON) {
                 audioManager.playMusic(SoundType.THEME_NEON);
+            } else if (line.sound === SoundType.THEME_TOWN) {
+                audioManager.playMusic(SoundType.THEME_TOWN);
             } else if (line.sound === SoundType.THEME_BAKERY) {
                 audioManager.playMusic(SoundType.THEME_BAKERY);
             } else {

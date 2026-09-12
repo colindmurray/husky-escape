@@ -1,4 +1,6 @@
 
+import { drawTownBackground, drawTownPerson, townLabel } from "./TownArt";
+import { drawHuskyEnhanced } from "./enhanced/EnhancedSprites";
 import { World } from "./World";
 import { CutsceneManager } from "./CutsceneManager";
 import { drawHuskyFace } from "../Utils";
@@ -29,7 +31,9 @@ export class Renderer {
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
-        if (enhanced) {
+        if (currentLevel === 13) {
+            drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, world.difficulty !== 'EASY', cameraY);
+        } else if (enhanced) {
             this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel, cameraY);
         } else {
             this.drawBackground(world);
@@ -53,6 +57,12 @@ export class Renderer {
             this.particles.updateAndDraw(this.ctx, world);
             this.postFX.drawGlows(this.ctx, world);
             this.postFX.apply(this.ctx, world);
+        }
+
+        if (currentLevel === 13 && world.player) {
+            const section = world.player.x < 1700 ? 'BAKERY LANE' : world.player.x < 3000 ? 'THE MARKET' : world.player.x < 3800 ? 'FOUNTAIN SQUARE' : world.player.x < 4870 ? 'QUIET GARDENS' : 'THE PARADE';
+            townLabel(this.ctx, `13 • MARKET DAY (${world.difficulty}) / ${section}`, width / 2, 112);
+            townLabel(this.ctx, world.player.hasBandana ? 'GOOD DOG BANDANA • Crowds yield • 1 shield' : 'Find a gold bandana: crowds yield + 1 shield', width / 2, height - 48);
         }
 
         // --- LEVEL 9: ATMOSPHERIC OVERLAY (classic only — enhanced has its own storm) ---
@@ -511,6 +521,21 @@ export class Renderer {
     public drawCutscene(manager: CutsceneManager, width: number, height: number) {
         const { frame, step, currentType } = manager;
         const ctx = this.ctx;
+
+        if (currentType === 'town_intro') {
+            const rich = gfxSettings.visualMode === 'enhanced';
+            drawTownBackground(ctx, width, height, frame * 0.3, rich, frame / 60);
+            ctx.save();
+            ctx.translate(width * 0.3, height * 0.62);
+            ctx.scale(2.2, 2.2);
+            if (rich) drawHuskyEnhanced(ctx, 0, 0, { velX: 2, velY: 0, grounded: true, level: 13, t: frame / 60 });
+            else drawHuskyFace(ctx, 20, 15, 0.7, 'happy');
+            drawTownPerson(ctx, 90, -18, '#258d91', frame / 10, step >= 2);
+            drawTownPerson(ctx, 145, -18, '#d96252', frame / 10 + 2, step >= 2);
+            ctx.restore();
+            townLabel(ctx, 'MARKET DAY', width / 2, height * 0.33);
+            return;
+        }
 
         // Enhanced mode: fully composed cinematic scenes (classic art preserved below)
         if (gfxSettings.visualMode === 'enhanced') {

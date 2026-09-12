@@ -1,5 +1,6 @@
 
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
+import { TownPedestrian, TownCyclist, RollingApple, TownJet, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -28,6 +29,7 @@ export class World {
     private worldHeight: number = 0;
     public timeLeft: number = 300;
     private frameCounter: number = 0;
+    private ended = false;
 
     public player: Player | null = null;
     public platforms: Entity[] = [];
@@ -36,7 +38,7 @@ export class World {
     public waters: Water[] = [];
     public props: Entity[] = [];
     public exit: Exit | null = null;
-    private difficulty: Difficulty = Difficulty.EASY;
+    public difficulty: Difficulty = Difficulty.EASY;
 
     private events: WorldEvents;
 
@@ -54,6 +56,7 @@ export class World {
     }
 
     public loadLevel(level: number, persistBones: boolean = true, difficulty: Difficulty = Difficulty.EASY) {
+        this.ended = false;
         this.currentLevel = level;
         this.difficulty = difficulty;
         
@@ -94,12 +97,13 @@ export class World {
             case 10: track = SoundType.THEME_CONSTRUCTION; break;
             case 11: track = SoundType.THEME_NEON; break;
             case 12: track = SoundType.THEME_BAKERY; break;
+            case 13: track = SoundType.THEME_TOWN; break;
         }
         audioManager.playMusic(track);
     }
 
     public update() {
-        if (!this.player || !this.exit) return;
+        if (this.ended || !this.player || !this.exit) return;
 
         // Timer
         this.frameCounter++;
@@ -136,9 +140,13 @@ export class World {
 
         // Enemy Collisions
         this.enemies.forEach(enemy => {
+            if (this.ended) return;
             enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
-            const pad = (enemy instanceof Pastry) ? 4 : 12;
+            const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownJet || enemy instanceof YardDog;
+            if (enemy instanceof RollingApple && !enemy.active) return;
+            if ((enemy instanceof TownCyclist || enemy instanceof TownJet || enemy instanceof YardDog) && !enemy.dangerous) return;
+            const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
                 this.player.x + this.player.w - pad > enemy.x + pad &&
@@ -146,6 +154,29 @@ export class World {
                 this.player.y + this.player.h - pad > enemy.y + pad
             ) {
                 if (this.player.invincibleTimer > 0) return;
+
+                if (enemy instanceof TownPedestrian) {
+                    if (!this.player.hasBandana && this.player.townBumpFrames === 0) {
+                        this.player.velX = this.player.x + this.player.w / 2 < enemy.x + enemy.w / 2 ? -3 : 3;
+                        this.player.velY = -3;
+                        this.player.townBumpFrames = 40;
+                        audioManager.playSFX(SoundType.LAND);
+                    }
+                    return;
+                }
+                if (townHazard) {
+                    if (this.player.hasBandana) {
+                        this.player.hasBandana = false;
+                        this.player.invincibleTimer = 100;
+                        this.player.velY = -7;
+                        audioManager.playSFX(SoundType.COLLECT);
+                    } else {
+                        const reason = enemy instanceof TownCyclist ? 'cycled' : enemy instanceof RollingApple ? 'appled' : enemy instanceof TownJet ? 'sprinkled' : 'yarddog';
+                        const narrative = enemy instanceof TownCyclist ? 'A delivery bike caught up! Listen for the bell and wait on a bench.' : enemy instanceof RollingApple ? 'Bonked by a loose apple! Take the market awnings.' : enemy instanceof TownJet ? 'Soaked by a water jet! Wait for it to switch off.' : 'Chased out of the garden! Jump the fence after the bark.';
+                        this.triggerGameOver(reason, narrative);
+                    }
+                    return;
+                }
 
                 // BOSS COLLISION LOGIC
                 if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator || enemy instanceof BossBaker) {
@@ -232,6 +263,8 @@ export class World {
             }
         });
 
+        if (this.ended) return;
+
         // Water
         this.waters.forEach(water => {
             if (this.player &&
@@ -248,6 +281,8 @@ export class World {
                 }
             }
         });
+
+        if (this.ended) return;
 
         // Collectibles
         this.collectibles.forEach(bone => {
@@ -311,9 +346,11 @@ export class World {
     }
 
     private triggerLevelComplete() {
+        if (this.ended) return;
+        this.ended = true;
         audioManager.stopMusic();
         audioManager.playSFX(SoundType.WIN_SHORT);
-        if (this.currentLevel < 12) {
+        if (this.currentLevel < 13) {
             this.events.onLevelComplete(this.currentLevel, this.player?.bonesCollected || 0);
         } else {
             this.events.onGameWon(this.player?.bonesCollected || 0);
@@ -321,6 +358,8 @@ export class World {
     }
 
     private triggerGameOver(reason: string, narrative: string) {
+        if (this.ended) return;
+        this.ended = true;
         audioManager.stopMusic();
         if (reason === 'drowned') audioManager.playSFX(SoundType.SPLASH);
         else audioManager.playSFX(SoundType.CRASH);

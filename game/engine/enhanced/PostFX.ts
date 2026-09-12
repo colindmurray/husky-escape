@@ -14,6 +14,7 @@ interface Grade {
 }
 
 const GRADES: Record<number, Grade> = {
+    13: { top: [255, 228, 163, 0.05], bottom: [255, 201, 124, 0.04], mode: 'screen', alpha: 1 },
     1: { top: [40, 70, 140, 0.10], bottom: [10, 20, 50, 0.16], mode: 'multiply', alpha: 1 },
     2: { top: [60, 60, 130, 0.08], bottom: [120, 70, 80, 0.12], mode: 'multiply', alpha: 1 },
     3: { top: [20, 25, 70, 0.14], bottom: [30, 45, 60, 0.18], mode: 'multiply', alpha: 1 },

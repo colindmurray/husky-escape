@@ -1,6 +1,7 @@
 
 import { Entity, GRAVITY, FRICTION, JUMP_FORCE } from "./Entity";
 import { InputState, SoundType } from "../../types";
+import { CollapsingAwning, TownPlatform } from "./Town";
 import { Platform } from "./Platform";
 import { Umbrella } from "./Umbrella";
 import { SkiJump } from "./SkiJump";
@@ -29,6 +30,9 @@ export class Player extends Entity {
     // Zone 11: neon dash pads grant a short friction-free sprint
     public dashFrames = 0;
 
+    public hasBandana = false;
+    public townBumpFrames = 0;
+
     public standingOnShakingPlatform = false;
 
     constructor(x: number, y: number) {
@@ -38,7 +42,9 @@ export class Player extends Entity {
     update(platforms?: Entity[], input?: InputState, height?: number, currentLevel?: number) {
         if (!platforms || !input || height === undefined || currentLevel === undefined) return;
         
+        const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
+        if (this.townBumpFrames > 0) this.townBumpFrames--;
 
         // --- LEVEL 8: UNDERWATER PHYSICS ---
         if (currentLevel === 8) {
@@ -226,6 +232,10 @@ export class Player extends Entity {
         this.standingOnShakingPlatform = false;
 
         platforms.forEach(platform => {
+            if (platform instanceof CollapsingAwning && platform.collapsed) return;
+            // Town shelves support from above; Onyx can jump up through cloth and bench tops.
+            if (platform instanceof TownPlatform && ['awning', 'bench', 'stone', 'float'].includes(platform.kind)
+                && (this.velY < 0 || previousBottom > platform.y + 2)) return;
             // Zone 11: industrial fans lift Onyx through their air column
             if (platform instanceof Fan) {
                 platform.applyLift(this);
@@ -275,6 +285,7 @@ export class Player extends Entity {
                     audioManager.playSFX(SoundType.JUMP);
                 } 
                 else {
+                    if (platform instanceof CollapsingAwning) platform.stepOn();
                     this.grounded = true;
                     this.velY = 0;
                     this.jumpsLeft = 2;
@@ -318,6 +329,7 @@ export class Player extends Entity {
                 t: Date.now() / 1000,
             });
             if (this.hasUmbrella && !this.facingRight) this.drawHeldUmbrella(ctx, x, y);
+            if (this.hasBandana) this.drawBandana(ctx, x, y);
             ctx.restore();
             return;
         }
@@ -401,7 +413,14 @@ export class Player extends Entity {
              this.drawHeldUmbrella(ctx, x, y);
         }
 
+        if (this.hasBandana) this.drawBandana(ctx, x, y);
         ctx.restore();
+    }
+
+    private drawBandana(ctx: CanvasRenderingContext2D, x: number, y: number) {
+        ctx.fillStyle = "#ffd268";
+        ctx.beginPath(); ctx.moveTo(x + 23, y + 18); ctx.lineTo(x + 39, y + 18); ctx.lineTo(x + 28, y + 31); ctx.fill();
+        ctx.fillStyle = "#b65c3d"; ctx.fillRect(x + 29, y + 20, 3, 3);
     }
 
     private drawHeldUmbrella(ctx: CanvasRenderingContext2D, x: number, y: number) {

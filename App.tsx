@@ -138,6 +138,7 @@ export default function App() {
         else if (currentLvl === 8) engineRef.current?.startPierCutscene();
         else if (currentLvl === 10) engineRef.current?.startNeonCutscene();
         else if (currentLvl === 11) engineRef.current?.startBakeryCutscene();
+        else if (currentLvl === 12) engineRef.current?.startTownCutscene(difficulty);
         else engineRef.current?.startLevel((currentLvl || 0) + 1, difficulty);
     };
 
@@ -177,6 +178,7 @@ export default function App() {
          else if (lvl === 9) engineRef.current?.startPierCutscene();
           else if (lvl === 11) engineRef.current?.startNeonCutscene();
           else if (lvl === 12) engineRef.current?.startBakeryCutscene();
+          else if (lvl === 13) engineRef.current?.startTownCutscene(difficulty);
           else engineRef.current?.startLevel(lvl, difficulty);
     };
 
@@ -186,7 +188,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
-        if (isWin) return { title: "VICTORY!", desc: "You beat the Night Baker, slipped out the back door with a warm baguette, and followed your nose all the way home. Good girl, Onyx!" };
+        if (isWin) return { title: "VICTORY!", desc: "You escaped the bakery, slipped through the busy market, and rode the parade all the way home. Good girl, Onyx!" };
         if (isLevelComplete) {
             const congrats = [
                 "The pound breakout has begun!",
@@ -217,11 +219,16 @@ export default function App() {
             return { title: "WATCH YOUR STEP!", desc: "A husky always lands on his feet... but not from that height!" };
         }
         if (reason === 'drowned') {
+            if (level === 13) return { title: 'FOUNTAIN SPLASH!', desc: 'The hard route crosses deep water. Ride the moving stones; the bandana cannot save you from a fall.' };
             if (level === 4) return { title: "WASHED AWAY!", desc: "The tide came in fast! You need to stay on the dry sand." };
             if (level === 9) return { title: "ROUGH SEAS!", desc: "The storm waves are too high! Don't fall in!" };
             return { title: "SPLASH!", desc: "Looks like you aren't much of a swimmer without your gear." };
         }
 
+        if (reason === 'cycled') return { title: "RING RING!", desc: "A delivery bike caught you! Wait on a bench when the bell rings, then cross behind it." };
+        if (reason === 'appled') return { title: "APPLE BONK!", desc: "Watch for loose apples at the fruit cart, or take the awnings above the market." };
+        if (reason === 'sprinkled') return { title: "SOAKED!", desc: "The jets hiss before spraying. Wait for a gap or hop across the stepping stones." };
+        if (reason === 'yarddog') return { title: "WOOF!", desc: "The yard dog guards the gold-marked stretch. Wait for it to return home, or jump across the garden awning." };
         if (reason === 'caught') return { title: "BUSTED!", desc: "The pound dog-catcher nabbed you with his net!" };
         if (reason === 'wolfed') return { title: "WOLF PACK!", desc: "The mountain wolves don't like trespassers on their peaks." };
         if (reason === 'excavator') return { title: "CRUSHED!", desc: "You got trapped in the giant yellow excavator bucket! Wait for its arm to slam down, then run up it to hit the strobe cab light!" };
@@ -251,7 +258,7 @@ export default function App() {
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
             <div className="flex gap-2 justify-center flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10,11,12].map(lvl => (
+                {[1,2,3,4,5,6,7,8,9,10,11,12,13].map(lvl => (
                     <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="w-8 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl}</button>
                 ))}
             </div>
@@ -330,7 +337,7 @@ export default function App() {
                                     <p className="text-xs text-gray-400 mb-2 uppercase">Difficulty</p>
                                     <div className="flex flex-col gap-2">
                                         <button onClick={() => changeDifficulty(Difficulty.EASY)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.EASY ? 'bg-green-900 border-green-500 text-green-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Easy</button>
-                                        <button onClick={() => changeDifficulty(Difficulty.HARD)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.HARD ? 'bg-orange-900 border-orange-500 text-orange-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Hard (More Enemies)</button>
+                                        <button onClick={() => changeDifficulty(Difficulty.HARD)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.HARD ? 'bg-orange-900 border-orange-500 text-orange-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Hard (Extra Challenges)</button>
                                         <button onClick={() => changeDifficulty(Difficulty.HARDCORE)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.HARDCORE ? 'bg-red-900 border-red-500 text-red-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Hardcore (Permadeath)</button>
                                     </div>
                                 </div>
