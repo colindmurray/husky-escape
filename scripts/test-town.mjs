@@ -26,7 +26,7 @@ try {
         const { Player } = await import('/game/entities/Player.ts');
         const { inputManager } = await import('/game/Input.ts');
         const { getLevel13 } = await import('/game/levels/level13.ts');
-        const { TownPedestrian, TownCyclist, TownJet, YardDog, CollapsingAwning, BandanaPickup, TownPlatform } = await import('/game/entities/Town.ts');
+        const { TownPedestrian, TownCyclist, TownTimedHazard, YardDog, CollapsingAwning, BandanaPickup, TownPlatform } = await import('/game/entities/Town.ts');
         const { Difficulty, SoundType } = await import('/types.ts');
         const { audioManager } = await import('/game/Audio.ts');
         const { gfxSettings } = await import('/game/GfxSettings.ts');
@@ -46,9 +46,16 @@ try {
         check(easy.props.filter(p => p instanceof BandanaPickup).length === 2 && hard.props.filter(p => p instanceof BandanaPickup).length === 1, 'Hard bandana requires the upper route');
         check(hard.platforms.filter(p => p.kind === 'float').every(p => p.w === 150), 'Hard parade requires narrow moving floats');
         check(easy.exit.locked && hard.exit.locked, 'Both routes require the parade pass to open home');
-        check(easy.enemies.filter(e => e instanceof TownJet).every(e => e.h >= 155), 'Easy jets reach beyond low obstacles');
-        check(hard.enemies.filter(e => e instanceof TownJet).length > easy.enemies.filter(e => e instanceof TownJet).length, 'Hard adds a second parade jet');
+        check(easy.enemies.filter(e => e instanceof TownTimedHazard).every(e => e.h >= 155), 'Easy timed hazards reach beyond low obstacles');
+        check(hard.enemies.filter(e => e instanceof TownTimedHazard).length > easy.enemies.filter(e => e instanceof TownTimedHazard).length, 'Hard adds a second parade roadwork post');
         check(JSON.stringify(getLevel13(720, Difficulty.HARDCORE)) === JSON.stringify(hard), 'Hardcore uses the hard layout');
+        for (const layout of [easy, hard]) {
+            const traps = layout.enemies.filter(e => e instanceof TownTimedHazard);
+            check(traps.filter(e => e.kind === 'fountain').length === 3 && traps.filter(e => e.kind === 'fountain').every(e => e.x >= 3000 && e.x < 3800), 'Fountain jets stay in the square');
+            check(traps.filter(e => e.kind === 'hydrant').length === 2 && traps.filter(e => e.kind === 'roadwork').every(e => e.x >= 5000), 'Gardens use hydrants; finale uses mechanical posts');
+            check(layout.props.filter(p => p.kind === 'sign').length === 2, 'Only town and parade wayfinding signs remain');
+        }
+
 
         const idle = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false, Space: false };
         const awning = new CollapsingAwning(100, 400, 160, '#d96252');
@@ -87,22 +94,33 @@ try {
         check(world.player.hasBandana && !world.props.some(p => p instanceof BandanaPickup && p.x === 350), 'Bandana pickup equips and disappears');
         const pedestrian = new TownPedestrian(350, 563, 80);
         pedestrian.update([], world.player);
-        check(pedestrian.yielding, 'Bandana makes pedestrians yield');
+        check(pedestrian.yielding && pedestrian.greetingFrames > 0, 'Bandana makes pedestrians yield and say Good dog');
+        for (let f = 0; f < 100; f++) pedestrian.update([], world.player);
+        check(pedestrian.yielding && pedestrian.greetingFrames === 0, 'Good dog greeting fades while the pedestrian keeps yielding');
         world.enemies = [pedestrian]; world.player.hasBandana = false;
         world.player.x = 350; world.player.y = 580; world.player.velY = 0; world.update();
         check(lost.length === 0 && world.player.townBumpFrames > 0, 'Pedestrians bump without ending the run');
         world.player.hasBandana = true; world.player.x = 350; world.player.y = 580;
-        const jet = new TownJet(350, 620, 330, 75, 55);
+        const jet = new TownTimedHazard(350, 620, 330, 75, 55);
         world.enemies = [jet]; world.update();
         check(!world.player.hasBandana && world.player.invincibleTimer === 100 && lost.length === 0, 'Bandana absorbs one town hazard');
         world.player.x = 350; world.player.y = 580; world.player.invincibleTimer = 0; world.player.velY = 0;
-        world.enemies.push(new TownJet(350, 620, 330, 75, 55)); world.update(); world.update();
+        world.enemies.push(new TownTimedHazard(350, 620, 330, 75, 55)); world.update(); world.update();
         check(lost.length === 1 && lost[0] === 'sprinkled', 'Overlapping hazards emit only one game-over event');
         world.loadLevel(13, false, Difficulty.HARD);
         check(!world.player.hasBandana && world.player.townBumpFrames === 0, 'Restart clears town item and bump state');
         world.player.hasBandana = true; world.enemies = [];
         world.player.x = 3370; world.player.y = 652; world.update();
         check(lost.at(-1) === 'drowned', 'Bandana cannot bypass the hard fountain crossing');
+        world.loadLevel(13, false, Difficulty.EASY); world.props = [];
+        const post = new TownTimedHazard(600, 620, 340, 95, 0, 205, 'roadwork');
+        world.enemies = [post]; world.player.x = 600; world.player.y = 580;
+        const deathsBeforePost = lost.length; world.update();
+        check(lost.length === deathsBeforePost, 'Retracted roadwork post is harmless during its warning');
+        post.frame = 55; world.player.hasBandana = true; world.update();
+        check(!world.player.hasBandana && world.player.invincibleTimer > 0, 'Bandana saves one roadwork collision');
+        world.player.invincibleTimer = 0; world.update();
+        check(lost.at(-1) === 'roadwork', 'Raised roadwork post uses its own defeat reason');
         world.loadLevel(12, false, Difficulty.EASY); world.enemies = [];
         world.exit.unlock(); world.player.x = world.exit.x; world.player.y = world.exit.y; world.update();
         check(completed.at(-1) === 12 && wins === 0, 'Bakery exit advances instead of ending the game');
@@ -197,7 +215,7 @@ try {
         check(true, 'Existing levels still initialize, update, and draw in both visual modes');
         check(MUSIC_TRACKS[SoundType.THEME_TOWN].sequence.every(([f, d]) => Number.isFinite(f) && d > 0), 'Town theme has a valid melody');
         for (const enhanced of [false, true]) {
-            for (const sound of [SoundType.BIKE_BELL, SoundType.DOG_BARK, SoundType.WATER_JET]) {
+            for (const sound of [SoundType.BIKE_BELL, SoundType.DOG_BARK, SoundType.WATER_JET, SoundType.ROADWORK]) {
                 const ctx = new OfflineAudioContext(1, 44100, 44100), gain = ctx.createGain(); gain.connect(ctx.destination);
                 if (enhanced) check(playSoundEffectEnhanced(sound, ctx, gain), `Enhanced ${sound} has its own sound`);
                 else playSoundEffect(sound, ctx, gain);

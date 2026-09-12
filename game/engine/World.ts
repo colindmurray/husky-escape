@@ -1,6 +1,6 @@
 
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
-import { TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownJet, YardDog } from "../entities/Town";
+import { TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -148,9 +148,9 @@ export class World {
             if (this.ended) return;
             enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
-            const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownJet || enemy instanceof YardDog;
+            const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownTimedHazard || enemy instanceof YardDog;
             if (enemy instanceof RollingApple && !enemy.active) return;
-            if ((enemy instanceof TownCyclist || enemy instanceof TownJet || enemy instanceof YardDog) && !enemy.dangerous) return;
+            if ((enemy instanceof TownCyclist || enemy instanceof TownTimedHazard || enemy instanceof YardDog) && !enemy.dangerous) return;
             const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
@@ -176,8 +176,8 @@ export class World {
                         this.player.velY = -7;
                         audioManager.playSFX(SoundType.COLLECT);
                     } else {
-                        const reason = enemy instanceof TownCyclist ? 'cycled' : enemy instanceof RollingApple ? 'appled' : enemy instanceof TownJet ? 'sprinkled' : 'yarddog';
-                        const narrative = enemy instanceof TownCyclist ? 'A delivery bike caught up! Listen for the bell and wait on a bench.' : enemy instanceof RollingApple ? 'Bonked by a loose apple! Take the market awnings.' : enemy instanceof TownJet ? 'Soaked by a water jet! Wait for it to switch off.' : 'Chased out of the garden! Jump the fence after the bark.';
+                        const reason = enemy instanceof TownCyclist ? 'cycled' : enemy instanceof RollingApple ? 'appled' : enemy instanceof TownTimedHazard ? (enemy.kind === 'roadwork' ? 'roadwork' : 'sprinkled') : 'yarddog';
+                        const narrative = enemy instanceof TownCyclist ? 'A delivery bike caught up! Listen for the bell and wait on a bench.' : enemy instanceof RollingApple ? 'Bonked by a loose apple! Take the market awnings.' : enemy instanceof TownTimedHazard ? (enemy.kind === 'roadwork' ? 'Caught by a rising roadwork post! Wait for it to retract.' : enemy.kind === 'hydrant' ? 'Soaked by a leaking hydrant! Wait for the burst to stop.' : 'Soaked by a fountain jet! Wait for it to switch off.') : 'Chased out of the garden! Jump the fence after the bark.';
                         this.triggerGameOver(reason, narrative);
                     }
                     return;

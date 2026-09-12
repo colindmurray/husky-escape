@@ -40,6 +40,7 @@ export enum SoundType {
     BIKE_BELL = 'bike_bell',
     DOG_BARK = 'dog_bark',
     WATER_JET = 'water_jet',
+    ROADWORK = 'roadwork',
 
     // MUSIC TRACKS
     THEME_MENU = 'theme_menu',

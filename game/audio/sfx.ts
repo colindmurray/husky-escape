@@ -248,8 +248,21 @@ export function playSoundEffect(type: SoundType, ctx: AudioContext, masterGain: 
 }
 
 export function playTownSound(type: SoundType, ctx: AudioContext, masterGain: GainNode, enhanced: boolean): boolean {
-    if (type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET) return false;
+    if (type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET && type !== SoundType.ROADWORK) return false;
     const t = ctx.currentTime;
+    if (type === SoundType.ROADWORK) {
+        for (let i = 0; i < (enhanced ? 3 : 2); i++) {
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            const start = t + i * 0.09;
+            osc.type = i === 2 ? 'sawtooth' : 'square';
+            osc.frequency.setValueAtTime(i === 2 ? 110 : 620, start);
+            osc.frequency.exponentialRampToValueAtTime(i === 2 ? 45 : 420, start + 0.09);
+            gain.gain.setValueAtTime(0.0001, start); gain.gain.linearRampToValueAtTime(0.045, start + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.11);
+            osc.connect(gain).connect(masterGain); osc.start(start); osc.stop(start + 0.12);
+        }
+        return true;
+    }
     if (type === SoundType.WATER_JET) {
         const length = Math.floor(ctx.sampleRate * 0.35);
         const buffer = ctx.createBuffer(1, length, ctx.sampleRate);

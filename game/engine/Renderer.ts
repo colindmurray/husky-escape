@@ -61,13 +61,14 @@ export class Renderer {
         }
 
         if (currentLevel === 13 && world.player) {
-            const section = world.player.x < 1700 ? 'BAKERY LANE' : world.player.x < 3000 ? 'THE MARKET' : world.player.x < 3800 ? 'FOUNTAIN SQUARE' : world.player.x < 4870 ? 'QUIET GARDENS' : 'THE PARADE';
-            townLabel(this.ctx, `13 • MARKET DAY (${world.difficulty}) / ${section}`, width / 2, 112);
+            this.ctx.save(); this.ctx.font = 'bold 14px sans-serif'; this.ctx.textAlign = 'left';
+            this.ctx.fillStyle = '#fff5d7'; this.ctx.shadowColor = '#29434d'; this.ctx.shadowBlur = 4;
             if (world.player.x >= 4750) {
                 const stamps = world.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float' && p.boarded).length;
-                townLabel(this.ctx, stamps === 3 ? 'PARADE PASS COMPLETE • Home gate open →' : `PARADE PASS ${stamps}/3 • Land on each gold-marked float`, width / 2, height - 82);
+                this.ctx.fillText(stamps === 3 ? '★ ★ ★  Home open →' : `★ ${stamps}/3  Parade floats`, 20, 76);
             }
-            townLabel(this.ctx, world.player.hasBandana ? 'GOOD DOG BANDANA • Crowds yield • 1 shield' : 'Find a gold bandana: crowds yield + 1 shield', width / 2, height - 48);
+            if (world.player.hasBandana) this.ctx.fillText('◆ Bandana · 1 save', 20, 96);
+            this.ctx.restore();
         }
 
         // --- LEVEL 9: ATMOSPHERIC OVERLAY (classic only — enhanced has its own storm) ---

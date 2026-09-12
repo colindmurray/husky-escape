@@ -49,9 +49,9 @@ export class CutsceneManager {
         ],
         'town_intro': [
             { text: "Out of the bakery, into the sunshine... It's market day!", sound: SoundType.THEME_TOWN },
-            { text: "So many shoes! Hop onto benches and market awnings to slip past the crowds.", sound: null },
+            { text: "The streets are busy! Shoppers bump you aside, but they cannot hurt you.", sound: null },
             { text: "A golden Good Dog Bandana! People wave you through, and it saves you from one town hazard.", sound: SoundType.COLLECT },
-            { text: "Listen for bike bells and barks. Time the jets. Land on all three parade floats to open the home gate!", sound: SoundType.BIKE_BELL }
+            { text: "Watch the leaking hydrants and rising roadwork posts. Land on all three gold-marked parade floats to open home!", sound: SoundType.BIKE_BELL }
         ],
         'bakery_intro': [
             { text: "Past the neon roofs... wait. Do you smell that?", sound: SoundType.COLLECT },

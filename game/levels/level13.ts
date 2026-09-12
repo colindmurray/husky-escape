@@ -1,5 +1,5 @@
 import { Collectible, Exit, Water } from '../entities/index';
-import { CollapsingAwning, BandanaPickup, RollingApple, TownCyclist, TownJet, TownPedestrian, TownPlatform, TownScenery, YardDog } from '../entities/Town';
+import { CollapsingAwning, BandanaPickup, RollingApple, TownCyclist, TownTimedHazard, TownPedestrian, TownPlatform, TownScenery, YardDog } from '../entities/Town';
 import { Difficulty } from '../../types';
 import type { LevelData } from './types';
 
@@ -52,12 +52,12 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         new TownPedestrian(2680, floor - 57, 90, 1, false, '#d96252'),
         new RollingApple(2960, 2150, floor, easy ? 2.8 : 3.8, easy ? 450 : 350, 0),
         new RollingApple(2960, 2150, floor, easy ? 2.8 : 3.8, easy ? 450 : 350, 165),
-        new TownJet(3160, floor, easy ? 330 : 265, easy ? 75 : 100, 0, jetHeight),
-        new TownJet(3350, floor, easy ? 330 : 265, easy ? 75 : 100, 110, jetHeight),
-        new TownJet(3540, floor, easy ? 330 : 265, easy ? 75 : 100, 220, jetHeight),
-        new TownJet(3930, floor, easy ? 340 : 280, easy ? 80 : 110, 80, jetHeight),
+        new TownTimedHazard(3160, floor, easy ? 330 : 265, easy ? 75 : 100, 0, jetHeight),
+        new TownTimedHazard(3350, floor, easy ? 330 : 265, easy ? 75 : 100, 110, jetHeight),
+        new TownTimedHazard(3540, floor, easy ? 330 : 265, easy ? 75 : 100, 220, jetHeight),
+        new TownTimedHazard(3930, floor, easy ? 340 : 280, easy ? 80 : 110, 80, jetHeight, 'hydrant'),
         new YardDog(4190, 4420, floor - 36, easy ? 2.7 : 3.8, easy ? 85 : 60),
-        new TownJet(4610, floor, easy ? 340 : 280, easy ? 80 : 110, 240, jetHeight),
+        new TownTimedHazard(4610, floor, easy ? 340 : 280, easy ? 80 : 110, 240, jetHeight, 'hydrant'),
     ];
     for (const [i, x] of [1850, 2180, 2510, 2860].entries()) {
         enemies.push(new TownPedestrian(x, floor - 57, 45, easy ? 0.65 : 1, false, ['#e4af46', '#8272ab'][i % 2]));
@@ -99,16 +99,11 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
     }
     const props: LevelData['props'] = [
         new TownScenery(230, floor - 128, 'sign', 'MARKET DAY →'),
-        new TownScenery(460, floor - 95, 'sign', 'Jump over shoppers, or take the benches'),
-        new TownScenery(940, floor - 150, 'sign', 'Bike bell? Wait up here!'),
-        new TownScenery(1890, floor - 270, 'sign', easy ? 'THE MARKET • Follow the awnings →' : 'ROAD CLOSED • Frayed awnings tear underfoot!'),
         new TownScenery(2920, floor - 5, 'cart'),
         new TownScenery(3090, floor - 24, 'fountain'),
-        new TownScenery(3270, floor - 205, 'sign', easy ? 'FOUNTAIN SQUARE • Watch the jets' : 'DEEP FOUNTAIN • Ride the moving stones'),
         new TownScenery(3860, floor, 'garden'),
         new TownScenery(4190, floor, 'garden'),
-        new TownScenery(4240, floor - 245, 'sign', 'WOOF! Wait for the dog to head home'),
-        new TownScenery(4880, floor - 210, 'sign', easy ? 'PARADE PASS • Land on all 3 floats!' : 'PARADE PASS • 3 floats, broken road, timed jets'),
+        new TownScenery(4880, floor - 210, 'sign', 'PARADE →'),
         new TownScenery(6620, floor, 'gate'),
         new TownScenery(290, floor, 'neighbor'),
         new TownScenery(3700, floor - 45, 'neighbor'),
@@ -120,8 +115,8 @@ export function getLevel13(height: number, difficulty: Difficulty): LevelData {
         new TownScenery(6460, floor - 5, 'pigeon'),
     ];
     for (const platform of platforms) platform.floorY = floor;
-    enemies.push(new TownJet(5600, floor, easy ? 340 : 280, easy ? 95 : 120, 160, easy ? 205 : 255));
-    if (!easy) enemies.push(new TownJet(6100, floor, 310, 110, 60, 205));
+    enemies.push(new TownTimedHazard(5600, floor, easy ? 340 : 280, easy ? 95 : 120, 160, easy ? 205 : 255, 'roadwork'));
+    if (!easy) enemies.push(new TownTimedHazard(6100, floor, 310, 110, 60, 205, 'roadwork'));
     const exit = new Exit(6670, floor - 80);
     exit.lock();
     const bones = [

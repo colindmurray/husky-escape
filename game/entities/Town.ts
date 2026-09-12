@@ -5,7 +5,7 @@ import type { Player } from './Player';
 import { SoundType } from '../../types';
 import { audioManager } from '../Audio';
 import { gfxSettings } from '../GfxSettings';
-import { drawTownPerson, drawTownPlatform, townBox, townColors, townLabel, type TownPlatformKind } from '../engine/TownArt';
+import { drawTownPerson, drawTownPlatform, townBox, townColors, type TownPlatformKind } from '../engine/TownArt';
 
 const TAU = Math.PI * 2;
 const near = (a: Entity, b: Entity, distance: number) => Math.abs(a.x - b.x) < distance && Math.abs(a.y - b.y) < 250;
@@ -49,7 +49,7 @@ export class CollapsingAwning extends TownPlatform {
             ctx.fillRect(x + this.w - 12, this.y + this.h, 7, (this.floorY ?? this.y + 130) - this.y - this.h);
             ctx.fillStyle = this.color;
             ctx.beginPath(); ctx.moveTo(x + 8, this.y + 25); ctx.lineTo(x + 36, this.y + 83); ctx.lineTo(x + 16, this.y + 112); ctx.closePath(); ctx.fill();
-            townLabel(ctx, 'REPAIRING…', x + this.w / 2, this.y - 12);
+
         } else {
             super.draw(ctx, camX);
             const wear = this.countdown ? 1 - this.countdown / 55 : 0;
@@ -58,7 +58,7 @@ export class CollapsingAwning extends TownPlatform {
                 const cx = x + this.w * (0.25 + i * 0.25);
                 ctx.beginPath(); ctx.moveTo(cx, this.y + 4); ctx.lineTo(cx - 5, this.y + 10); ctx.lineTo(cx + 4, this.y + this.h + wear * 9); ctx.stroke();
             }
-            townLabel(ctx, this.countdown ? 'TEARING! JUMP →' : 'FRAYED AWNING', x + this.w / 2, this.y - 12, '#ffe294');
+
             if (this.countdown) { ctx.fillStyle = '#f5d68c'; ctx.fillRect(x, this.y - 5, this.w * (1 - wear), 3); }
         }
         ctx.restore();
@@ -70,13 +70,22 @@ export class TownPedestrian extends Enemy {
     public yielding = false;
     private frame = 0;
     private walking = false;
+    public greetingFrames = 0;
+    private greetingCooldown = 0;
     constructor(x: number, y: number, distance: number, speed = 0.8, public marching = false, color = '#258d91') {
         super(x, y, distance, speed);
         this.w = 38; this.h = 57; this.color = color;
     }
     update(_platforms?: Entity[], player?: Player) {
         this.frame++;
+        const wasYielding = this.yielding;
         this.yielding = !!player?.hasBandana && near(this, player, 145);
+        this.greetingFrames = Math.max(0, this.greetingFrames - 1);
+        this.greetingCooldown = Math.max(0, this.greetingCooldown - 1);
+        if (this.yielding && !wasYielding && this.greetingCooldown === 0) {
+            this.greetingFrames = 90; this.greetingCooldown = 300;
+        }
+        if (!this.yielding) this.greetingFrames = 0;
         this.walking = !this.yielding && (this.marching || (this.frame + this.origX) % 260 >= 55);
         if (!this.walking) {
             this.walkAnim += 0.07;
@@ -89,7 +98,15 @@ export class TownPedestrian extends Enemy {
             townBox(ctx, this.x - camX + 7, this.y - 6, 25, 6, '#d6aa4e');
             townBox(ctx, this.x - camX + 25, this.y + 27, 16, 17, '#f0d7a1');
         }
-        if (this.yielding) { ctx.fillStyle = '#f6d36d'; ctx.font = '16px sans-serif'; ctx.fillText('♥', this.x - camX + 12, this.y - 10); }
+        if (this.greetingFrames > 0) {
+            const x = this.x - camX + 19, y = this.y - 35;
+            ctx.save();
+            ctx.fillStyle = '#fff6dc'; ctx.strokeStyle = '#768d7b'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.roundRect(x - 43, y, 86, 25, 9); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x - 6, y + 24); ctx.lineTo(x, y + 32); ctx.lineTo(x + 5, y + 24); ctx.fill();
+            ctx.fillStyle = '#38594b'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Good dog!', x, y + 17);
+            ctx.restore();
+        }
     }
 }
 
@@ -124,7 +141,10 @@ export class TownCyclist extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         const x = this.x - camX, y = this.y;
         if (this.phase === 'warning') {
-            townLabel(ctx, this.direction === -1 ? 'RING RING!  ◀ BIKE' : 'RING RING!  BIKE ▶', Math.max(105, Math.min(ctx.canvas.width - 105, x)), y - 38, '#ffe294');
+            ctx.save(); ctx.strokeStyle = '#b77a2f'; ctx.lineWidth = 2;
+            const bx = Math.max(20, Math.min(ctx.canvas.width - 20, x + 13));
+            for (const radius of [9, 15, 21]) { ctx.beginPath(); ctx.arc(bx, y + 19, radius, -0.8, 0.8); ctx.stroke(); }
+            ctx.restore();
         }
         if (x < -100 || x > ctx.canvas.width + 100) return;
         const rich = gfxSettings.visualMode === 'enhanced';
@@ -181,7 +201,9 @@ export class RollingApple extends Entity {
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         const phase = ((this.frame % this.period) + this.period) % this.period;
         if (this.frame >= 0 && phase < 60 && this.startX > camX && this.startX < camX + ctx.canvas.width) {
-            townLabel(ctx, 'LOOSE APPLES! ◀', this.startX - camX, this.floorY - 85, '#ffe294');
+            ctx.save(); ctx.strokeStyle = '#a66b36'; ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) { const x = this.startX - camX - 15 + i * 10; ctx.beginPath(); ctx.moveTo(x, this.floorY - 60); ctx.lineTo(x - 4, this.floorY - 72); ctx.stroke(); }
+            ctx.restore();
         }
         if (!this.active || this.x < camX - 40 || this.x > camX + ctx.canvas.width + 40) return;
         ctx.save();
@@ -198,9 +220,9 @@ export class RollingApple extends Entity {
     }
 }
 
-export class TownJet extends Entity {
+export class TownTimedHazard extends Entity {
     public frame: number;
-    constructor(x: number, public floorY: number, private period: number, public activeFrames: number, offset: number, height = 92) {
+    constructor(x: number, public floorY: number, private period: number, public activeFrames: number, offset: number, height = 92, public kind: 'fountain' | 'hydrant' | 'roadwork' = 'fountain') {
         super(x, floorY - height, 34, height, '#64cfe1'); this.frame = offset;
     }
     get phase() { return this.frame % this.period; }
@@ -208,13 +230,43 @@ export class TownJet extends Entity {
     get dangerous() { return this.phase >= 55 && this.phase < 55 + this.activeFrames; }
     update(_platforms?: Entity[], player?: Player) {
         this.frame++;
-        if ((this.phase === 1 || this.phase === 55) && player && near(this, player, 450)) audioManager.playSFX(SoundType.WATER_JET);
+        if ((this.phase === 1 || this.phase === 55) && player && near(this, player, 450)) audioManager.playSFX(this.kind === 'roadwork' ? SoundType.ROADWORK : SoundType.WATER_JET);
     }
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         const x = this.x - camX;
         if (x < -80 || x > ctx.canvas.width + 80) return;
         const rich = gfxSettings.visualMode === 'enhanced';
         ctx.save();
+        if (this.kind === 'roadwork') {
+            townBox(ctx, x - 10, this.floorY - 8, 54, 8, '#3b4b50');
+            const top = this.dangerous ? this.y : this.floorY - 12;
+            if (this.dangerous) {
+                ctx.fillStyle = '#ce8d36'; ctx.fillRect(x, top, this.w, this.h - 8);
+                if (rich) {
+                    const metal = ctx.createLinearGradient(x, 0, x + this.w, 0);
+                    metal.addColorStop(0, '#574c3d'); metal.addColorStop(0.3, '#dce1c2'); metal.addColorStop(0.6, '#9b9f88'); metal.addColorStop(1, '#495354');
+                    ctx.fillStyle = metal; ctx.fillRect(x + 5, top + 28, this.w - 10, this.h - 36);
+                }
+                for (let y = top + 35; y < this.floorY - 12; y += 38) {
+                    ctx.fillStyle = '#36464b'; ctx.fillRect(x, y, this.w, 12);
+                    ctx.fillStyle = '#f5d68a'; ctx.fillRect(x, y + 12, this.w, 5);
+                }
+                townBox(ctx, x, top, this.w, 28, '#db9b3c');
+                ctx.fillStyle = '#fff0b6'; ctx.fillRect(x + 3, top + 5, this.w - 6, 7);
+                ctx.strokeStyle = '#725936'; ctx.lineWidth = 2;
+                for (const k of [5, this.w - 5]) { ctx.beginPath(); ctx.arc(x + k, top + 21, 2, 0, TAU); ctx.stroke(); }
+            }
+            // A flashing beacon and dashed rise outline warn before the post extends.
+            if (this.warning) {
+                ctx.setLineDash([4, 7]); ctx.strokeStyle = '#ad773da0'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, this.y, this.w, this.h); ctx.setLineDash([]);
+            }
+            const lit = this.warning && this.frame % 16 < 8;
+            ctx.fillStyle = lit ? '#ffe196' : '#bc7d35';
+            ctx.beginPath(); ctx.arc(x + 17, top + 4, 7, Math.PI, 0); ctx.fill();
+            if (lit) { ctx.strokeStyle = '#eeb947'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x + 17, top + 4, 13, Math.PI, 0); ctx.stroke(); }
+            ctx.restore(); return;
+        }
         // The recessed grate and pressure dial remain visible between bursts.
         townBox(ctx, x - 6, this.floorY - 8, 46, 8, '#304f5b');
         ctx.strokeStyle = '#a5c1bd'; ctx.lineWidth = 2;
@@ -226,7 +278,7 @@ export class TownJet extends Entity {
         if (this.warning) {
             ctx.save(); ctx.setLineDash([3, 6]); ctx.strokeStyle = '#a66b36b0'; ctx.lineWidth = 1.5;
             ctx.strokeRect(x, this.y, this.w, this.h); ctx.restore();
-            townLabel(ctx, 'HISS…', x + 17, this.floorY - 42, '#ffe294');
+
             ctx.strokeStyle = '#b8edec'; ctx.lineWidth = 1;
             for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x + 6 + k * 10, this.floorY - 28); ctx.quadraticCurveTo(x + k * 10 + 14, this.floorY - 32 - pressure * 12, x + 6 + k * 10, this.floorY - 37 - pressure * 12); ctx.stroke(); }
         }
@@ -248,6 +300,19 @@ export class TownJet extends Entity {
             }
             ctx.strokeStyle = '#c9f5ef90'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.ellipse(x + 17, this.floorY - 5, 22, 4, 0, 0, TAU); ctx.stroke();
+        }
+        if (this.kind === 'hydrant') {
+            const hy = this.floorY - 40;
+            townBox(ctx, x - 3, this.floorY - 8, 40, 8, '#733f37');
+            townBox(ctx, x + 4, hy + 4, 26, 32, '#bf5544');
+            if (rich) { ctx.fillStyle = '#ef937060'; ctx.fillRect(x + 8, hy + 7, 5, 27); }
+            ctx.fillStyle = '#d47451'; ctx.beginPath(); ctx.ellipse(x + 17, hy + 4, 14, 7, 0, 0, TAU); ctx.fill();
+            ctx.strokeStyle = '#492f31'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 15, hy - 2); ctx.lineTo(x + 12, hy + 5); ctx.lineTo(x + 19, hy + 9); ctx.stroke();
+            townBox(ctx, x - 4, hy + 12, 10, 12, '#e09161'); townBox(ctx, x + 29, hy + 12, 10, 12, '#e09161');
+            ctx.fillStyle = '#e7b886'; ctx.beginPath(); ctx.arc(x + 17, hy + 19, 6, 0, TAU); ctx.fill();
+            ctx.strokeStyle = '#8f6450'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + 31, hy + 26, 10, 0, Math.PI); ctx.stroke();
+            // Small drops make the damaged cap readable even while the burst is off.
+            ctx.fillStyle = '#91dbdf'; ctx.beginPath(); ctx.ellipse(x + 15, hy - 5 - this.frame % 20 / 4, 2, 3, 0, 0, TAU); ctx.fill();
         }
         ctx.restore();
     }
@@ -292,7 +357,10 @@ export class YardDog extends Entity {
         for (const end of [this.minX - camX, this.maxX - camX + this.w]) {
             ctx.fillStyle = '#e3cda5'; ctx.fillRect(end, y + 23, 4, 13);
         }
-        if (this.phase === 'warning') townLabel(ctx, 'WOOF! GET READY', x + 26, y - 19, '#ffe294');
+        if (this.phase === 'warning') {
+            ctx.strokeStyle = '#c27b38'; ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(x - 3, y + i * 8); ctx.lineTo(x - 12, y - 4 + i * 11); ctx.stroke(); }
+        }
         ctx.translate(x + 26, y); ctx.scale(facing, 1); ctx.translate(-26, 0);
         if (rich) { ctx.fillStyle = '#233b3a35'; ctx.beginPath(); ctx.ellipse(27, 37, 29, 4, 0, 0, TAU); ctx.fill(); }
         const stride = moving ? Math.sin(this.x / (charging ? 5 : 8)) * 5 : 0;
@@ -341,7 +409,7 @@ export class BandanaPickup extends Entity {
         ctx.fillStyle = '#b65c3d'; ctx.beginPath(); ctx.arc(x + 16, y + 13, 3, 0, TAU); ctx.fill();
         for (const [dx, dy] of [[10, 8], [14, 6], [19, 6], [23, 8]]) { ctx.beginPath(); ctx.arc(x + dx, y + dy, 1.8, 0, TAU); ctx.fill(); }
         ctx.restore();
-        townLabel(ctx, 'GOOD DOG BANDANA', x + 16, y - 15);
+
     }
 }
 
@@ -361,8 +429,10 @@ export class TownScenery extends Entity {
         if (x < -500 || x > ctx.canvas.width + 300) return;
         ctx.save();
         if (this.kind === 'sign') {
-            townLabel(ctx, this.text, x, y);
-            ctx.fillStyle = '#796451'; ctx.fillRect(x - 3, y + 8, 6, 26);
+            ctx.fillStyle = '#796451'; ctx.fillRect(x - 3, y + 8, 6, 42);
+            townBox(ctx, x - 72, y - 18, 144, 30, '#ae7950');
+            ctx.strokeStyle = '#704d39'; ctx.lineWidth = 2; ctx.strokeRect(x - 69, y - 15, 138, 24);
+            ctx.fillStyle = '#fff0cd'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(this.text, x, y + 3);
         } else if (this.kind === 'neighbor') {
             drawTownPerson(ctx, x, y - 57, '#8272ab', this.frame / 15, true);
         } else if (this.kind === 'pigeon') {
@@ -415,7 +485,8 @@ export class TownScenery extends Entity {
             ctx.strokeStyle = '#e6d6ad'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x, y - 37); ctx.lineTo(x + 320, y - 37); ctx.stroke();
         } else if (this.kind === 'gate') {
             townBox(ctx, x - 10, y - 195, 16, 195, '#f0dfb8'); townBox(ctx, x + 145, y - 195, 16, 195, '#f0dfb8');
-            townLabel(ctx, 'HOME SWEET HOME →', x + 75, y - 180);
+            townBox(ctx, x - 15, y - 195, 182, 28, '#c0a276');
+            ctx.fillStyle = '#4b6550'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('HOME →', x + 75, y - 176);
         }
         ctx.restore();
     }
