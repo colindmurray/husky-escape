@@ -52,7 +52,9 @@ export enum SoundType {
     THEME_BOSS_WOLF = 'theme_boss_wolf',
     THEME_CONSTRUCTION = 'theme_construction',
     THEME_BOSS_EXCAVATOR = 'theme_boss_excavator',
-    THEME_NEON = 'theme_neon'
+    THEME_NEON = 'theme_neon',
+    THEME_BAKERY = 'theme_bakery',
+    THEME_BOSS_BAKER = 'theme_boss_baker'
 }
 
 export interface GameStats {

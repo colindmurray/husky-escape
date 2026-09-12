@@ -137,6 +137,7 @@ export default function App() {
         else if (currentLvl === 7) engineRef.current?.startUnderwaterCutscene();
         else if (currentLvl === 8) engineRef.current?.startPierCutscene();
         else if (currentLvl === 10) engineRef.current?.startNeonCutscene();
+        else if (currentLvl === 11) engineRef.current?.startBakeryCutscene();
         else engineRef.current?.startLevel((currentLvl || 0) + 1, difficulty);
     };
 
@@ -174,8 +175,9 @@ export default function App() {
          else if (lvl === 7) engineRef.current?.startChaseCutscene();
          else if (lvl === 8) engineRef.current?.startUnderwaterCutscene();
          else if (lvl === 9) engineRef.current?.startPierCutscene();
-         else if (lvl === 11) engineRef.current?.startNeonCutscene();
-         else engineRef.current?.startLevel(lvl, difficulty);
+          else if (lvl === 11) engineRef.current?.startNeonCutscene();
+          else if (lvl === 12) engineRef.current?.startBakeryCutscene();
+          else engineRef.current?.startLevel(lvl, difficulty);
     };
 
     const getModalContent = () => {
@@ -184,7 +186,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
-        if (isWin) return { title: "VICTORY!", desc: "You've crossed the construction site, slipped through the Neon Metropolis, and made it home to your warm bed and family!" };
+        if (isWin) return { title: "VICTORY!", desc: "You beat the Night Baker, slipped out the back door with a warm baguette, and followed your nose all the way home. Good girl, Onyx!" };
         if (isLevelComplete) {
             const congrats = [
                 "The pound breakout has begun!",
@@ -197,7 +199,8 @@ export default function App() {
                 "You're a natural diver! Surfacing now...",
                 "The end is in sight!",
                 "You cleared the ultimate scaffolding obstacle!",
-                "Through the neon night — home is just ahead!"
+                "Through the neon night — home is just ahead!",
+                "Warm buns! The Night Baker is beaten — home smells close!"
             ];
             return { title: `ZONE ${level} CLEAR!`, desc: congrats[level-1] || "Great job!" };
         }
@@ -230,6 +233,13 @@ export default function App() {
         if (reason === 'seagulled') return { title: "BIRD ATTACK!", desc: "The seagulls are dive-bombing to protect their pier!" };
         if (reason === 'snowballed') return { title: "SNOWED UNDER!", desc: "That giant snowball turned you into a husky-popsicle!" };
         if (reason === 'droned') return { title: "SPOTTED!", desc: "A security drone's patrol light caught you! Stay out of the red scan." };
+        if (reason === 'pastried') return { title: "PASTRY BONK!", desc: "A falling pastry flattened you! Watch the crumb shadows and keep moving." };
+        if (reason === 'baked') return { title: "BAKED!", desc: "You fell into the oven and got baked into a cake! Hop the cooling racks instead." };
+        if (reason === 'battered') return { title: "BATTERED!", desc: "You plopped into raw cake batter! Jump the vat next time." };
+        if (reason === 'pressed') return { title: "FLATTENED!", desc: "The packaging press squished you flat! Dash under while the light is green." };
+        if (reason === 'mothed') return { title: "MOTHED!", desc: "A flour moth tickled you senseless! Time your jumps between flaps." };
+        if (reason === 'dough') return { title: "DOUGHED!", desc: "A wobbly dough blob absorbed you! Hop over it." };
+        if (reason === 'baker') return { title: "BUSTED BY THE BAKER!", desc: "The Night Baker caught you! Bonk the glowing toque off his head, then bonk him while he's dizzy!" };
 
         return { title: "GAME OVER", desc: "The trail went cold. Try again, Onyx!" };
     };
@@ -241,7 +251,7 @@ export default function App() {
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
             <div className="flex gap-2 justify-center flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10,11].map(lvl => (
+                {[1,2,3,4,5,6,7,8,9,10,11,12].map(lvl => (
                     <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="w-8 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl}</button>
                 ))}
             </div>

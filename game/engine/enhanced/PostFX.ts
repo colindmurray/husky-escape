@@ -100,6 +100,7 @@ export class PostFX {
         for (const bone of world.collectibles) {
             if (bone.markedForDeletion) continue;
             const x = bone.x - camX + bone.w / 2;
+            if (x < -60 || x > ctx.canvas.width + 60) continue;
             const y = bone.y + bone.floatY + bone.h / 2;
             const pulse = 0.5 + 0.5 * Math.sin(t * 3 + bone.x * 0.01);
             const r = 16 + pulse * 4;

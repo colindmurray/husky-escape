@@ -35,3 +35,12 @@ export * from './LunchboxThrower';
 export * from './Fan';
 export * from './SecurityDrone';
 export * from './NeonProps';
+
+export * from './ConveyorBelt';
+export * from './Pastry';
+export * from './FlourMoth';
+export * from './DoughBlob';
+export * from './BakerChaser';
+export * from './OvenMouth';
+export * from './PackagingPress';
+export * from './BossBaker';

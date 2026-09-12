@@ -132,6 +132,7 @@ export class ParticleSystem {
             case 9: this.emitAmbient(w, h, camX, 1.6, (x, y) => this.rainDrop(x, y)); break;
             case 10: this.emitAmbient(w, h, camX, 0.4, (x, y) => this.ember(x, y)); break;
             case 11: this.emitAmbient(w, h, camX, 0.5, (x, y) => this.neonMote(x, y)); break;
+            case 12: this.emitAmbient(w, h, camX, 0.55, (x, y) => this.flourMote(x, y)); break;
         }
 
         // ---- Update & draw ----
@@ -322,6 +323,16 @@ private neonMote(x: number, y: number): Particle {
             size: 1 + Math.random() * 1.4,
             color: Math.random() > 0.4 ? 'rgba(255,150,60,0.85)' : 'rgba(255,210,110,0.8)',
             gravity: -0.001, drag: 0.995, kind: 'glow',
+        };
+    }
+
+    private flourMote(x: number, y: number): Particle {
+        return {
+            x, y: y * 0.85, vx: (Math.random() - 0.5) * 0.35, vy: -(0.08 + Math.random() * 0.25),
+            life: 0, maxLife: 150 + Math.random() * 110,
+            size: 0.9 + Math.random() * 1.5,
+            color: 'rgba(245,232,200,0.55)',
+            gravity: -0.0006, drag: 0.997, kind: 'dot',
         };
     }
 }

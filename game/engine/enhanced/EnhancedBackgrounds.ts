@@ -40,6 +40,93 @@ export class EnhancedBackgrounds {
             case 9: this.drawPier(ctx, width, height, cameraX, t); break;
             case 10: this.drawConstruction(ctx, width, height, cameraX, t); break;
             case 11: this.drawNeonMetropolis(ctx, width, height, cameraX, t, cameraY); break;
+            case 12: this.drawBakery(ctx, width, height, cameraX, t); break;
+        }
+    }
+
+    // ------------------------------------------------------------------ //
+    // LEVEL 12: THE WARM BAKERY — brick interior, glowing deck ovens, lamps
+    // ------------------------------------------------------------------ //
+    private drawBakery(ctx: CanvasRenderingContext2D, w: number, h: number, camX: number, t: number) {
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, "#241409");
+        sky.addColorStop(0.55, "#4a2b16");
+        sky.addColorStop(1, "#1c1008");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Far brick courses (slow parallax) — batched single stroke call
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let by = 30; by < h; by += 44) {
+            const off = (camX * 0.12) % 80;
+            ctx.moveTo(-80, by); ctx.lineTo(w + 80, by);
+            for (let bx = -80 - off + ((by / 44) % 2) * 40; bx < w + 80; bx += 80) {
+                ctx.moveTo(bx, by); ctx.lineTo(bx, by + 44);
+            }
+        }
+        ctx.stroke();
+
+        // Deck ovens glowing through the haze (mid parallax)
+        for (let i = 0; i < w + 460; i += 460) {
+            const renderX = i - (camX * 0.3);
+            const xPos = ((renderX % (w + 460)) + (w + 460)) % (w + 460) - 120;
+            const flick = 0.55 + 0.45 * Math.sin(t * 2.4 + i * 0.7);
+            // Iron body
+            ctx.fillStyle = "#17100b";
+            ctx.fillRect(xPos, h - 300, 170, 200);
+            ctx.fillStyle = "#241a12";
+            ctx.fillRect(xPos - 10, h - 320, 190, 24);
+            // Mouth glow
+            const g = ctx.createRadialGradient(xPos + 85, h - 190, 6, xPos + 85, h - 190, 90);
+            g.addColorStop(0, `rgba(255,220,140,${0.75 * flick})`);
+            g.addColorStop(0.5, `rgba(255,140,40,${0.4 * flick})`);
+            g.addColorStop(1, "rgba(255,120,30,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(xPos - 20, h - 290, 210, 180);
+            ctx.fillStyle = `rgba(255,${150 + Math.floor(50 * flick)},60,0.95)`;
+            ctx.fillRect(xPos + 35, h - 220, 100, 60);
+        }
+
+        // Hanging lamps (near parallax) with warm pools
+        for (let i = 0; i < w + 560; i += 560) {
+            const renderX = i - (camX * 0.55);
+            const xPos = ((renderX % (w + 560)) + (w + 560)) % (w + 560) - 80;
+            ctx.strokeStyle = "#0d0d0d";
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(xPos, -10); ctx.lineTo(xPos, 84); ctx.stroke();
+            ctx.fillStyle = "#2c2c2c";
+            ctx.beginPath();
+            ctx.moveTo(xPos - 26, 84); ctx.lineTo(xPos + 26, 84); ctx.lineTo(xPos + 14, 62); ctx.lineTo(xPos - 14, 62);
+            ctx.closePath(); ctx.fill();
+            const sway = Math.sin(t * 0.8 + i) * 3;
+            ctx.fillStyle = "#ffd97a";
+            ctx.beginPath(); ctx.arc(xPos + sway, 92, 11, 0, Math.PI * 2); ctx.fill();
+            const pool = ctx.createRadialGradient(xPos, 96, 6, xPos, 96, 170);
+            pool.addColorStop(0, "rgba(255,205,130,0.22)");
+            pool.addColorStop(1, "rgba(255,205,130,0)");
+            ctx.fillStyle = pool;
+            ctx.fillRect(xPos - 170, 0, 340, 380);
+        }
+
+        // Home-light window far down the line (visible near the arena)
+        const winX = 6300 - camX;
+        if (winX > -220 && winX < w + 220) {
+            const wg = ctx.createRadialGradient(winX + 45, h - 360, 8, winX + 45, h - 360, 150);
+            wg.addColorStop(0, "rgba(255,235,180,0.5)");
+            wg.addColorStop(1, "rgba(255,235,180,0)");
+            ctx.fillStyle = wg;
+            ctx.fillRect(winX - 110, h - 510, 300, 300);
+            ctx.fillStyle = "#ffedb8";
+            ctx.fillRect(winX, h - 420, 90, 120);
+            ctx.strokeStyle = "#5a4326";
+            ctx.lineWidth = 6;
+            ctx.strokeRect(winX, h - 420, 90, 120);
+            ctx.beginPath();
+            ctx.moveTo(winX + 45, h - 420); ctx.lineTo(winX + 45, h - 300);
+            ctx.moveTo(winX, h - 360); ctx.lineTo(winX + 90, h - 360);
+            ctx.stroke();
         }
     }
 

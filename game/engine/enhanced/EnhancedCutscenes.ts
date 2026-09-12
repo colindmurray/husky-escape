@@ -516,6 +516,7 @@ export function drawEnhancedCutscene(
         case 'underwater_intro': this_underwater(ctx, step, w, h, cx, ground, t); break;
         case 'pier_intro': this_pier(ctx, step, w, h, cx, ground, t); break;
         case 'neon_intro': this_neon(ctx, step, w, h, cx, ground, t); break;
+        case 'bakery_intro': this_bakery(ctx, step, w, h, cx, ground, t); break;
         default:
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(0, 0, w, h);
@@ -1359,5 +1360,69 @@ function this_neon(ctx: CanvasRenderingContext2D, step: number, w: number, h: nu
         ctx.fillStyle = `rgba(255,70,170,${0.6 + 0.3 * Math.sin(t * 5)})`;
         ctx.fillRect(0, ground, w, 4);
         drawCineHusky(ctx, cx, ground, 2.8, 'run', 'determined', t);
+    }
+}
+
+// ---- BAKERY INTRO: smell the sugar → sneak in → the belt moves → the baker ----
+function this_bakery(ctx: CanvasRenderingContext2D, step: number, w: number, h: number, cx: number, ground: number, t: number) {
+    sky(ctx, w, h, [[0, '#241409'], [0.6, '#4a2b16'], [1, '#1c1008']]);
+    // Brick back wall
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 2;
+    for (let by = h * 0.1; by < ground; by += 30) {
+        ctx.beginPath(); ctx.moveTo(0, by); ctx.lineTo(w, by); ctx.stroke();
+    }
+    // Glowing deck ovens left + right
+    for (const ox of [cx - 380, cx + 220]) {
+        ctx.fillStyle = '#14100b';
+        ctx.fillRect(ox, ground - 220, 170, 220);
+        const flick = 0.6 + 0.4 * Math.sin(t * 4 + ox);
+        ctx.fillStyle = `rgba(255,${150 + Math.floor(50 * flick)},60,0.9)`;
+        ctx.fillRect(ox + 35, ground - 140, 100, 60);
+        ctx.fillStyle = 'rgba(255,220,150,0.9)';
+        ctx.fillRect(ox + 55, ground - 120, 60, 24);
+    }
+    // Conveyor line with travelling glow ticks
+    ctx.fillStyle = '#2c1c10';
+    ctx.fillRect(0, ground - 30, w, 40);
+    ctx.fillStyle = 'rgba(255,190,110,0.8)';
+    for (let px = (t * 120) % 64; px < w; px += 64) {
+        ctx.fillRect(px, ground - 16, 26, 6);
+    }
+    // Pastries riding past
+    for (let i = 0; i < 3; i++) {
+        const px = ((t * 120 + i * 320) % (w + 120)) - 60;
+        ctx.fillStyle = '#deb887';
+        ctx.fillRect(px, ground - 58, 40, 26);
+        ctx.fillStyle = '#fff8e1';
+        ctx.fillRect(px, ground - 64, 40, 8);
+    }
+    if (step <= 1) {
+        // Sniffing the air, hearts of sugar
+        drawCineHusky(ctx, cx - 60, ground, 2.6, 'sit', 'happy', t);
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillStyle = 'rgba(255,200,220,0.9)';
+        const bob = Math.sin(t * 3) * 6;
+        ctx.fillText('~', cx + 60, ground - 130 + bob);
+        ctx.fillText('~', cx + 90, ground - 150 - bob);
+    } else if (step <= 3) {
+        drawCineHusky(ctx, cx - 120 + Math.sin(t * 6) * 8, ground, 2.6, 'run', 'determined', t);
+    } else {
+        // The baker looms in the doorway
+        const bx = cx + 250;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(bx - 60, ground - 320, 150, 320);
+        ctx.fillStyle = '#0d0d0d';
+        ctx.fillRect(bx - 35, ground - 220, 80, 220);
+        ctx.fillStyle = '#f4f4f4';
+        ctx.fillRect(bx - 40, ground - 280, 90, 60);
+        ctx.beginPath();
+        ctx.arc(bx + 5, ground - 280, 48, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#f1c27d';
+        ctx.beginPath();
+        ctx.arc(bx + 5, ground - 200, 22, 0, Math.PI * 2);
+        ctx.fill();
+        drawCineHusky(ctx, cx - 160, ground, 2.6, 'sit', 'sad', t);
     }
 }

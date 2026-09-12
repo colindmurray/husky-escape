@@ -1,5 +1,5 @@
 
-import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone } from "../entities/index";
+import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -36,6 +36,7 @@ export class World {
     public waters: Water[] = [];
     public props: Entity[] = [];
     public exit: Exit | null = null;
+    private difficulty: Difficulty = Difficulty.EASY;
 
     private events: WorldEvents;
 
@@ -54,6 +55,7 @@ export class World {
 
     public loadLevel(level: number, persistBones: boolean = true, difficulty: Difficulty = Difficulty.EASY) {
         this.currentLevel = level;
+        this.difficulty = difficulty;
         
         const data = initLevel(level, this.height, difficulty);
         this.platforms = data.platforms;
@@ -91,6 +93,7 @@ export class World {
             case 9: track = SoundType.THEME_PIER; break;
             case 10: track = SoundType.THEME_CONSTRUCTION; break;
             case 11: track = SoundType.THEME_NEON; break;
+            case 12: track = SoundType.THEME_BAKERY; break;
         }
         audioManager.playMusic(track);
     }
@@ -133,9 +136,9 @@ export class World {
 
         // Enemy Collisions
         this.enemies.forEach(enemy => {
-            enemy.update(this.platforms, this.player, this.enemies);
+            enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
-            const pad = 12;
+            const pad = (enemy instanceof Pastry) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
                 this.player.x + this.player.w - pad > enemy.x + pad &&
@@ -145,7 +148,7 @@ export class World {
                 if (this.player.invincibleTimer > 0) return;
 
                 // BOSS COLLISION LOGIC
-                if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator) {
+                if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator || enemy instanceof BossBaker) {
                     if (!enemy.isActive || enemy.health <= 0) return;
 
                     // Check if player is above enemy (falling on head)
@@ -163,6 +166,8 @@ export class World {
                         // Touching active boss not on head -> DAMAGE
                         if (enemy instanceof BossWolf) {
                              this.triggerGameOver('wolfed', 'Eaten by the Alpha Wolf!');
+                        } else if (enemy instanceof BossBaker) {
+                             this.triggerGameOver('baker', 'Caught by the Night Baker\'s rolling pin!');
                         } else if (enemy instanceof BossCatcher) {
                              this.triggerGameOver('caught', 'Caught by the Giant Dog Catcher');
                         } else {
@@ -194,6 +199,17 @@ export class World {
                     this.triggerGameOver('seagulled', 'Dive-bombed by an angry seagull');
                 } else if (enemy instanceof Snowball) {
                     this.triggerGameOver('snowballed', 'Flattened by a giant rolling snowball');
+                } else if (enemy instanceof Pastry) {
+                    this.triggerGameOver('pastried', 'Bonked by a bakery pastry! Time your jumps and dodge them!');
+                } else if (enemy instanceof FlourMoth) {
+                    this.triggerGameOver('mothed', 'Tickled senseless by a flour moth!');
+                } else if (enemy instanceof DoughBlob) {
+                    this.triggerGameOver('dough', 'Swallowed by a wobbly dough blob!');
+                } else if (enemy instanceof PackagingPress) {
+                    // The press is only lethal while slamming or fully down
+                    if (enemy.isLethal()) {
+                        this.triggerGameOver('pressed', 'Flattened like a pancake by the packaging press! Time your dash!');
+                    }
                 } else if (enemy instanceof Shark) {
                      // Non-lethal
                 } else if (enemy instanceof FallingDebris) {
@@ -207,6 +223,8 @@ export class World {
                 } else {
                     if (enemy instanceof ChaserEnemy) {
                         this.triggerGameOver('caught', 'Caught by a fast-running dog catcher');
+                    } else if (enemy instanceof BakerChaser) {
+                        this.triggerGameOver('caught', 'Caught by the apprentice baker\'s net!');
                     } else {
                         this.triggerGameOver('caught', 'Caught by a patrolling dog catcher');
                     }
@@ -221,7 +239,13 @@ export class World {
                 this.player.x + this.player.w > water.x &&
                 this.player.y + this.player.h > water.y + 15 
             ) {
-                this.triggerGameOver('drowned', 'Fell into deep water and got soaked');
+                if (water instanceof OvenMouth) {
+                    this.triggerGameOver('baked', 'Baked into a cake! Hop the cooling racks to get past the oven!');
+                } else if (water instanceof BatterVat) {
+                    this.triggerGameOver('battered', 'Plopped into raw cake batter! Jump the vat!');
+                } else {
+                    this.triggerGameOver('drowned', 'Fell into deep water and got soaked');
+                }
             }
         });
 
@@ -289,7 +313,7 @@ export class World {
     private triggerLevelComplete() {
         audioManager.stopMusic();
         audioManager.playSFX(SoundType.WIN_SHORT);
-        if (this.currentLevel < 11) {
+        if (this.currentLevel < 12) {
             this.events.onLevelComplete(this.currentLevel, this.player?.bonesCollected || 0);
         } else {
             this.events.onGameWon(this.player?.bonesCollected || 0);

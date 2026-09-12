@@ -420,6 +420,68 @@ export class Renderer {
             }
             
             ctx.restore();
+        } else if (currentLevel === 12) {
+            // The Warm Bakery (classic look): cozy brick interior, glowing ovens
+            const warmGrad = ctx.createLinearGradient(0, 0, 0, height);
+            warmGrad.addColorStop(0, "#3a2418");
+            warmGrad.addColorStop(0.6, "#5d3a22");
+            warmGrad.addColorStop(1, "#2c1a10");
+            ctx.fillStyle = warmGrad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.save();
+            // Brick courses
+            ctx.strokeStyle = "rgba(0,0,0,0.25)";
+            ctx.lineWidth = 1.5;
+            for (let by = 20; by < height; by += 34) {
+                ctx.beginPath(); ctx.moveTo(0, by); ctx.lineTo(width, by); ctx.stroke();
+                for (let bx = ((by / 34) % 2) * 30; bx < width; bx += 60) {
+                    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx, by + 34); ctx.stroke();
+                }
+            }
+            // Distant oven mouths glowing through the haze
+            const t = Date.now() / 1000;
+            for (let i = 0; i < width + cameraX; i += 420) {
+                const renderX = i - (cameraX * 0.35);
+                const xPos = (renderX % (width + 420)) - 100;
+                const flick = 0.5 + 0.5 * Math.sin(t * 3 + i);
+                ctx.fillStyle = "#1c1310";
+                ctx.fillRect(xPos, height - 260, 150, 160);
+                ctx.fillStyle = `rgba(255,${140 + Math.floor(60 * flick)},40,${0.55 + 0.3 * flick})`;
+                ctx.fillRect(xPos + 25, height - 200, 100, 70);
+                ctx.fillStyle = "rgba(255,220,150,0.9)";
+                ctx.fillRect(xPos + 45, height - 180, 60, 30);
+            }
+            // Hanging lamps with warm pools of light
+            for (let i = 200; i < width + cameraX; i += 520) {
+                const renderX = i - (cameraX * 0.6);
+                const xPos = (renderX % (width + 520)) - 60;
+                ctx.strokeStyle = "#141414";
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(xPos, 0); ctx.lineTo(xPos, 70); ctx.stroke();
+                ctx.fillStyle = "#f1c40f";
+                ctx.beginPath(); ctx.arc(xPos, 85, 12, 0, Math.PI * 2); ctx.fill();
+                const pool = ctx.createRadialGradient(xPos, 90, 4, xPos, 90, 130);
+                pool.addColorStop(0, "rgba(255,200,120,0.20)");
+                pool.addColorStop(1, "rgba(255,200,120,0)");
+                ctx.fillStyle = pool;
+                ctx.fillRect(xPos - 130, 0, 260, 300);
+            }
+            // Home-light window far down the line (the goal Onyx can smell)
+            const winX = 6300 - cameraX;
+            if (winX > -200 && winX < width + 200) {
+                ctx.fillStyle = "#ffe9b8";
+                ctx.fillRect(winX, height - 420, 90, 120);
+                ctx.strokeStyle = "#5a4326";
+                ctx.lineWidth = 6;
+                ctx.strokeRect(winX, height - 420, 90, 120);
+                ctx.beginPath();
+                ctx.moveTo(winX + 45, height - 420);
+                ctx.lineTo(winX + 45, height - 300);
+                ctx.moveTo(winX, height - 360);
+                ctx.lineTo(winX + 90, height - 360);
+                ctx.stroke();
+            }
+            ctx.restore();
         } else if (currentLevel === 11) {
             // Neon Metropolis (classic look) — with vertical parallax
             const shift = Math.max(0, -world.cameraY) * 0.25;
@@ -483,9 +545,52 @@ export class Renderer {
                  ctx.closePath();
                  ctx.fill();
              }
-             drawHuskyFace(ctx, cx, cy + 50, 2, step >= 4 ? 'determined' : (step === 3 ? 'sad' : 'happy'));
-             return;
-        }
+              drawHuskyFace(ctx, cx, cy + 50, 2, step >= 4 ? 'determined' : (step === 3 ? 'sad' : 'happy'));
+              return;
+         }
+
+         if (currentType === 'bakery_intro') {
+              // Warm bakery back-room: brick walls, glowing ovens, conveyor line
+              const warm = ctx.createLinearGradient(0, 0, 0, height);
+              warm.addColorStop(0, "#3a2418");
+              warm.addColorStop(1, "#1c1008");
+              ctx.fillStyle = warm;
+              ctx.fillRect(0, 0, width, height);
+              // Oven mouths
+              const t = frame / 60;
+              for (const ox of [cx - 320, cx + 220]) {
+                  ctx.fillStyle = "#141414";
+                  ctx.fillRect(ox, cy - 40, 180, 190);
+                  const flick = 0.6 + 0.4 * Math.sin(t * 4 + ox);
+                  ctx.fillStyle = `rgba(255,${140 + Math.floor(50 * flick)},40,0.9)`;
+                  ctx.fillRect(ox + 30, cy + 30, 120, 80);
+              }
+              // Conveyor line across the floor
+              ctx.fillStyle = "#3e2723";
+              ctx.fillRect(0, cy + 150, width, 40);
+              ctx.fillStyle = "#ffcc80";
+              for (let px = (frame * 3) % 52; px < width; px += 52) {
+                  ctx.fillRect(px, cy + 162, 20, 6);
+              }
+              // Pastries riding the belt
+              for (let i = 0; i < 3; i++) {
+                  const px = ((frame * 3 + i * 300) % (width + 100)) - 50;
+                  ctx.fillStyle = "#deb887";
+                  ctx.fillRect(px, cy + 128, 34, 22);
+                  ctx.fillStyle = "#fff8e1";
+                  ctx.fillRect(px, cy + 124, 34, 6);
+              }
+              if (step >= 3) {
+                  // Baker silhouette appears at the door
+                  const bx = cx + 260;
+                  ctx.fillStyle = "#0a0a0a";
+                  ctx.fillRect(bx - 30, cy - 60, 70, 220);
+                  ctx.fillStyle = "white";
+                  ctx.fillRect(bx - 28, cy - 100, 66, 44);
+              }
+              drawHuskyFace(ctx, cx - 120, cy + 60, 2, step >= 3 ? 'sad' : (step === 0 ? 'happy' : 'determined'));
+              return;
+         }
 
         if (currentType === 'pier_intro') {
              ctx.fillStyle = "#1e272e";

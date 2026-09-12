@@ -19,10 +19,11 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' = 'intro';
+    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' = 'intro';
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
+    private isLoopRunning = false;
 
     constructor(canvas: HTMLCanvasElement, options: GameEngineOptions) {
         this.options = options;
@@ -133,6 +134,15 @@ export class GameEngine {
         this.startLoop();
     }
 
+    public startBakeryCutscene() {
+        this.currentCutscene = 'bakery_intro';
+        this.gameState = GameState.CUTSCENE;
+        this.options.onStateChange(GameState.CUTSCENE, { text: "" });
+        audioManager.stopMusic();
+        this.cutsceneManager.start('bakery_intro');
+        this.startLoop();
+    }
+
     public skipCutscene() {
         this.cutsceneManager.skip();
     }
@@ -156,12 +166,18 @@ export class GameEngine {
         } else if (this.currentCutscene === 'neon_intro') {
             // Start Level 11: Neon Metropolis
             this.startLevel(11, this.difficulty);
+        } else if (this.currentCutscene === 'bakery_intro') {
+            // Start Level 12: The Warm Bakery
+            this.startLevel(12, this.difficulty);
         }
     }
 
     private startLoop() {
+        if (this.isLoopRunning) return;
+        this.isLoopRunning = true;
         if (this.frameId) cancelAnimationFrame(this.frameId);
         const loop = () => {
+            if (!this.isLoopRunning) return;
             if (this.gameState === GameState.PLAYING) {
                 this.world.update();
                 this.renderer.drawGame(this.world);
@@ -181,7 +197,8 @@ export class GameEngine {
     }
 
     public stop() {
-        cancelAnimationFrame(this.frameId);
+        this.isLoopRunning = false;
+        if (this.frameId) cancelAnimationFrame(this.frameId);
         audioManager.stopMusic();
     }
 }
