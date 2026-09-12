@@ -2,6 +2,7 @@
 import { SoundType } from "../../types";
 
 export function playSoundEffect(type: SoundType, ctx: AudioContext, masterGain: GainNode) {
+    if (playTownSound(type, ctx, masterGain, false)) return;
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -244,4 +245,52 @@ export function playSoundEffect(type: SoundType, ctx: AudioContext, masterGain: 
             osc.stop(t + 0.5);
             break;
     }
+}
+
+export function playTownSound(type: SoundType, ctx: AudioContext, masterGain: GainNode, enhanced: boolean): boolean {
+    if (type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET && type !== SoundType.ROADWORK) return false;
+    const t = ctx.currentTime;
+    if (type === SoundType.ROADWORK) {
+        for (let i = 0; i < (enhanced ? 3 : 2); i++) {
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            const start = t + i * 0.09;
+            osc.type = i === 2 ? 'sawtooth' : 'square';
+            osc.frequency.setValueAtTime(i === 2 ? 110 : 620, start);
+            osc.frequency.exponentialRampToValueAtTime(i === 2 ? 45 : 420, start + 0.09);
+            gain.gain.setValueAtTime(0.0001, start); gain.gain.linearRampToValueAtTime(0.045, start + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.11);
+            osc.connect(gain).connect(masterGain); osc.start(start); osc.stop(start + 0.12);
+        }
+        return true;
+    }
+    if (type === SoundType.WATER_JET) {
+        const length = Math.floor(ctx.sampleRate * 0.35);
+        const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+        const source = ctx.createBufferSource(); source.buffer = buffer;
+        const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(enhanced ? 2400 : 1500, t);
+        filter.frequency.exponentialRampToValueAtTime(700, t + 0.3);
+        const gain = ctx.createGain(); gain.gain.setValueAtTime(0.07, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        source.connect(filter).connect(gain).connect(masterGain); source.start(t); source.stop(t + 0.36);
+        return true;
+    }
+    const bell = type === SoundType.BIKE_BELL;
+    for (let i = 0; i < 2; i++) {
+        const start = t + i * (bell ? 0.19 : 0.2);
+        const duration = bell ? 0.34 : 0.14;
+        for (let layer = 0; layer < (enhanced ? 2 : 1); layer++) {
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.type = bell ? (enhanced ? 'sine' : 'triangle') : (enhanced ? 'sawtooth' : 'square');
+            const frequency = bell ? (i === 0 ? 1568 : 2093) : 210;
+            osc.frequency.setValueAtTime(frequency * (layer ? 2.01 : 1), start);
+            if (!bell) osc.frequency.exponentialRampToValueAtTime(layer ? 135 : 90, start + duration);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(layer ? 0.025 : 0.085, start + 0.008);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+            osc.connect(gain).connect(masterGain); osc.start(start); osc.stop(start + duration + 0.02);
+        }
+    }
+    return true;
 }

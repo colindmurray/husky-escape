@@ -1,5 +1,6 @@
 
-import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone } from "../entities/index";
+import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
+import { MarchingBand, TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
 import { inputManager } from "../Input";
 import { audioManager } from "../Audio";
@@ -18,8 +19,17 @@ export class World {
     public height: number;
     public currentLevel: number = 1;
     public cameraX: number = 0;
+    /**
+     * Vertical camera: world-y currently at the viewport's TOP edge.
+     * 0 = ground view (default for levels without vertical scrolling);
+     * negative = scrolled up. Clamped to [height - worldHeight, 0].
+     */
+    public cameraY: number = 0;
+    /** Total vertical span of the current level's world (defaults to viewport height). */
+    private worldHeight: number = 0;
     public timeLeft: number = 300;
     private frameCounter: number = 0;
+    private ended = false;
 
     public player: Player | null = null;
     public platforms: Entity[] = [];
@@ -28,6 +38,7 @@ export class World {
     public waters: Water[] = [];
     public props: Entity[] = [];
     public exit: Exit | null = null;
+    public difficulty: Difficulty = Difficulty.EASY;
 
     private events: WorldEvents;
 
@@ -40,10 +51,14 @@ export class World {
     public resize(w: number, h: number) {
         this.width = w;
         this.height = h;
+        // Keep the vertical camera inside the (possibly resized) world bounds
+        this.clampCameraY();
     }
 
     public loadLevel(level: number, persistBones: boolean = true, difficulty: Difficulty = Difficulty.EASY) {
+        this.ended = false;
         this.currentLevel = level;
+        this.difficulty = difficulty;
         
         const data = initLevel(level, this.height, difficulty);
         this.platforms = data.platforms;
@@ -52,6 +67,7 @@ export class World {
         this.waters = data.waters;
         this.props = data.props || [];
         this.exit = data.exit;
+        this.worldHeight = data.worldHeight ?? this.height;
 
         // Reset timer - Level 3 is now long, so give it more time (400)
         // Level 5 extended also needs more time
@@ -65,6 +81,7 @@ export class World {
         this.events.onScoreUpdate(currentBones);
 
         this.cameraX = 0;
+        this.cameraY = 0;
 
         // Music Logic
         let track = SoundType.THEME_POUND;
@@ -79,12 +96,14 @@ export class World {
             case 9: track = SoundType.THEME_PIER; break;
             case 10: track = SoundType.THEME_CONSTRUCTION; break;
             case 11: track = SoundType.THEME_NEON; break;
+            case 12: track = SoundType.THEME_BAKERY; break;
+            case 13: track = SoundType.THEME_TOWN; break;
         }
         audioManager.playMusic(track);
     }
 
     public update() {
-        if (!this.player || !this.exit) return;
+        if (this.ended || !this.player || !this.exit) return;
 
         // Timer
         this.frameCounter++;
@@ -113,26 +132,63 @@ export class World {
             audioManager.playMusic(SoundType.THEME_GOLDEN_SHARK);
         }
 
+        if (this.currentLevel === 13) {
+            const floats = this.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float') as TownPlatform[];
+            if (floats.length === 3 && floats.every(p => p.boarded)) this.exit.unlock();
+        }
+
         // Camera
         const targetCamX = this.player.x - this.width / 3;
         this.cameraX += (targetCamX - this.cameraX) * 0.1;
         if(this.cameraX < 0) this.cameraX = 0;
+        this.updateCameraY();
 
         // Enemy Collisions
         this.enemies.forEach(enemy => {
-            enemy.update(this.platforms, this.player, this.enemies);
+            if (this.ended) return;
+            enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
-            const pad = 12;
+            const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownTimedHazard || enemy instanceof YardDog;
+            if (enemy instanceof RollingApple && !enemy.active) return;
+            if ((enemy instanceof TownCyclist || enemy instanceof TownTimedHazard || enemy instanceof YardDog) && !enemy.dangerous) return;
+            const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian || enemy instanceof MarchingBand) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
                 this.player.x + this.player.w - pad > enemy.x + pad &&
                 this.player.y + pad < enemy.y + enemy.h - pad &&
                 this.player.y + this.player.h - pad > enemy.y + pad
             ) {
+                if (enemy instanceof MarchingBand) {
+                    this.triggerGameOver('parade', 'Swept into the marching band! Stay on the floats and raised benches.');
+                    return;
+                }
                 if (this.player.invincibleTimer > 0) return;
 
+                if (enemy instanceof TownPedestrian) {
+                    if (!this.player.hasBandana && this.player.townBumpFrames === 0) {
+                        this.player.velX = this.player.x + this.player.w / 2 < enemy.x + enemy.w / 2 ? -3 : 3;
+                        this.player.velY = -3;
+                        this.player.townBumpFrames = 40;
+                        audioManager.playSFX(SoundType.LAND);
+                    }
+                    return;
+                }
+                if (townHazard) {
+                    if (this.player.hasBandana) {
+                        this.player.hasBandana = false;
+                        this.player.invincibleTimer = 100;
+                        this.player.velY = -7;
+                        audioManager.playSFX(SoundType.COLLECT);
+                    } else {
+                        const reason = enemy instanceof TownCyclist ? 'cycled' : enemy instanceof RollingApple ? 'appled' : enemy instanceof TownTimedHazard ? (enemy.kind === 'roadwork' ? 'roadwork' : 'sprinkled') : 'yarddog';
+                        const narrative = enemy instanceof TownCyclist ? 'A delivery bike caught up! Listen for the bell and wait on a bench.' : enemy instanceof RollingApple ? 'Bonked by a loose apple! Take the market awnings.' : enemy instanceof TownTimedHazard ? (enemy.kind === 'roadwork' ? 'Caught by a rising roadwork post! Wait for it to retract.' : enemy.kind === 'hydrant' ? 'Soaked by a leaking hydrant! Wait for the burst to stop.' : 'Soaked by a fountain jet! Wait for it to switch off.') : 'Chased out of the garden! Jump the fence after the bark.';
+                        this.triggerGameOver(reason, narrative);
+                    }
+                    return;
+                }
+
                 // BOSS COLLISION LOGIC
-                if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator) {
+                if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator || enemy instanceof BossBaker) {
                     if (!enemy.isActive || enemy.health <= 0) return;
 
                     // Check if player is above enemy (falling on head)
@@ -150,6 +206,8 @@ export class World {
                         // Touching active boss not on head -> DAMAGE
                         if (enemy instanceof BossWolf) {
                              this.triggerGameOver('wolfed', 'Eaten by the Alpha Wolf!');
+                        } else if (enemy instanceof BossBaker) {
+                             this.triggerGameOver('baker', 'Caught by the Night Baker\'s rolling pin!');
                         } else if (enemy instanceof BossCatcher) {
                              this.triggerGameOver('caught', 'Caught by the Giant Dog Catcher');
                         } else {
@@ -181,6 +239,17 @@ export class World {
                     this.triggerGameOver('seagulled', 'Dive-bombed by an angry seagull');
                 } else if (enemy instanceof Snowball) {
                     this.triggerGameOver('snowballed', 'Flattened by a giant rolling snowball');
+                } else if (enemy instanceof Pastry) {
+                    this.triggerGameOver('pastried', 'Bonked by a bakery pastry! Time your jumps and dodge them!');
+                } else if (enemy instanceof FlourMoth) {
+                    this.triggerGameOver('mothed', 'Tickled senseless by a flour moth!');
+                } else if (enemy instanceof DoughBlob) {
+                    this.triggerGameOver('dough', 'Swallowed by a wobbly dough blob!');
+                } else if (enemy instanceof PackagingPress) {
+                    // The press is only lethal while slamming or fully down
+                    if (enemy.isLethal()) {
+                        this.triggerGameOver('pressed', 'Flattened like a pancake by the packaging press! Time your dash!');
+                    }
                 } else if (enemy instanceof Shark) {
                      // Non-lethal
                 } else if (enemy instanceof FallingDebris) {
@@ -194,12 +263,16 @@ export class World {
                 } else {
                     if (enemy instanceof ChaserEnemy) {
                         this.triggerGameOver('caught', 'Caught by a fast-running dog catcher');
+                    } else if (enemy instanceof BakerChaser) {
+                        this.triggerGameOver('caught', 'Caught by the apprentice baker\'s net!');
                     } else {
                         this.triggerGameOver('caught', 'Caught by a patrolling dog catcher');
                     }
                 }
             }
         });
+
+        if (this.ended) return;
 
         // Water
         this.waters.forEach(water => {
@@ -208,9 +281,17 @@ export class World {
                 this.player.x + this.player.w > water.x &&
                 this.player.y + this.player.h > water.y + 15 
             ) {
-                this.triggerGameOver('drowned', 'Fell into deep water and got soaked');
+                if (water instanceof OvenMouth) {
+                    this.triggerGameOver('baked', 'Baked into a cake! Hop the cooling racks to get past the oven!');
+                } else if (water instanceof BatterVat) {
+                    this.triggerGameOver('battered', 'Plopped into raw cake batter! Jump the vat!');
+                } else {
+                    this.triggerGameOver('drowned', 'Fell into deep water and got soaked');
+                }
             }
         });
+
+        if (this.ended) return;
 
         // Collectibles
         this.collectibles.forEach(bone => {
@@ -249,10 +330,36 @@ export class World {
         this.collectibles = this.collectibles.filter(c => !c.markedForDeletion);
     }
 
+    /**
+     * Vertical scrolling (Zone 11): soft center-follow. Onyx is kept inside a
+     * deadzone band around the middle of the screen; the camera eases toward
+     * true centering gently while he's inside the band and more firmly when he
+     * leaves it, so the motion is smooth both climbing up and dropping back
+     * down, but never rigidly locked.
+     */
+    private updateCameraY() {
+        if (this.worldHeight <= this.height) return; // no vertical scroll for flat levels
+        const desiredCamTop = (this.player.y + this.player.h / 2) - this.height / 2;
+        const screenY = this.player.y - this.cameraY;
+        const inDeadzone = screenY > this.height * 0.32 && screenY < this.height * 0.62;
+        const ease = inDeadzone ? 0.02 : 0.09;
+        this.cameraY += (desiredCamTop - this.cameraY) * ease;
+        this.clampCameraY();
+    }
+
+    private clampCameraY() {
+        if (this.worldHeight <= this.height) { this.cameraY = 0; return; }
+        const minTop = this.height - this.worldHeight;
+        if (this.cameraY < minTop) this.cameraY = minTop;
+        if (this.cameraY > 0) this.cameraY = 0;
+    }
+
     private triggerLevelComplete() {
+        if (this.ended) return;
+        this.ended = true;
         audioManager.stopMusic();
         audioManager.playSFX(SoundType.WIN_SHORT);
-        if (this.currentLevel < 11) {
+        if (this.currentLevel < 13) {
             this.events.onLevelComplete(this.currentLevel, this.player?.bonesCollected || 0);
         } else {
             this.events.onGameWon(this.player?.bonesCollected || 0);
@@ -260,6 +367,8 @@ export class World {
     }
 
     private triggerGameOver(reason: string, narrative: string) {
+        if (this.ended) return;
+        this.ended = true;
         audioManager.stopMusic();
         if (reason === 'drowned') audioManager.playSFX(SoundType.SPLASH);
         else audioManager.playSFX(SoundType.CRASH);

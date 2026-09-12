@@ -1,4 +1,7 @@
 
+import { TownPlatform } from "../entities/Town";
+import { drawTownBackground, drawTownPerson, townLabel } from "./TownArt";
+import { drawHuskyEnhanced } from "./enhanced/EnhancedSprites";
 import { World } from "./World";
 import { CutsceneManager } from "./CutsceneManager";
 import { drawHuskyFace } from "../Utils";
@@ -25,17 +28,22 @@ export class Renderer {
     }
 
     public drawGame(world: World) {
-        const { width, height, cameraX, currentLevel } = world;
+        const { width, height, cameraX, cameraY, currentLevel } = world;
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
-        if (enhanced) {
-            this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel);
+        if (currentLevel === 13) {
+            drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, cameraY);
+        } else if (enhanced) {
+            this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel, cameraY);
         } else {
             this.drawBackground(world);
         }
 
         this.ctx.save();
+        // Vertical scrolling (Zone 11): shift the whole world layer up/down.
+        // Entities draw in world coords, so a single translate covers them all.
+        if (cameraY) this.ctx.translate(0, -cameraY);
         (world as any).props?.forEach?.((pr: any) => pr.draw?.(this.ctx, cameraX));
         world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
         world.waters.forEach(w => w.draw(this.ctx, cameraX));
@@ -50,6 +58,17 @@ export class Renderer {
             this.particles.updateAndDraw(this.ctx, world);
             this.postFX.drawGlows(this.ctx, world);
             this.postFX.apply(this.ctx, world);
+        }
+
+        if (currentLevel === 13 && world.player) {
+            this.ctx.save(); this.ctx.font = 'bold 14px sans-serif'; this.ctx.textAlign = 'left';
+            this.ctx.fillStyle = '#fff5d7'; this.ctx.shadowColor = '#29434d'; this.ctx.shadowBlur = 4;
+            if (world.player.x >= 4750) {
+                const stamps = world.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float' && p.boarded).length;
+                this.ctx.fillText(stamps === 3 ? '★ ★ ★  Home open →' : `★ ${stamps}/3  Parade floats`, 20, 76);
+            }
+            if (world.player.hasBandana) this.ctx.fillText('◆ Bandana · 1 save', 20, 96);
+            this.ctx.restore();
         }
 
         // --- LEVEL 9: ATMOSPHERIC OVERLAY (classic only — enhanced has its own storm) ---
@@ -417,14 +436,78 @@ export class Renderer {
             }
             
             ctx.restore();
+        } else if (currentLevel === 12) {
+            // The Warm Bakery (classic look): cozy brick interior, glowing ovens
+            const warmGrad = ctx.createLinearGradient(0, 0, 0, height);
+            warmGrad.addColorStop(0, "#3a2418");
+            warmGrad.addColorStop(0.6, "#5d3a22");
+            warmGrad.addColorStop(1, "#2c1a10");
+            ctx.fillStyle = warmGrad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.save();
+            // Brick courses
+            ctx.strokeStyle = "rgba(0,0,0,0.25)";
+            ctx.lineWidth = 1.5;
+            for (let by = 20; by < height; by += 34) {
+                ctx.beginPath(); ctx.moveTo(0, by); ctx.lineTo(width, by); ctx.stroke();
+                for (let bx = ((by / 34) % 2) * 30; bx < width; bx += 60) {
+                    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx, by + 34); ctx.stroke();
+                }
+            }
+            // Distant oven mouths glowing through the haze
+            const t = Date.now() / 1000;
+            for (let i = 0; i < width + cameraX; i += 420) {
+                const renderX = i - (cameraX * 0.35);
+                const xPos = (renderX % (width + 420)) - 100;
+                const flick = 0.5 + 0.5 * Math.sin(t * 3 + i);
+                ctx.fillStyle = "#1c1310";
+                ctx.fillRect(xPos, height - 260, 150, 160);
+                ctx.fillStyle = `rgba(255,${140 + Math.floor(60 * flick)},40,${0.55 + 0.3 * flick})`;
+                ctx.fillRect(xPos + 25, height - 200, 100, 70);
+                ctx.fillStyle = "rgba(255,220,150,0.9)";
+                ctx.fillRect(xPos + 45, height - 180, 60, 30);
+            }
+            // Hanging lamps with warm pools of light
+            for (let i = 200; i < width + cameraX; i += 520) {
+                const renderX = i - (cameraX * 0.6);
+                const xPos = (renderX % (width + 520)) - 60;
+                ctx.strokeStyle = "#141414";
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(xPos, 0); ctx.lineTo(xPos, 70); ctx.stroke();
+                ctx.fillStyle = "#f1c40f";
+                ctx.beginPath(); ctx.arc(xPos, 85, 12, 0, Math.PI * 2); ctx.fill();
+                const pool = ctx.createRadialGradient(xPos, 90, 4, xPos, 90, 130);
+                pool.addColorStop(0, "rgba(255,200,120,0.20)");
+                pool.addColorStop(1, "rgba(255,200,120,0)");
+                ctx.fillStyle = pool;
+                ctx.fillRect(xPos - 130, 0, 260, 300);
+            }
+            // Home-light window far down the line (the goal Onyx can smell)
+            const winX = 6300 - cameraX;
+            if (winX > -200 && winX < width + 200) {
+                ctx.fillStyle = "#ffe9b8";
+                ctx.fillRect(winX, height - 420, 90, 120);
+                ctx.strokeStyle = "#5a4326";
+                ctx.lineWidth = 6;
+                ctx.strokeRect(winX, height - 420, 90, 120);
+                ctx.beginPath();
+                ctx.moveTo(winX + 45, height - 420);
+                ctx.lineTo(winX + 45, height - 300);
+                ctx.moveTo(winX, height - 360);
+                ctx.lineTo(winX + 90, height - 360);
+                ctx.stroke();
+            }
+            ctx.restore();
         } else if (currentLevel === 11) {
-            // Neon Metropolis (classic look)
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            // Neon Metropolis (classic look) — with vertical parallax
+            const shift = Math.max(0, -world.cameraY) * 0.25;
+            ctx.save();
+            ctx.translate(0, shift);
+            const skyGrad = ctx.createLinearGradient(0, -shift, 0, height);
             skyGrad.addColorStop(0, "#14102A");
             skyGrad.addColorStop(1, "#241A38");
             ctx.fillStyle = skyGrad;
-            ctx.fillRect(0, 0, width, height);
-            ctx.save();
+            ctx.fillRect(0, -shift, width, height);
             ctx.fillStyle = "#191430";
             for(let i=0; i < width + cameraX; i += 90) {
                  let renderX = i - (cameraX * 0.25);
@@ -444,6 +527,21 @@ export class Renderer {
     public drawCutscene(manager: CutsceneManager, width: number, height: number) {
         const { frame, step, currentType } = manager;
         const ctx = this.ctx;
+
+        if (currentType === 'town_intro') {
+            const rich = gfxSettings.visualMode === 'enhanced';
+            drawTownBackground(ctx, width, height, frame * 0.3, rich, frame / 60);
+            ctx.save();
+            ctx.translate(width * 0.3, height * 0.62);
+            ctx.scale(2.2, 2.2);
+            if (rich) drawHuskyEnhanced(ctx, 0, 0, { velX: 2, velY: 0, grounded: true, level: 13, t: frame / 60 });
+            else drawHuskyFace(ctx, 20, 15, 0.7, 'happy');
+            drawTownPerson(ctx, 90, -18, '#258d91', frame / 10, step >= 2);
+            drawTownPerson(ctx, 145, -18, '#d96252', frame / 10 + 2, step >= 2);
+            ctx.restore();
+            townLabel(ctx, 'MARKET DAY', width / 2, height * 0.33);
+            return;
+        }
 
         // Enhanced mode: fully composed cinematic scenes (classic art preserved below)
         if (gfxSettings.visualMode === 'enhanced') {
@@ -478,9 +576,52 @@ export class Renderer {
                  ctx.closePath();
                  ctx.fill();
              }
-             drawHuskyFace(ctx, cx, cy + 50, 2, step >= 4 ? 'determined' : (step === 3 ? 'sad' : 'happy'));
-             return;
-        }
+              drawHuskyFace(ctx, cx, cy + 50, 2, step >= 4 ? 'determined' : (step === 3 ? 'sad' : 'happy'));
+              return;
+         }
+
+         if (currentType === 'bakery_intro') {
+              // Warm bakery back-room: brick walls, glowing ovens, conveyor line
+              const warm = ctx.createLinearGradient(0, 0, 0, height);
+              warm.addColorStop(0, "#3a2418");
+              warm.addColorStop(1, "#1c1008");
+              ctx.fillStyle = warm;
+              ctx.fillRect(0, 0, width, height);
+              // Oven mouths
+              const t = frame / 60;
+              for (const ox of [cx - 320, cx + 220]) {
+                  ctx.fillStyle = "#141414";
+                  ctx.fillRect(ox, cy - 40, 180, 190);
+                  const flick = 0.6 + 0.4 * Math.sin(t * 4 + ox);
+                  ctx.fillStyle = `rgba(255,${140 + Math.floor(50 * flick)},40,0.9)`;
+                  ctx.fillRect(ox + 30, cy + 30, 120, 80);
+              }
+              // Conveyor line across the floor
+              ctx.fillStyle = "#3e2723";
+              ctx.fillRect(0, cy + 150, width, 40);
+              ctx.fillStyle = "#ffcc80";
+              for (let px = (frame * 3) % 52; px < width; px += 52) {
+                  ctx.fillRect(px, cy + 162, 20, 6);
+              }
+              // Pastries riding the belt
+              for (let i = 0; i < 3; i++) {
+                  const px = ((frame * 3 + i * 300) % (width + 100)) - 50;
+                  ctx.fillStyle = "#deb887";
+                  ctx.fillRect(px, cy + 128, 34, 22);
+                  ctx.fillStyle = "#fff8e1";
+                  ctx.fillRect(px, cy + 124, 34, 6);
+              }
+              if (step >= 3) {
+                  // Baker silhouette appears at the door
+                  const bx = cx + 260;
+                  ctx.fillStyle = "#0a0a0a";
+                  ctx.fillRect(bx - 30, cy - 60, 70, 220);
+                  ctx.fillStyle = "white";
+                  ctx.fillRect(bx - 28, cy - 100, 66, 44);
+              }
+              drawHuskyFace(ctx, cx - 120, cy + 60, 2, step >= 3 ? 'sad' : (step === 0 ? 'happy' : 'determined'));
+              return;
+         }
 
         if (currentType === 'pier_intro') {
              ctx.fillStyle = "#1e272e";

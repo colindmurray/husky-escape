@@ -4,112 +4,123 @@ import { LevelData } from "./types";
 import { Difficulty } from "../../types";
 
 /**
- * Zone 11: NEON METROPOLIS — the city night.
+ * Zone 11: NEON METROPOLIS — the city night, now a full vertical world.
  *
- * Onyx crosses a bustling skyline of neon-lit rooftops. Industrial fans in
- * alley shafts blast him skyward (steady + pulsing variants), security drones
- * patrol the gaps with scan cones, and neon dash pads fling him across wide
- * streets. A few roof cats keep watch.
+ * This level uses VERTICAL SCROLLING: the camera follows Onyx up AND back down
+ * (soft center-follow with a deadzone), so the whole ~1750px-tall skyline is
+ * playable even on short screens. The route forces repeated climbing and
+ * descending:
+ *
+ *   Act 1  Street → fire-escape climb up a mid-rise (drone overhead)
+ *          → forced DROP down a roof shaft to a sunken courtyard
+ *   Act 2  Pulse-fan spire: timed lifts + alternating perches to the high
+ *          tower, then a boost-pad dash across the boulevard
+ *   Act 3  A long plunge off the boulevard tower into the low plaza
+ *   Act 4  Steady-fan ascent onto the upper decks, then a zigzag fire-escape
+ *          climb to the summit roof and the exit at the top of the world.
  */
 export function getLevel11(height: number, difficulty: Difficulty): LevelData {
     // Drone pursuit gentleness scales with difficulty (EASY ~55%)
     const aggro = difficulty === Difficulty.EASY ? 0.55 : 1;
+
+    // Ground line (world BOTTOM edge is always y = height)
+    const G = height;
+    // Total vertical span; content reaches ~G-1460, so leave headroom
+    const WORLD_H = 1750;
+
     const platforms: any[] = [
-        // Left boundary
-        new Platform(-50, 0, 50, height),
+        // Left boundary (full world height)
+        new Platform(-50, G - WORLD_H, 50, WORLD_H),
 
-        // --- Act 1: first rooftops ---
-        new Platform(0, height - 80, 520, 80),          // start roof
-        new Platform(660, height - 150, 360, 70),       // hop across the street
-        // Fan shaft #1 (steady): open alley column, lifts to the mid-tower
-        new Platform(1020, height - 60, 250, 40),       // alley floor (safety net)
-        new Fan(1120, height - 90, 'steady', 420),
-        new Platform(1052, height - 520, 26, 320),      // left guide wall (doorway at street level)
-        new Platform(1250, height - 430, 280, 55),      // landing tower (right of column)
+        // --- Act 1: street start + fire-escape climb ---
+        new Platform(0, G - 80, 520, 80),               // start street roof
+        new Platform(620, G - 240, 150, 20),            // fire escape 1
+        new Platform(840, G - 390, 150, 20),            // fire escape 2
+        new Platform(1060, G - 545, 150, 20),           // fire escape 3
+        new Platform(1240, G - 600, 460, 60),           // Rooftop A
 
-        // Fire escape climb with a drone overhead
-        new Platform(1470, height - 490, 150, 20),
-        new Platform(1690, height - 550, 150, 20),
-        new SecurityDrone(1560, height - 750, 120, aggro),
+        // Forced descent: drop shaft off Rooftop A's right edge down to courtyard
+        new Platform(1740, G - 560, 26, 420),           // shaft guide wall
+        new Platform(1790, G - 380, 120, 18),           // mid-drop ledge (optional break)
+        new Platform(1880, G - 140, 520, 70),           // sunken courtyard floor
 
-        // Mid-tower long roof + dash pad across the boulevard
-        new Platform(1840, height - 500, 520, 60),
-        new BoostPad(2260, height - 514, 1),
-        new Platform(2520, height - 520, 240, 40),      // pad landing
+        // --- Act 2: pulse-fan spire ---
+        new Fan(2080, G - 170, 'pulse'),                // timed lift out of the courtyard
+        new Platform(1950, G - 480, 130, 20),           // left perch
+        new Platform(2230, G - 640, 130, 20),           // right perch
+        new Platform(1930, G - 800, 130, 20),           // left perch
+        new Platform(2090, G - 950, 220, 40),           // spire landing
+        new Fan(2140, G - 975, 'steady', 320),          // steady lift to Tower B
+        new Platform(2320, G - 1280, 300, 55),          // Tower B
 
-        // --- Act 2: descend, pulse-fan tower ---
-        new Platform(2860, height - 300, 340, 60),
-        new Platform(3180, height - 200, 200, 40),      // pulse-shaft floor
-        new Fan(3260, height - 230, 'pulse'),           // timed lift!
-        new Platform(3080, height - 580, 160, 55),      // high tower LEFT of column
-        new Platform(3440, height - 580, 160, 55),      // high tower RIGHT of column
-        new Platform(3232, height - 700, 130, 20),      // sky perch above the column
+        // High traverse + boost dash across the boulevard
+        new Platform(2620, G - 1320, 520, 60),          // Rooftop B run
+        new BoostPad(3060, G - 1334, 1),
+        new Platform(3320, G - 1340, 240, 40),          // pad landing tower
 
-        new SecurityDrone(3320, height - 800, 160, aggro),
-        new Platform(3650, height - 630, 160, 20),      // fire escape hop
-        new Platform(3870, height - 690, 160, 20),
+        // --- Act 3: long plunge into the plaza ---
+        new Platform(3620, G - 760, 130, 18),           // mid-fall ledge w/ bone
+        new Platform(3560, G - 160, 620, 70),           // low plaza
 
-        // --- Act 3: high run + big dash ---
-        new Platform(4040, height - 640, 560, 60),
-        new BoostPad(4520, height - 654, 1),
-        new Platform(4800, height - 660, 260, 40),
-        new SecurityDrone(4700, height - 560, 200),
+        // --- Act 4: final ascent to the summit ---
+        new Fan(4080, G - 186, 'steady', 400),          // fan column off the plaza
+        new Platform(3900, G - 560, 165, 50),           // upper deck LEFT (column gap)
+        new Platform(4290, G - 560, 185, 50),           // upper deck RIGHT
+        new Platform(4620, G - 700, 160, 20),           // zigzag fire escapes
+        new Platform(4840, G - 850, 160, 20),
+        new Platform(5060, G - 1000, 160, 20),
+        new Platform(5280, G - 1140, 170, 20),
+        new Platform(5500, G - 1280, 170, 20),
+        new Platform(5700, G - 1350, 580, 60),          // summit roof
 
-        // Drop down to the plaza
-        new Platform(5150, height - 300, 420, 60),
-        new Platform(5560, height - 210, 220, 40),      // shaft floor
-        new Fan(5640, height - 240, 'steady'),
-        new Platform(5420, height - 560, 190, 50),      // upper deck LEFT (column open)
-        new Platform(5740, height - 560, 200, 50),      // upper deck RIGHT
-
-        // --- Final ascent to home suburb sign ---
-        new Platform(5970, height - 615, 170, 20),
-        new Platform(6180, height - 675, 170, 20),
-        new Platform(6380, height - 730, 520, 60),      // summit roof
-
-        // Right boundary wall
-        new Platform(6940, 0, 50, height),
+        // Right boundary wall (full world height)
+        new Platform(6340, G - WORLD_H, 50, WORLD_H),
     ];
 
-    // Extra drones on higher difficulties
+    // Extra perch on higher difficulties
     if (difficulty !== Difficulty.EASY) {
-        platforms.push(new Platform(1240, height - 240, 160, 20)); // extra perch in shaft 1
+        platforms.push(new Platform(1660, G - 260, 120, 18)); // ledge inside drop shaft
     }
+
     const enemies: any[] = [
-        new SecurityDrone(850, height - 380, 120, aggro),
-        new SecurityDrone(1900, height - 620, 220, aggro),
-        new SecurityDrone(2960, height - 420, 150, aggro),
-        new SecurityDrone(4180, height - 760, 200, aggro),
-        new SecurityDrone(5250, height - 400, 170, aggro),
+        new SecurityDrone(820, G - 560, 120, aggro),    // over the fire escapes
+        new SecurityDrone(1400, G - 780, 140, aggro),   // above Rooftop A
+        new SecurityDrone(2150, G - 700, 110, aggro),   // sweeping the pulse-fan perches
+        new SecurityDrone(2500, G - 1470, 150, aggro),  // above Tower B
+        new SecurityDrone(3860, G - 420, 170, aggro),   // plaza guard
+        new SecurityDrone(5000, G - 1130, 150, aggro),  // final ascent
     ];
     if (difficulty !== Difficulty.EASY) {
-        enemies.push(new SecurityDrone(1120, height - 260, 120, 1));
-        enemies.push(new SecurityDrone(5700, height - 660, 130, 1));
+        enemies.push(new SecurityDrone(1050, G - 320, 120, 1));
+        enemies.push(new SecurityDrone(4420, G - 700, 130, 1));
     }
 
     const collectibles = [
-        new Collectible(300, height - 140),
-        new Collectible(800, height - 210),
-        new Collectible(1180, height - 200),   // floating in fan shaft 1
-        new Collectible(1240, height - 300),
-        new Collectible(1700, height - 630),
-        new Collectible(2000, height - 560),
-        new Collectible(2600, height - 580),
-        new Collectible(3320, height - 320),   // inside pulse-fan column (timed grab)
-        new Collectible(3720, height - 700),
-        new Collectible(4300, height - 700),
-        new Collectible(5300, height - 360),
-        new Collectible(5700, height - 380),   // fan shaft 3
-        new Collectible(6240, height - 740),
+        new Collectible(300, G - 140),     // start roof
+        new Collectible(700, G - 310),     // fire escape 1
+        new Collectible(920, G - 460),     // fire escape 2
+        new Collectible(1140, G - 615),    // fire escape 3
+        new Collectible(1450, G - 670),    // Rooftop A
+        new Collectible(1830, G - 330),    // grabbed while dropping the shaft
+        new Collectible(1850, G - 200),    // lower in the drop
+        new Collectible(2120, G - 400),    // pulse-fan column
+        new Collectible(2300, G - 700),    // right perch
+        new Collectible(2180, G - 1020),   // above the spire landing
+        new Collectible(2800, G - 1390),   // Rooftop B run
+        new Collectible(3230, G - 1420),   // boost-dash flight path
+        new Collectible(3660, G - 950),    // long-plunge arc
+        new Collectible(3640, G - 600),    // long-plunge arc (lower)
+        new Collectible(4130, G - 450),    // fan column 3
+        new Collectible(5110, G - 1070),   // final ascent
+        new Collectible(5850, G - 1420),   // summit
     ];
 
-    const exit = new Exit(6680, height - 810);
-
-    // Roof cats: two little watchers
+    // Roof cats: little watchers along the route
     const props = [
-        new RoofCat(420, height - 102),
-        new RoofCat(4400, height - 662),
-        new RoofCat(6500, height - 752),
+        new RoofCat(420, G - 102),
+        new RoofCat(1500, G - 622),
+        new RoofCat(3700, G - 182),
+        new RoofCat(5950, G - 1372),
     ];
 
     return {
@@ -117,8 +128,9 @@ export function getLevel11(height: number, difficulty: Difficulty): LevelData {
         enemies,
         collectibles,
         waters: [],
-        exit,
-        playerStart: { x: 100, y: height - 130 },
+        exit: new Exit(6080, G - 1430),
+        playerStart: { x: 100, y: G - 130 },
         props,
+        worldHeight: WORLD_H,
     } as LevelData;
 }

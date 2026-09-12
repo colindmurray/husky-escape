@@ -35,7 +35,7 @@ export class ParticleSystem {
     private lastLevel = -1;
 
     public updateAndDraw(ctx: CanvasRenderingContext2D, world: World) {
-        const { width: w, height: h, cameraX: camX, currentLevel: level } = world;
+        const { width: w, height: h, cameraX: camX, cameraY: camY, currentLevel: level } = world;
         const p = world.player;
 
         if (level !== this.lastLevel) {
@@ -53,7 +53,7 @@ export class ParticleSystem {
                     const dir = i % 2 === 0 ? 1 : -1;
                     this.particles.push({
                         x: p.x - camX + p.w / 2 + dir * (4 + Math.random() * 12),
-                        y: p.y + p.h - 2,
+                        y: p.y - camY + p.h - 2,
                         vx: dir * (0.6 + Math.random() * 1.8),
                         vy: -(0.3 + Math.random() * 0.9),
                         life: 0, maxLife: 26 + Math.random() * 16,
@@ -70,7 +70,7 @@ export class ParticleSystem {
                     const dir = i % 2 === 0 ? 1 : -1;
                     this.particles.push({
                         x: p.x - camX + p.w / 2 + dir * 6,
-                        y: p.y + p.h - 4,
+                        y: p.y - camY + p.h - 4,
                         vx: dir * (0.4 + Math.random()),
                         vy: 0.2 + Math.random() * 0.5,
                         life: 0, maxLife: 20,
@@ -88,7 +88,7 @@ export class ParticleSystem {
                     const spd = 1.2 + Math.random() * 1.6;
                     this.particles.push({
                         x: p.x - camX + p.w / 2,
-                        y: p.y + p.h / 2,
+                        y: p.y - camY + p.h / 2,
                         vx: Math.cos(ang) * spd,
                         vy: Math.sin(ang) * spd - 0.5,
                         life: 0, maxLife: 30 + Math.random() * 18,
@@ -132,6 +132,7 @@ export class ParticleSystem {
             case 9: this.emitAmbient(w, h, camX, 1.6, (x, y) => this.rainDrop(x, y)); break;
             case 10: this.emitAmbient(w, h, camX, 0.4, (x, y) => this.ember(x, y)); break;
             case 11: this.emitAmbient(w, h, camX, 0.5, (x, y) => this.neonMote(x, y)); break;
+            case 12: this.emitAmbient(w, h, camX, 0.55, (x, y) => this.flourMote(x, y)); break;
         }
 
         // ---- Update & draw ----
@@ -322,6 +323,16 @@ private neonMote(x: number, y: number): Particle {
             size: 1 + Math.random() * 1.4,
             color: Math.random() > 0.4 ? 'rgba(255,150,60,0.85)' : 'rgba(255,210,110,0.8)',
             gravity: -0.001, drag: 0.995, kind: 'glow',
+        };
+    }
+
+    private flourMote(x: number, y: number): Particle {
+        return {
+            x, y: y * 0.85, vx: (Math.random() - 0.5) * 0.35, vy: -(0.08 + Math.random() * 0.25),
+            life: 0, maxLife: 150 + Math.random() * 110,
+            size: 0.9 + Math.random() * 1.5,
+            color: 'rgba(245,232,200,0.55)',
+            gravity: -0.0006, drag: 0.997, kind: 'dot',
         };
     }
 }

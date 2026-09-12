@@ -79,7 +79,21 @@ export class Platform extends Entity {
                      ctx.lineTo(drawX + i, drawY + this.h);
                  }
                  ctx.stroke();
-             } else {
+        } else if (currentLevel === 12) {
+             // Warm bakery: floured oak counters and cooling racks
+             ctx.fillStyle = "#8a5a34";
+             ctx.fillRect(drawX, drawY, this.w, this.h);
+             // Wood grain line
+             ctx.strokeStyle = "rgba(40,22,8,0.4)";
+             ctx.lineWidth = 2;
+             ctx.beginPath();
+             ctx.moveTo(drawX, drawY + 22);
+             ctx.lineTo(drawX + this.w, drawY + 22);
+             ctx.stroke();
+             // Flour-dusted top
+             ctx.fillStyle = "#f5e6c8";
+             ctx.fillRect(drawX, drawY, this.w, 8);
+        } else {
                  // Grassy top for mountain/forest default
                  ctx.fillStyle = "#2ecc71";
                  ctx.fillRect(drawX, drawY, this.w, 15);

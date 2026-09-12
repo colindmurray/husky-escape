@@ -6,6 +6,7 @@
 // audio toggle is set to "Classic". Any SoundType not handled here falls back
 // to the classic effect automatically.
 
+import { playTownSound } from "./sfx";
 import { SoundType } from "../../types";
 
 function noiseBuffer(ctx: AudioContext, seconds: number): AudioBuffer {
@@ -17,6 +18,7 @@ function noiseBuffer(ctx: AudioContext, seconds: number): AudioBuffer {
 }
 
 export function playSoundEffectEnhanced(type: SoundType, ctx: AudioContext, masterGain: GainNode): boolean {
+    if (playTownSound(type, ctx, masterGain, true)) return true;
     const t = ctx.currentTime;
 
     switch (type) {

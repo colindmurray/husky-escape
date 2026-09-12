@@ -114,6 +114,33 @@ export function drawPlatformEnhanced(
             ctx.fillRect(x, y + h - 4, w, 4);
             break;
         }
+        case 12: {
+            // Bakery: floured oak cooling racks / counters
+            const body = ctx.createLinearGradient(0, y, 0, y + h);
+            body.addColorStop(0, '#a9764b');
+            body.addColorStop(0.3, '#8a5a34');
+            body.addColorStop(1, '#5d3a20');
+            ctx.fillStyle = body;
+            ctx.fillRect(x, y, w, h);
+            // Wood grain
+            ctx.strokeStyle = 'rgba(40,22,8,0.4)';
+            ctx.lineWidth = 1.6;
+            for (let gy = y + 12; gy < y + h; gy += 10) {
+                ctx.beginPath();
+                ctx.moveTo(x + 3, gy);
+                ctx.bezierCurveTo(x + w * 0.3, gy + 2, x + w * 0.6, gy - 2, x + w - 3, gy + 1);
+                ctx.stroke();
+            }
+            // Flour-dusted top
+            ctx.fillStyle = 'rgba(245,230,200,0.75)';
+            ctx.fillRect(x, y, w, 5);
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            for (let i = 0; i < w / 22; i++) {
+                const fx = hash2(seedBase + i, 91) * w;
+                ctx.beginPath(); ctx.arc(x + fx, y + 3, 1.6, 0, TAU); ctx.fill();
+            }
+            break;
+        }
         case 5:
         default: {
             // Mountain / generic: rocky earth with grassy fringe

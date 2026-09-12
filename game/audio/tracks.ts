@@ -24,6 +24,20 @@ const {
 const DEFAULT_INSTRUMENT = { type: 'triangle' as OscillatorType, attack: 0.05, release: 0.05 };
 
 export const MUSIC_TRACKS: Partial<Record<SoundType, TrackData>> = {
+    [SoundType.THEME_TOWN]: {
+        tempo: 116,
+        instrument: { type: 'triangle', attack: 0.012, release: 0.04, isPlucky: true },
+        sequence: [
+            [C4, 3], [E4, 1], [G4, 2], [E4, 2], [A4, 3], [G4, 1], [E4, 2], [0, 2],
+            [F4, 3], [A4, 1], [C5, 2], [A4, 2], [G4, 4], [E4, 2], [C4, 2],
+            [D4, 3], [F4, 1], [A4, 2], [F4, 2], [G4, 3], [B4, 1], [D5, 2], [0, 2],
+            [C5, 2], [B4, 2], [A4, 2], [G4, 2], [E4, 4], [C4, 4],
+            [C3, 2], [G3, 2], [E4, 3], [G4, 1], [A4, 2], [G4, 2], [E4, 4],
+            [F3, 2], [C4, 2], [F4, 3], [A4, 1], [G4, 2], [F4, 2], [D4, 4],
+            [G3, 2], [B3, 2], [D4, 2], [G4, 2], [E4, 2], [G4, 2], [C5, 4],
+            [A4, 2], [F4, 2], [G4, 2], [B4, 2], [C5, 6], [0, 2],
+        ]
+    },
     [SoundType.THEME_POUND]: {
         tempo: 100,
         instrument: { ...DEFAULT_INSTRUMENT, attack: 0.02 },
@@ -197,8 +211,7 @@ export const MUSIC_TRACKS: Partial<Record<SoundType, TrackData>> = {
         ]
     },
 
-    [SoundType.THEME_NEON]: {
-        tempo: 118,
+    [SoundType.THEME_NEON]: {        tempo: 118,
         instrument: { type: 'sawtooth', attack: 0.01, release: 0.06 },
         sequence: [
             // Am - F - C - G arpeggio engine (synth-wave pulse)
@@ -215,6 +228,35 @@ export const MUSIC_TRACKS: Partial<Record<SoundType, TrackData>> = {
             [C5, 2], [D5, 2], [E5, 4], [C5, 2], [A4, 2],
             [F4, 2], [G4, 2], [A4, 4], [B4, 2], [C5, 2],
             [B4, 2], [G4, 2], [E4, 2], [D4, 2], [C4, 4], [B3, 4]
+        ]
+    },
+
+    [SoundType.THEME_BAKERY]: {
+        tempo: 132,
+        instrument: { ...DEFAULT_INSTRUMENT, type: 'triangle' },
+        sequence: [
+            // Cozy 3/4-ish waltz: oom-pah-pah accordion feel in C major
+            [C3, 2], [G3, 2], [G3, 2], [E4, 2], [G4, 2], [E4, 2],
+            [F3, 2], [A3, 2], [A3, 2], [F4, 2], [A4, 2], [F4, 2],
+            [G3, 2], [B3, 2], [B3, 2], [G4, 2], [B4, 2], [G4, 2],
+            [C3, 2], [G3, 2], [G3, 2], [C5, 4], [B4, 2],
+            [A4, 2], [G4, 2], [F4, 2], [E4, 2], [D4, 2], [C4, 4],
+            [D4, 2], [F4, 2], [A4, 2], [G4, 4], [E4, 2],
+            [F4, 2], [E4, 2], [D4, 2], [C4, 8]
+        ]
+    },
+    [SoundType.THEME_BOSS_BAKER]: {
+        tempo: 162,
+        instrument: { type: 'square', attack: 0.01, release: 0.06 },
+        sequence: [
+            // Frantic kitchen chase: chromatic runs + stomping oom-pah
+            [E3, 1], [F3, 1], [Gb3, 1], [G3, 1], [Ab3, 1], [A3, 1], [Bb3, 1], [B3, 1],
+            [C4, 2], [B3, 2], [Bb3, 2], [A3, 4],
+            [E3, 1], [F3, 1], [Gb3, 1], [G3, 1], [Ab3, 1], [A3, 1], [Bb3, 1], [B3, 1],
+            [D4, 2], [C4, 2], [B3, 2], [Bb3, 4],
+            [A3, 2], [A3, 2], [C4, 2], [E4, 2], [A4, 4], [G4, 4],
+            [F4, 2], [E4, 2], [Eb4, 2], [D4, 2], [C4, 2], [B3, 2], [Bb3, 4], [A3, 4],
+            [E3, 2], [E3, 2], [G3, 2], [Bb3, 2], [A3, 8]
         ]
     }
 };

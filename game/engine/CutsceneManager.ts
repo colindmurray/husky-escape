@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro';
+type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro';
 
 export class CutsceneManager {
     public step = 0;
@@ -46,6 +46,19 @@ export class CutsceneManager {
             { text: "But the city never sleeps -- and neither do its machines.", sound: SoundType.DRONE_ALERT },
             { text: "Ride the rooftop fans. Dodge the drones.", sound: SoundType.BOOST },
             { text: "Almost home, Onyx!", sound: SoundType.THEME_NEON }
+        ],
+        'town_intro': [
+            { text: "Out of the bakery, into the sunshine... It's market day!", sound: SoundType.THEME_TOWN },
+            { text: "The streets are busy! Shoppers bump you aside, but they cannot hurt you.", sound: null },
+            { text: "A golden Good Dog Bandana! People wave you through, and it saves you from one town hazard.", sound: SoundType.COLLECT },
+            { text: "Watch the leaking hydrants and rising roadwork posts. Land on all three gold-marked parade floats to open home!", sound: SoundType.BIKE_BELL }
+        ],
+        'bakery_intro': [
+            { text: "Past the neon roofs... wait. Do you smell that?", sound: SoundType.COLLECT },
+            { text: "Warm butter. Sugar. FRESH BREAD from the corner bakery!", sound: SoundType.WIN_SHORT },
+            { text: "Home is just down the street. But... just one little sniff?", sound: null },
+            { text: "Uh oh. The back door slammed shut. And the belt is moving...", sound: SoundType.CRASH },
+            { text: "Don't get baked, Onyx! And whatever you do — avoid the Night Baker!", sound: SoundType.THEME_BAKERY }
         ],
         'pier_intro': [
             { text: "You surface from the deep ocean...", sound: SoundType.SPLASH },
@@ -103,6 +116,10 @@ export class CutsceneManager {
                 audioManager.playMusic(SoundType.THEME_PIER);
             } else if (line.sound === SoundType.THEME_NEON) {
                 audioManager.playMusic(SoundType.THEME_NEON);
+            } else if (line.sound === SoundType.THEME_TOWN) {
+                audioManager.playMusic(SoundType.THEME_TOWN);
+            } else if (line.sound === SoundType.THEME_BAKERY) {
+                audioManager.playMusic(SoundType.THEME_BAKERY);
             } else {
                 audioManager.playSFX(line.sound);
             }
