@@ -54,6 +54,20 @@ Finish the backyard, then choose **Go inside · Home**. Walk through Onyx’s ho
 
 Home access, quests, bones, and purchases persist within the current journey, including retries and return trips. Starting a new journey or reloading the page resets them. Both Classic and Enhanced graphics and audio are supported. Run `npm run test:home` for quest, reward, travel, non-dev UI, keyboard, and mobile checks.
 
+## House floors, companions, and building
+
+Use **Change floor**, or press **E** beside the stairs, to move between three rooms:
+
+- **Ground floor:** the fetch-quest dogs, Juniper’s shop, and free travel.
+- **Basement:** choose **Hardcore practice** for any of the 14 real Hardcore layouts. Retries restore the supplies you entered with. Training uses a separate copy of bones, outfits, party, and quest progress; leaving restores the real journey and selected difficulty. Practice does not advance fetch quests or earn spending bones. **Retry practice** and **Back to basement** are available during a run; completed and failed attempts also offer another try.
+- **Second floor:** talk to **Opal**, **Ruby**, and **Samwise** with E and invite them along. All three can join. They follow Onyx’s recorded path, including jumps and swimming, without blocking her, taking damage, or collecting items. Talk to them upstairs to ask them to stay home. Party choices last for the current journey.
+
+The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platforms, water, raccoons, bones, a start, and an exit. Click/tap a square to place the selected tile; arrow keys move the focused square and Enter/Space places it. Scroll horizontally to reach the entire course. Start, exit, and raccoons need supporting platforms. Moving the start or exit replaces its old position. **Undo** retains 30 edits; **Starter layout** asks before replacing the draft.
+
+**Play my level** runs the course with normal movement and collisions under practice rules. **Back to editor** preserves the draft, including after a failed attempt. **Save layout** stores one custom course in this browser, independently of journey resets; saving is explicit, and a failed browser-storage write is reported. Layouts are checked when loaded and before play. The starter course is completable, but custom designs can intentionally be difficult or impossible—playtest and edit them.
+
+`npm run test:house-floors` covers floor navigation, companion recruitment and jump paths, all 14 practice destinations, economy isolation, retries, editor validation and save/reload, mobile layout, and a movement-only completion of the starter course.
+
 ## Secret doghouse shops
 
 Optional shops appear every three levels: a canopy trail in 3, snowy ledges in 6, lighthouse perches in 9, and bakery rafters in 12. Follow the three gold paw seals above the main path to unlock a doghouse. Hard and Hardcore have narrower approach ledges. These challenges never gate the normal exit.

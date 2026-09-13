@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import type { GameEngine } from './game/GameEngine';
-import { HomeDog, QUESTS } from './game/Home';
+import { LevelBuilderUI } from './LevelBuilderUI';
+import { HomeDog, QUESTS, COMPANIONS, FLOORS, type HomeFloor } from './game/Home';
 import './home.css';
 
 const LEVEL_NAMES = ['The Pound', 'Pound Escape', 'The Forest', 'The Beach', 'The Mountains', 'The Ski Slopes', 'The Chase', 'Underwater', 'The Pier', 'Construction', 'Neon City', 'The Bakery', 'The Town', 'The Backyard'];
@@ -16,7 +17,7 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
         const trap = (event: KeyboardEvent) => {
             if (event.key === 'Escape') { event.preventDefault(); close(); }
             if (event.key !== 'Tab') return;
-            const buttons = [...(dialog.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])];
+            const buttons = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input:not(:disabled), select:not(:disabled)') ?? [])];
             if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons.at(-1)?.focus(); }
             else if (!event.shiftKey && document.activeElement === buttons.at(-1)) { event.preventDefault(); buttons[0]?.focus(); }
         };
@@ -25,18 +26,32 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
     }, [panel]);
     if (!world.belongings.homeUnlocked) return null;
     const nearby = world.props.find(p => p instanceof HomeDog && p.nearby) as HomeDog | undefined;
+    const companion = COMPANIONS.find(c => c.id === panel);
+    const party = COMPANIONS.filter(c => world.belongings.companions.has(c.id));
     const quest = QUESTS.find(q => q.id === panel), status = quest && progress[quest.id];
-    const active = QUESTS.filter(q => progress[q.id] === 'found' || progress[q.id] === 'accepted' && q.level === world.currentLevel);
+    const active = world.practice ? [] : QUESTS.filter(q => progress[q.id] === 'found' || progress[q.id] === 'accepted' && q.level === world.currentLevel);
     return <>
         {!world.shopOpen && !panel && <div className={`home-controls ${world.isHome ? "" : "on-trail"}`}>
             <div className="home-actions">
-                {world.isHome ? <><strong>Home, sweet home</strong><button onClick={() => world.openHomePanel('travel')}>Explore old levels</button>{nearby && <button onClick={() => world.openHomePanel(nearby.quest.id)}>E · Talk to {nearby.quest.dog}</button>}</> : <button onClick={() => { engine.goHome(); focusGame(); }}>Return home</button>}
+                {world.isHome ? <><strong>{world.homeFloor === 'ground' ? 'Home, sweet home' : world.homeFloor === 'basement' ? 'The training den' : 'The companion loft'}</strong><button onClick={() => world.openHomePanel('floors')}>Change floor</button>
+                    {world.homeFloor === 'ground' && <button onClick={() => world.openHomePanel('travel')}>Explore old levels</button>}
+                    {world.homeFloor === 'basement' && <><button onClick={() => world.openHomePanel('practice')}>Hardcore practice</button><button onClick={() => world.openHomePanel('builder')}>Create a level</button></>}
+                    {nearby && <button onClick={() => world.openHomePanel(nearby.quest.id)}>E · Talk to {nearby.quest.dog}</button>}</> : <>
+                    <button onClick={() => { engine.goHome(); focusGame(); }}>{world.practice ? 'Back to basement' : 'Return home'}</button>
+                    {world.practice && <><button onClick={() => { engine.retryPractice(); focusGame(); }}>Retry practice</button>{world.isCustom && <button onClick={() => engine.returnToEditor()}>Back to editor</button>}</>}
+                </>}
             </div>
-            {world.isHome ? <p>← → / A D to walk · E to talk or shop · Friends and Juniper are to the right →</p> : <div className="fetch-status" role="status">{active.map(q => <p key={q.id}>{q.icon} {progress[q.id] === 'found' ? `${q.item} found! Bring it home to ${q.dog}.` : `Find ${q.dog}’s ${q.item}. ${q.hint}`}</p>)}</div>}
+            {world.isHome ? <p>← → / A D to walk · E to talk or shop · {world.homeFloor === 'ground' ? 'Friends and Juniper are to the right →' : world.homeFloor === 'basement' ? 'Practice board · Building bench · Stairs →' : 'Meet Opal, Ruby & Samwise →'}</p> : <div className="fetch-status" role="status">{active.map(q => <p key={q.id}>{q.icon} {progress[q.id] === 'found' ? `${q.item} found! Bring it home to ${q.dog}.` : `Find ${q.dog}’s ${q.item}. ${q.hint}`}</p>)}</div>}
+            {party.length > 0 && <p className="party-status">🐾 Coming along: {party.map(c => c.dog).join(' · ')}</p>}
+            {world.practice && <p className="party-status">{world.isCustom ? (world.editorDraft.name || 'Custom course') : 'Hardcore training'} · Unlimited retries · Practice belongings only</p>}
         </div>}
-        {panel && <div className="home-backdrop"><div className="home-dialog" ref={dialog} role="dialog" aria-modal="true" aria-labelledby="home-title">
-            <header><div><small>ONYX’S HOUSE</small><h1 id="home-title">{quest ? `${quest.dog}’s ${quest.item}` : 'Where shall we go?'}</h1></div><button onClick={close} aria-label="Close home conversation">Close · Esc</button></header>
-            {quest ? <>
+        {panel && <div className="home-backdrop"><div className={`home-dialog ${panel === "builder" ? "builder-dialog" : ""}`} ref={dialog} role="dialog" aria-modal="true" aria-labelledby="home-title">
+            <header><div><small>ONYX’S HOUSE</small><h1 id="home-title">{quest ? `${quest.dog}’s ${quest.item}` : companion ? `Meet ${companion.dog}` : panel === 'floors' ? 'Make yourself at home' : panel === 'practice' ? 'Hardcore practice' : panel === 'builder' ? 'Build your own adventure' : 'Where shall we go?'}</h1></div><button onClick={close} aria-label="Close home conversation">Close · Esc</button></header>
+            {panel === 'floors' ? <div className="floor-choices">{(Object.keys(FLOORS) as HomeFloor[]).map(floor => <button key={floor} aria-current={world.homeFloor === floor ? 'location' : undefined} onClick={() => { world.changeHomeFloor(floor); focusGame(); }}>{FLOORS[floor]}{world.homeFloor === floor ? ' · You are here' : ''}</button>)}</div>
+            : panel === 'builder' ? <LevelBuilderUI engine={engine} />
+            : panel === 'practice' ? <><p>Train on the actual Hardcore layouts. A mistake restarts only this practice attempt. Each retry restores your starting supplies; your real bones, quests, and belongings stay safe.</p><div className="home-levels">{LEVEL_NAMES.map((name, i) => <button key={name} onClick={() => { engine.startPractice(i + 1); focusGame(); }}><b>{i + 1}</b><span>{name}</span></button>)}</div></>
+            : companion ? <><div className="dog-conversation"><span aria-hidden="true">🐕</span><div><h2>{companion.dog}</h2><p>{companion.greeting}</p></div></div><p>{world.belongings.companions.has(companion.id) ? `${companion.dog} is coming on your next trip!` : `${companion.dog} is waiting for an adventure.`}</p><button className="home-primary" onClick={() => world.toggleCompanion()}>{world.belongings.companions.has(companion.id) ? `Ask ${companion.dog} to stay home` : `Invite ${companion.dog} along`}</button><p className="home-note">All three friends can join you. They follow your path and jumps without blocking you, taking damage, or collecting your quest items. Come back upstairs to change the party.</p></>
+            : quest ? <>
                 <div className="dog-conversation"><span aria-hidden="true">{quest.icon}</span><div><h2>{quest.dog}</h2><p>{status === 'complete' ? quest.thanks : status === 'found' ? `You found my ${quest.item}! Is that for me?` : status === 'accepted' ? `Still looking? ${quest.hint} It’s in level ${quest.level}.` : quest.request}</p></div></div>
                 <p className="quest-reward">{status === 'complete' ? `✓ Reunited · ${quest.reward} bones rewarded` : `Thank-you gift: ${quest.reward} bones`}</p>
                 {!status && <button className="home-primary" onClick={() => world.respondToDog()}>I’ll find it!</button>}
