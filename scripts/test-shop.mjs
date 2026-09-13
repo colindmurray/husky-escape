@@ -35,7 +35,7 @@ try {
         let deaths = [], changes = 0;
         const events = { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete() {}, onGameOver(reason) { deaths.push(reason); }, onGameWon() {}, onShopUpdate() { changes++; } };
         const world = new World(1280, 800, events);
-        for (let level = 1; level <= 13; level++) {
+        for (let level = 1; level <= 14; level++) {
             world.loadLevel(level, false, 'EASY');
             check(!!world.shopDoor === [3, 6, 9, 12].includes(level), `Secret shop placement: level ${level}`);
             if (world.shopDoor) {

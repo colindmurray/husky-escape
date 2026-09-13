@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro';
+type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro';
 
 export class CutsceneManager {
     public step = 0;
@@ -12,6 +12,11 @@ export class CutsceneManager {
     private onComplete: () => void;
 
     private storyLines = {
+        'raccoon_intro': [
+            { text: "Home at last… why is that trash can rattling?", sound: SoundType.RACCOON_CHATTER },
+            { text: "A top hat?! Meet Baron von Bins, king of the backyard!", sound: SoundType.CRASH },
+            { text: "Dodge his charge. When he crashes and sees stars, jump on his head!", sound: SoundType.BOSS_STUN }
+        ],
         'intro': [
             { text: "You are a dog named Onyx.", sound: null },
             { text: "You ran away from your house because you wanted to have some fun...", sound: null },
@@ -51,7 +56,7 @@ export class CutsceneManager {
             { text: "Out of the bakery, into the sunshine... It's market day!", sound: SoundType.THEME_TOWN },
             { text: "The streets are busy! Shoppers bump you aside, but they cannot hurt you.", sound: null },
             { text: "A golden Good Dog Bandana! People wave you through, and it saves you from one town hazard.", sound: SoundType.COLLECT },
-            { text: "Watch the leaking hydrants and rising roadwork posts. Land on all three gold-marked parade floats to open home!", sound: SoundType.BIKE_BELL }
+            { text: "Watch the leaking hydrants and rising roadwork posts. Land on all three gold-marked parade floats to reach the backyard!", sound: SoundType.BIKE_BELL }
         ],
         'bakery_intro': [
             { text: "Past the neon roofs... wait. Do you smell that?", sound: SoundType.COLLECT },

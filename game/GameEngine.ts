@@ -20,7 +20,7 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' = 'intro';
+    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' = 'intro';
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
@@ -32,6 +32,11 @@ export class GameEngine {
         
         // Initialize World
         this.world = new World(window.innerWidth, window.innerHeight, {
+            onRaccoonIntro: () => {
+                this.currentCutscene = 'raccoon_intro'; this.gameState = GameState.CUTSCENE;
+                this.options.onStateChange(GameState.CUTSCENE, { text: '' }); audioManager.stopMusic();
+                this.cutsceneManager.start('raccoon_intro');
+            },
             onShopUpdate: options.onShopUpdate,
             onScoreUpdate: options.onScoreUpdate,
             onTimeUpdate: options.onTimeUpdate,
@@ -162,7 +167,9 @@ export class GameEngine {
     }
 
     private endCutscene() {
-        if (this.currentCutscene === 'intro') {
+        if (this.currentCutscene === 'raccoon_intro') {
+            this.world.finishRaccoonIntro(); this.gameState = GameState.PLAYING; this.options.onStateChange(GameState.PLAYING);
+        } else if (this.currentCutscene === 'intro') {
             this.gameState = GameState.INTRO; 
             audioManager.stopMusic();
             this.options.onStateChange(GameState.INTRO, { showMenu: true });

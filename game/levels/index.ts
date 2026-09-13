@@ -11,6 +11,7 @@ import { getLevel8 } from "./level8";
 import { getLevel9 } from "./level9";
 import { getLevel10 } from "./level10";
 import { getLevel11 } from "./level11";
+import { getLevel14 } from "./level14";
 import { getLevel13 } from "./level13";
 import { getLevel12 } from "./level12";
 import { Exit } from "../entities/Exit";
@@ -33,6 +34,7 @@ export function initLevel(level: number, height: number, difficulty: Difficulty)
         case 11: return getLevel11(height, difficulty);
         case 12: return getLevel12(height, difficulty);
         case 13: return getLevel13(height, difficulty);
+        case 14: return getLevel14(height, difficulty);
         default: 
             return {
                 platforms: [],
