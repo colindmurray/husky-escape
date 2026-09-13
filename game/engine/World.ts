@@ -238,6 +238,7 @@ export class World {
                     if (enemy instanceof BossRaccoon && !enemy.isActive) return;
                     const stomp = this.player.velY >= 0 && this.player.y + this.player.h <= enemy.y + 35;
                     if (stomp) {
+                        this.player.y = enemy.y - this.player.h;
                         this.player.velY = -12; this.player.grounded = false; this.player.jumpsLeft = 1;
                         if (enemy instanceof BossRaccoon) enemy.takeHit(this.enemies);
                         else { enemy.markedForDeletion = true; audioManager.playSFX(SoundType.BOSS_HIT); }

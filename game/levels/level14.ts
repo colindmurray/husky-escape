@@ -11,11 +11,11 @@ export function getLevel14(height: number, difficulty: Difficulty): LevelData {
     for (const [x, width] of lawns) platforms.push(new BackyardGround(x, floor, width, 120));
     // Broad fence tops teach the climb before the flooded Hard route.
     const fences = hard
-        ? [[420, 90, 120], [730, 165, 105], [1040, 95, 110], [1270, 145, 100], [1460, 175, 95], [1670, 235, 90], [1900, 165, 100], [2160, 100, 140], [2410, 155, 90], [2630, 215, 90], [2860, 150, 90], [3060, 80, 120]]
-        : [[420, 70, 160], [790, 130, 155], [1140, 75, 150], [1520, 115, 170], [1870, 175, 160], [2210, 105, 175], [2530, 155, 170], [2870, 80, 150]];
+        ? [[420, 90, 105], [730, 165, 90], [1040, 95, 95], [1270, 145, 85], [1460, 175, 80], [1670, 235, 80], [1900, 165, 90], [2160, 100, 110], [2410, 155, 80], [2630, 215, 80], [2860, 150, 80], [3060, 80, 100]]
+        : [[420, 85, 135], [790, 145, 130], [1140, 90, 125], [1520, 130, 140], [1870, 185, 135], [2210, 120, 145], [2530, 170, 140], [2870, 95, 130]];
     for (const [i, [x, rise, width]] of fences.entries()) {
-        const moving = hard && (i === 5 || i === 9);
-        const fence = new TownPlatform(x, floor - rise, width, rise, 'fence', '#bd966c', moving ? 65 : 0, moving ? .8 : 0);
+        const moving = hard && (i === 5 || i === 8 || i === 9);
+        const fence = new TownPlatform(x, floor - rise, width, rise, 'fence', '#bd966c', moving ? 80 : 0, moving ? 1.05 : 0);
         fence.floorY = floor; platforms.push(fence);
     }
     // Landing shelves at both charge endpoints leave room to dodge and counterattack.
@@ -24,10 +24,11 @@ export function getLevel14(height: number, difficulty: Difficulty): LevelData {
     const exit = new Exit(4780, floor - 80); exit.lock();
     const enemies: LevelData['enemies'] = [];
     for (const [i, x] of (hard ? [640, 985, 1210, 2340, 3210] : [660, 1320, 1750, 2420, 3020]).entries()) {
-        enemies.push(new TownTimedHazard(x, floor, hard ? 260 : 320, hard ? 105 : 85, i * 83, hard ? 215 : 160, 'hydrant'));
+        enemies.push(new TownTimedHazard(x, floor, hard ? 235 : 280, hard ? 125 : 110, i * 83, hard ? 225 : 185, 'hydrant'));
     }
-    for (const [x, patrol] of (hard ? [[310, 80], [865, 95], [1170, 70], [2260, 75], [3250, 65]] : [[880, 120], [1660, 120], [2310, 130], [2790, 120]])) enemies.push(new Raccoon(x, floor, patrol, hard));
-    if (hard) for (const [x, rise, patrol] of [[1920, 165, 10], [2890, 150, 20]]) enemies.push(new Raccoon(x, floor - rise, patrol, true));
+    for (const [x, patrol] of (hard ? [[310, 80], [865, 95], [1170, 70], [2260, 75], [3250, 65]] : [[880, 100], [1240, 65], [1660, 100], [2310, 110], [2790, 100], [3140, 65]])) enemies.push(new Raccoon(x, floor, patrol, hard));
+    if (!hard) enemies.push(new Raccoon(1900, floor - 185, 15, false));
+    if (hard) for (const [x, rise, patrol] of [[750, 165, 10], [1920, 165, 10], [2875, 150, 10]]) enemies.push(new Raccoon(x, floor - rise, patrol, true));
     enemies.push(new BossRaccoon(floor, exit, walls, difficulty));
     const props = [new BackyardProp(190, floor, 'flowers'), new BackyardProp(1010, floor, 'bin'), new BackyardProp(2330, floor, 'flowers'), new BackyardProp(3340, floor, 'bin'), new BackyardProp(4690, floor, 'home')];
     const collectibles = [new Collectible(260, floor - 65), ...fences.map(([x, rise, width]) => new Collectible(x + width / 2 - 10, floor - rise - 45)), new Collectible(3300, floor - 60), new Collectible(4660, floor - 65)];

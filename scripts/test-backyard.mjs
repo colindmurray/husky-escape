@@ -20,7 +20,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 720 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto(base);
+    await page.goto(base, { waitUntil: 'domcontentloaded' });
     const checks = await page.evaluate(async () => {
         const { World } = await import('/game/engine/World.ts');
         const { BossRaccoon, Raccoon, TrashLid, BackyardGate } = await import('/game/entities/Backyard.ts');
@@ -38,7 +38,7 @@ try {
         const passed = [], check = (ok, name) => { if (!ok) throw Error(name); passed.push(name); };
         const easy = getLevel14(800, 'EASY'), hard = getLevel14(800, 'HARD');
         check(easy.waters.length === 0 && hard.waters.length === 2, 'Hard replaces two lawn sections with flooded fence crossings');
-        check(easy.platforms.every(p => !p.dx) && hard.platforms.filter(p => p.dx).length === 2, 'Only Hard has moving fence sections');
+        check(easy.platforms.every(p => !p.dx) && hard.platforms.filter(p => p.dx).length === 3, 'Only Hard has moving fence sections');
         check(easy.enemies.filter(e => e instanceof TownTimedHazard).every(e => e.kind === 'hydrant'), 'All backyard sprays come from hydrants');
         check(hard.enemies.filter(e => e instanceof Raccoon).length > easy.enemies.filter(e => e instanceof Raccoon).length, 'Hard adds raccoons on the upper fence route');
         check(easy.exit.locked && hard.exit.locked, 'Home remains locked until the boss is defeated');
@@ -53,9 +53,10 @@ try {
         check(!death && raccoon.markedForDeletion && world.player.velY < 0, 'Landing on a small raccoon defeats it and bounces Onyx');
         world.loadLevel(14, false, 'EASY');
         const boss = world.enemies.find(e => e instanceof BossRaccoon); world.enemies = [boss]; boss.activate();
-        const landOnBoss = () => { world.player.x = boss.x + 45; world.player.y = boss.y - 30; world.player.velY = 4; world.player.invincibleTimer = 0; world.update(); };
+        const landOnBoss = (penetration = 10) => { world.player.x = boss.x + 45; world.player.y = boss.y - world.player.h + penetration; world.player.velY = 4; world.player.invincibleTimer = 0; world.update(); };
         landOnBoss(); check(boss.health === 3 && world.player.velY < 0, 'The top hat blocks damage before the boss is dizzy');
-        boss.state = 'stunned'; boss.timer = 0; landOnBoss(); world.update();
+        boss.state = 'stunned'; boss.timer = 0; landOnBoss(30); world.update();
+        check(!death && world.player.y + world.player.h < boss.y, 'A deeply overlapping valid stomp clears the boss before the next frame');
         check(boss.health === 2 && boss.state === 'recover', 'One dizzy opening permits one damaging bonk');
         for (let i = 0; i < 2; i++) { boss.state = 'stunned'; boss.timer = 0; landOnBoss(); }
         check(boss.health === 0 && !world.exit.locked && world.platforms.filter(p => p instanceof BackyardGate).every(p => !p.isActive), 'Defeating the boss unlocks home and lowers both gates');
@@ -63,6 +64,12 @@ try {
         check(wins === 1, 'The backyard exit wins the game exactly once');
         world.loadLevel(14, true, 'HARD'); const hardBoss = world.enemies.find(e => e instanceof BossRaccoon); hardBoss.activate(); hardBoss.update(world.platforms, world.player, world.enemies);
         check(hardBoss.health === 4 && world.enemies.filter(e => e instanceof TrashLid).length === 2, 'Hard boss adds a fourth hit and two telegraphed lid arcs');
+        for (const [edge, outward] of [[hardBoss.minX, -1], [hardBoss.maxX, 1]]) {
+            hardBoss.x = edge; hardBoss.state = 'windup'; hardBoss.timer = 0;
+            world.player.x = edge + outward * 200;
+            for (let frame = 0; frame < 70; frame++) hardBoss.update(world.platforms, world.player, []);
+            check(hardBoss.dir === -outward && hardBoss.state === 'charge' && hardBoss.x > hardBoss.minX && hardBoss.x < hardBoss.maxX, `Camping beyond the ${outward < 0 ? 'left' : 'right'} endpoint cannot bait an instant crash`);
+        }
         const lid = new TrashLid(130, 660, 0, 700); lid.velY = 0; world.enemies = [lid]; world.player.x = 130; world.player.y = 660; world.update();
         check(death === 'trashlid', 'Flying trash lids have a real collision and an explanatory failure message');
         world.loadLevel(14, true, 'EASY'); world.enemies = [];
@@ -79,7 +86,9 @@ try {
             for (; frame < 7000 && !lost && !won; frame++) {
                 const p = run.player; let target = targets[index];
                 if (target && p.grounded && Math.abs(p.y + p.h - target.y) < 3 && p.x + p.w > target.x && p.x < target.x + target.w) target = targets[++index];
-                const targetX = target ? target.x + target.w / 2 : boss.health > 0 ? (boss.isActive ? boss.x + boss.w / 2 : 3540) : 4790;
+                const resetting = boss.state === 'recover';
+                const bossTarget = boss.state === 'windup' ? 3965 : boss.state === 'charge' ? (boss.dir === 1 ? boss.maxX : boss.minX) + boss.w / 2 : resetting && boss.x <= boss.minX ? 3505 : resetting && boss.x >= boss.maxX ? 4515 : boss.x + boss.w / 2;
+                const targetX = target ? target.x + target.w / 2 : boss.health > 0 ? (boss.isActive ? bossTarget : 3540) : 4790;
                 const dx = targetX - p.x - p.w / 2;
                 inputManager.keys.ArrowRight = dx > 6; inputManager.keys.ArrowLeft = dx < -6;
                 let jump = false;
@@ -87,13 +96,13 @@ try {
                     const support = run.platforms.find(s => p.x + p.w > s.x && p.x < s.x + s.w && Math.abs(p.y + p.h - s.y) < 3);
                     jump = p.grounded && (Math.abs(dx) < 200 || support?.kind === 'fence' && p.x + p.w > support.x + support.w - 35) || p.velY > 0 && p.jumpsLeft === 1 && p.y + p.h > target.y - margin;
                 } else if (!boss.isActive && boss.health > 0) jump = p.grounded && p.x < 3465;
-                else if (boss.health > 0) jump = p.grounded || p.velY > 0 && p.jumpsLeft === 1 && p.y + p.h > boss.y - margin;
+                else if (boss.health > 0) jump = p.grounded || p.velY > 0 && p.jumpsLeft === 1 && p.y + p.h > boss.y - margin && Math.abs(boss.x + boss.w / 2 - p.x - p.w / 2) > boss.w / 2 + 20;
                 else jump = p.grounded && p.x < 4610;
                 const jet = run.enemies.find(e => e instanceof TownTimedHazard && e.x > p.x - 20 && e.x < p.x + 100 && (e.dangerous || e.warning));
                 if (jet && p.jumpsLeft > 0 && p.y + p.h > jet.y - 45) jump = true;
                 inputManager.keys.Space = jump && !previousJump; previousJump = inputManager.keys.Space; run.update();
             }
-            check(won && !lost && boss.health === 0, `${difficulty} complete route and boss, height ${height}, jump margin ${margin}: ${lost || `${frame} frames`}`);
+            check(won && !lost && boss.health === 0, `${difficulty} complete route and boss, height ${height}, jump margin ${margin}: ${lost ? `${lost} at x=${Math.round(run.player.x)}, route=${index}, boss=${boss.state}/${boss.health}@${boss.x}, t=${boss.timer}, feet=${Math.round(run.player.y+40)}, vy=${run.player.velY.toFixed(1)}` : `${frame} frames, x=${Math.round(run.player.x)}, hp=${boss.health}, state=${boss.state}@${boss.x}, route=${index}`}`);
         }
         inputManager.clear();
         const canvas = document.createElement('canvas'); canvas.width = 1280; canvas.height = 800; const renderer = new Renderer(canvas);

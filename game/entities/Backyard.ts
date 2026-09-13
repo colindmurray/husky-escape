@@ -55,7 +55,7 @@ export class Raccoon extends Enemy {
     private cooldown = 110;
     private floorY: number;
     constructor(x: number, floor: number, patrol: number, public hard: boolean) {
-        super(x, floor - 38, patrol, hard ? 1.9 : 1.35); this.w = 52; this.h = 38; this.floorY = floor;
+        super(x, floor - 38, patrol, hard ? 2.15 : 1.6); this.w = 52; this.h = 38; this.floorY = floor;
     }
     update(_platforms?: Entity[], player?: Player) {
         if (this.markedForDeletion) return;
@@ -115,20 +115,21 @@ export class BossRaccoon extends Enemy {
         this.timer++; this.walkAnim += .12;
         if (this.state === 'windup') {
             if (this.timer === 1) {
-                this.dir = player.x + player.w / 2 < this.x + this.w / 2 ? -1 : 1;
+                // Face into the arena at either end; camping beyond a wall cannot bait instant crashes.
+                this.dir = this.x <= this.minX ? 1 : this.x >= this.maxX ? -1 : player.x + player.w / 2 < this.x + this.w / 2 ? -1 : 1;
                 audioManager.playSFX(SoundType.RACCOON_CHATTER);
                 if (this.hard && enemies) for (const speed of [3, 4.8]) enemies.push(new TrashLid(this.x + this.w / 2, this.y + 12, this.dir * speed, this.y + this.h));
             }
-            if (this.timer >= (this.hard ? 70 : 95)) { this.state = 'charge'; this.timer = 0; }
+            if (this.timer >= (this.hard ? 65 : 85)) { this.state = 'charge'; this.timer = 0; }
         } else if (this.state === 'charge') {
             this.x += this.dir * (this.hard ? 7 : 5);
             if (this.x <= this.minX || this.x >= this.maxX) {
                 this.x = Math.max(this.minX, Math.min(this.maxX, this.x)); this.state = 'stunned'; this.timer = 0;
                 audioManager.playSFX(SoundType.CRASH);
             }
-        } else if (this.state === 'stunned' && this.timer >= (this.hard ? 160 : 225)) {
+        } else if (this.state === 'stunned' && this.timer >= (this.hard ? 225 : 250)) {
             this.state = 'recover'; this.timer = 0;
-        } else if (this.state === 'recover' && this.timer >= 80) { this.state = 'windup'; this.timer = 0; }
+        } else if (this.state === 'recover' && this.timer >= (this.hard ? 50 : 65)) { this.state = 'windup'; this.timer = 0; }
     }
     takeHit(enemies: Entity[]) {
         if (!this.isStunned || this.health <= 0) return false;

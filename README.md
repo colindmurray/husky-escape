@@ -37,10 +37,10 @@ Run `npm run test:town` after installing dependencies. It uses the existing Play
 
 The town exit advances to the backyard; Dev Mode also offers a direct warp to 14. Follow the fence tops past leaking hydrants and raccoon patrols. Small raccoons hurt on side contact and can be defeated by landing on their heads.
 
-- **Easy:** broad, fixed fences above a continuous lawn, five timed hydrants, four patrolling raccoons, and a three-hit boss.
-- **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, two moving sections, and seven raccoons that telegraph a pounce. The boss needs four hits and throws two arcing trash lids before charging.
+- **Easy:** fixed fences with raised, narrower tops above a continuous lawn, five hydrants with longer bursts, six ground patrols plus a raccoon on a fence, and a three-hit boss.
+- **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, three faster moving sections, and eight raccoons that telegraph a pounce. The boss needs four hits and throws two arcing trash lids before charging.
 - **Boss:** approaching the arena starts a nine-second cutscene: a trash can rattles, its lid flies off, and Baron von Bins leaps out wearing a top hat. Skip resumes the same run. The level clock, player, hazards, and inventory effects pause throughout the reveal.
-- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. Defeating him lowers the arena gates and opens home. Entering home completes the game.
+- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. After recovering at either end, he charges back across the arena, so camping beside one endpoint cannot repeatedly stun him. Reposition during the warning, then use the opening after his crash. Successful stomps lift Onyx clear of his body before she bounces. Defeating him lowers the arena gates and opens home. Entering home completes the game.
 
 Classic and Enhanced share gameplay, with flat versus shaded art, parallax houses and hedges, ringed raccoon tails, metallic trash cans, a backyard melody, a boss theme, and raccoon chatter. Existing shop outfits and supplies work here.
 
