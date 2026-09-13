@@ -21,6 +21,13 @@ export default function App() {
     const [huskyWisdom, setHuskyWisdom] = useState("");
     const [loadingWisdom, setLoadingWisdom] = useState(false);
     
+    const printDialog = useRef<HTMLDialogElement>(null);
+    const [printUrl, setPrintUrl] = useState('');
+    useEffect(() => {
+        if (printUrl) printDialog.current?.showModal();
+    }, [printUrl]);
+    const closePrint = () => { engineRef.current?.setPrintPaused(false); inputManager.clear(); setPrintUrl(''); };
+
     const [showSettings, setShowSettings] = useState(false);
     const [musicOn, setMusicOn] = useState(true);
     const [sfxOn, setSfxOn] = useState(true);
@@ -274,7 +281,11 @@ export default function App() {
         </div>
     );
 
-    return (
+    return (<>
+        {printUrl && <dialog ref={printDialog} onCancel={closePrint} onClose={closePrint} aria-label="Print and draw levels" style={{ width: 'min(1200px, 96vw)', height: '94dvh', maxWidth: '96vw', padding: 0, border: '2px solid #638c80', borderRadius: 14, background: '#f4f6f2' }}>
+            <div style={{ padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Onyx’s drawing studio</strong><button autoFocus onClick={closePrint} style={{ padding: '8px 16px', background: '#1c5148', color: 'white', borderRadius: 8 }}>Back to game</button></div>
+            <iframe title="Drawing studio" src={printUrl} style={{ width: '100%', height: 'calc(100% - 62px)', border: 0 }} />
+        </dialog>}
         <div className="relative w-screen h-screen bg-gray-900 overflow-hidden font-sans">
             <canvas ref={canvasRef} tabIndex={0} className="block w-full h-full" />
             {gameState === GameState.PLAYING && engineRef.current && <><ShopUI world={engineRef.current.world} visualMode={visualMode} /><HomeUI engine={engineRef.current} /></>}
@@ -293,9 +304,9 @@ export default function App() {
                         </div>
                     )}
                     <div className="relative pointer-events-auto">
-                        <button onClick={() => setShowSettings(!showSettings)} className="text-2xl hover:scale-110 transition bg-slate-800 p-2 rounded-full border border-slate-600 shadow-xl">⚙️</button>
+                        <button aria-label="Settings" onClick={() => setShowSettings(!showSettings)} className="text-2xl hover:scale-110 transition bg-slate-800 p-2 rounded-full border border-slate-600 shadow-xl">⚙️</button>
                         {showSettings && (
-                            <div className="absolute right-0 top-14 bg-slate-800 border border-slate-600 rounded-lg p-4 w-56 shadow-2xl text-sm">
+                            <div style={{ maxHeight: 'calc(100dvh - 110px)', overflowY: 'auto' }} className="absolute right-0 top-14 bg-slate-800 border border-slate-600 rounded-lg p-4 w-56 shadow-2xl text-sm">
                                 <div className="mb-4 pb-3 border-b border-slate-600">
                                     <div className="flex justify-between items-center mb-1">
                                         <span>Volume</span>
@@ -354,10 +365,16 @@ export default function App() {
 
                                 <div className="border-t border-slate-600 pt-3 flex justify-between items-center">
                                     <span className="text-xs text-gray-400">Dev Mode</span>
-                                     <button onClick={() => setDevMode(!devMode)} className={`w-4 h-4 border rounded ${devMode ? 'bg-blue-500 border-blue-500' : 'bg-transparent border-gray-500'}`}>
+                                     <button aria-label="Dev Mode" aria-pressed={devMode} onClick={() => setDevMode(!devMode)} className={`w-4 h-4 border rounded ${devMode ? 'bg-blue-500 border-blue-500' : 'bg-transparent border-gray-500'}`}>
                                         {devMode && "✓"}
                                      </button>
                                 </div>
+                                {devMode && <button className="mt-3 w-full bg-blue-600 rounded p-2 text-white" onClick={() => {
+                                    const world = engineRef.current?.world;
+                                    const params = new URLSearchParams({ print: '1', level: String(world?.currentLevel || 1), difficulty, graphics: visualMode, floor: world?.homeFloor || 'ground' });
+                                    engineRef.current?.setPrintPaused(true); inputManager.clear();
+                                    setPrintUrl(`?${params}`);
+                                }}>Print & draw levels</button>}
                             </div>
                         )}
                     </div>
@@ -427,5 +444,5 @@ export default function App() {
                 @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
             `}</style>
         </div>
-    );
+    </>);
 }

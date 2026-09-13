@@ -1,6 +1,16 @@
 # Printable level design packs
 
-This local tool renders the game's real platforms, enemies, collectibles, and props into whole-level images and overlapping slices. It also creates pale worksheets with a coordinate grid and space for handwritten ideas. Nothing is added to the game menus or production bundle, and generated packs are ignored by Git.
+The drawing studio and local batch tool render the game's real platforms, enemies, collectibles, and props into whole-level images and overlapping slices, with pale worksheets, coordinates, and room for handwritten ideas.
+
+## Print from the website
+
+Open **Settings → Dev Mode → Print & draw levels**. The studio starts with the game's difficulty, graphics choice, current level, and house floor. Choose **Level maps** or **Cutscene storyboard**, then select the content, page style, and Letter/A4 paper. **Make print preview** prepares the pages; use its checkboxes to omit individual sheets, then **Print drawing pack**. The browser offers printing or Save as PDF. Print landscape at 100% and turn off browser headers and footers.
+
+Maps can include the whole level, close-ups, or both. Smaller close-up areas give larger printed details. All 14 story levels, all house floors, and the custom course are available without completing them. Custom Course reads the layout saved in this browser, or uses the starter course; save editor changes before printing. Storyboards include one actual rendered still and its dialogue per spoken line, including Baron von Bins’s reveal.
+
+The game and cutscene timers pause while the studio is open. **Back to game** resumes from the same position. Printing runs in a separate document and does not change the journey, saved course, or graphics/audio preferences. Print controls are visible only with Dev Mode; this is a convenience toggle, not an authentication boundary.
+
+Keep the printed revision, level/story, page code, and coordinates visible in returned photos. Screenshots represent a frozen pose, so use arrows to describe motion. Browser printing works without a server-side export service; the browser controls printer/PDF availability.
 
 ## Make a pack
 
@@ -72,8 +82,10 @@ The export is a static authored layout, not a simulated playthrough. Enemies and
 
 The tool uses the existing level loader, entity draw methods, and background renderer. Time and random visual details are fixed by `--seed`, so a region export matches the same pixels in a full export. All slices are cropped from one frozen map, avoiding seams caused by moving enemies or different animation times.
 
-No output is placed in `public/` or `dist/`; the command rejects those output paths. Keep drawing packs outside deployable folders when choosing a custom `--out`. The temporary server listens only on `127.0.0.1`. Export code lives under `scripts/` and is not imported by the game entry point. Building or deploying the game does not include it.
+No output is placed in `public/` or `dist/`; the command rejects those output paths. Keep drawing packs outside deployable folders when choosing a custom `--out`. The temporary server listens only on `127.0.0.1`. The Node/Playwright batch runner stays under `scripts/` and is not bundled. Shared capture and booklet helpers under `game/printing/` also serve the website’s print studio. Generated local PNG/PDF packs are ignored by Git and excluded from deployment.
 
 ## Checks
 
-`npm run test:level-export` checks argument validation, complete overlapping coverage, all 14 story levels in both difficulty layouts and both graphics modes, tall maps, exact crop-to-full-image pixel correspondence, printable Letter/A4 layout, house/custom courses, exclusion from a production build, and cleanup on an invalid crop. It uses a temporary output directory and removes its own generated fixtures.
+`npm run test:level-export` checks argument validation, complete overlapping coverage, all 14 story levels in both difficulty layouts and both graphics modes, tall maps, exact crop-to-full-image pixel correspondence, printable Letter/A4 layout, house/custom courses, exclusion of Node batch tooling and local output from a production build, and cleanup on an invalid crop. It uses a temporary output directory and removes its own generated fixtures.
+
+`npm run test:print-studio` checks Dev Mode access, game/cutscene pause and resume, preference isolation, page selection, all cutscenes in both graphics modes, mobile layout, and the built website.

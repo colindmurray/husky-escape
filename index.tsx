@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+const app = new URLSearchParams(location.search).get('print') === '1' ? import('./PrintStudio') : import('./App');
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+void app.then(({ default: App }) => root.render(<App />));

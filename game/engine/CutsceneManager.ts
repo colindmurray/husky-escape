@@ -1,13 +1,16 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro';
+export type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro';
 
 export class CutsceneManager {
     public step = 0;
     public frame = 0;
     public currentType: CutsceneType = 'intro';
-    private timer: any = null;
+    private timer: ReturnType<typeof setTimeout> | null = null;
+    private dueAt = 0;
+    private remaining = 0;
+    private paused = false;
     private onTextChange: (text: string) => void;
     private onComplete: () => void;
 
@@ -79,6 +82,22 @@ export class CutsceneManager {
         this.onComplete = onComplete;
     }
 
+    getLines(type: CutsceneType) { return this.storyLines[type]; }
+
+    setPaused(paused: boolean) {
+        if (this.paused === paused) return;
+        this.paused = paused;
+        if (paused && this.timer) {
+            this.remaining = Math.max(1, this.dueAt - Date.now());
+            clearTimeout(this.timer); this.timer = null;
+        } else if (!paused && this.remaining > 0) this.scheduleLine(this.remaining);
+    }
+
+    private scheduleLine(ms: number) {
+        this.remaining = ms; this.dueAt = Date.now() + ms;
+        this.timer = setTimeout(() => { this.timer = null; this.remaining = 0; this.nextLine(); }, ms);
+    }
+
     start(type: CutsceneType = 'intro') {
         // Bug fix: clear any pending line timer from a previous run so
         // restarting a cutscene can't run two timer chains in parallel.
@@ -86,6 +105,7 @@ export class CutsceneManager {
             clearTimeout(this.timer);
             this.timer = null;
         }
+        this.remaining = 0; this.paused = false;
         this.currentType = type;
         this.step = 0;
         this.frame = 0;
@@ -98,6 +118,7 @@ export class CutsceneManager {
 
     skip() {
         if (this.timer) clearTimeout(this.timer);
+        this.timer = null; this.remaining = 0;
         this.onComplete();
     }
 
@@ -136,8 +157,6 @@ export class CutsceneManager {
         this.step++;
 
         if (this.timer) clearTimeout(this.timer);
-        this.timer = setTimeout(() => {
-            this.nextLine();
-        }, 3000); 
+        this.scheduleLine(3000);
     }
 }
