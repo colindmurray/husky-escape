@@ -2,6 +2,10 @@
 
 A React/Vite platformer where you help Onyx the Husky escape the pound and find her way home. The game includes short, optional AI reactions after important gameplay events.
 
+## Local level drawing packs
+
+Run `npm run export:levels -- --level 14 --difficulty both` to make whole-level PNGs, numbered slices, and printable PDF worksheets for drawing level changes. This developer tool runs locally and is excluded from the published game. See [the export guide](docs/level-exports.md) for crops, other levels, print settings, and using annotated pages to make changes.
+
 ## Classic / Enhanced presentation toggle
 
 The game ships with two presentation layers, switchable live from the ⚙️ settings panel (Visuals and Audio each have a Classic / Enhanced switch; choices persist in `localStorage`):
