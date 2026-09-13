@@ -1,4 +1,5 @@
 
+import { HOME_LEVEL } from './Home';
 import { GameState, SoundType, Difficulty } from "../types";
 import { audioManager } from "./Audio";
 import { Renderer } from "./engine/Renderer";
@@ -77,11 +78,22 @@ export class GameEngine {
     public setDifficulty(difficulty: Difficulty) { this.difficulty = difficulty; }
 
     public startLevel(level: number, difficulty: Difficulty = Difficulty.EASY) {
+        if (level === HOME_LEVEL && !this.world.belongings.homeUnlocked) return;
         this.difficulty = difficulty;
         this.world.loadLevel(level, this.world.player !== null, difficulty);
         this.gameState = GameState.PLAYING;
         this.options.onStateChange(GameState.PLAYING);
         this.startLoop();
+    }
+
+    public goHome() {
+        if (!this.world.belongings.homeUnlocked) return;
+        this.startLevel(HOME_LEVEL, this.difficulty);
+    }
+
+    public revisitLevel(level: number) {
+        if (!this.world.isHome || !this.world.belongings.homeUnlocked || !Number.isInteger(level) || level < 1 || level > 14) return;
+        this.startLevel(level, this.difficulty);
     }
 
     public startGame(difficulty: Difficulty = Difficulty.EASY) {

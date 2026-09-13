@@ -45,6 +45,7 @@ export enum SoundType {
 
     // MUSIC TRACKS
     THEME_MENU = 'theme_menu',
+    THEME_HOME = 'theme_home',
     THEME_POUND = 'theme_pound',
     THEME_FOREST = 'theme_forest',
     THEME_BEACH = 'theme_beach',

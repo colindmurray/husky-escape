@@ -55,15 +55,15 @@ export function ShopUI({ world, visualMode }: { world: World; visualMode: string
     const { belongings } = world;
     const visible = belongings.slots.some(Boolean) || belongings.owned.size > 0;
     return <>
-        {!world.shopOpen && <div className="pocket-hud" aria-label="Inventory">
-            {visible && belongings.slots.map((item, index) => <button key={index} disabled={!item} aria-label={item ? `Use ${SHOP_GOODS[item].name}, slot ${index + 1}` : `Empty slot ${index + 1}`} title={item ? SHOP_GOODS[item].description : 'Find a secret doghouse to buy treats'} onClick={() => { world.useInventorySlot(index); focusGame(); }}>
+        {!world.shopOpen && !world.homePanel && <div className="pocket-hud" aria-label="Inventory">
+            {visible && belongings.slots.map((item, index) => <button key={index} disabled={!item || world.isHome} aria-label={item ? `Use ${SHOP_GOODS[item].name}, slot ${index + 1}` : `Empty slot ${index + 1}`} title={item ? SHOP_GOODS[item].description : 'Find a secret doghouse to buy treats'} onClick={() => { world.useInventorySlot(index); focusGame(); }}>
                 <kbd>{index + 1}</kbd><span>{item ? SHOP_GOODS[item].icon : '·'}</span><small>{item ? SHOP_GOODS[item].name : 'Empty'}</small>
             </button>)}
             {world.shopDoor?.nearby && world.shopDoor.unlocked && <button className="enter-shop" onClick={() => world.openShop()}>E · Enter doghouse</button>}
         </div>}
         {world.shopOpen && <div className={`shop-backdrop ${visualMode}`}>
             <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="shop-title" className="husky-shop">
-                <header><div><small>SECRET DOGHOUSE · {world.shopDoor?.title}</small><h1 id="shop-title">The Hidden Paw</h1></div><button className="leave-shop" onClick={leave} aria-label="Leave shop">Back to trail <kbd>Esc</kbd></button></header>
+                <header><div><small>SECRET DOGHOUSE · {world.shopDoor?.title}</small><h1 id="shop-title">The Hidden Paw</h1></div><button className="leave-shop" onClick={leave} aria-label="Leave shop">{world.isHome ? 'Back home' : 'Back to trail'} <kbd>Esc</kbd></button></header>
                 <div className="shop-welcome"><canvas ref={portrait} width={320} height={145} role="img" aria-label="Juniper the husky shopkeeper behind a wooden counter" /><div><h2>Awoo, fellow explorer!</h2><p>I'm Juniper. Pick a treat for the trail, or try on something lovely.</p><strong>🍖 {world.player?.bonesCollected ?? 0} bones</strong><small>The trail is paused. Your belongings stay with you through this journey.</small></div></div>
                 <div className="shop-shelves">{(['Treats for the trail', 'Wear something lovely', 'A different look'] as const).map((title, section) => <section key={title}><h2>{title}</h2><div className="shop-cards">{(Object.keys(SHOP_GOODS) as ShopGood[]).filter(id => section === 0 ? isSupply(id) : section === 1 ? !isSupply(id) && !isSkin(id) : isSkin(id)).map(id => {
                     const good = SHOP_GOODS[id], supply = isSupply(id), owned = !supply && belongings.owned.has(id), equipped = !supply && belongings.equipped.has(id);
