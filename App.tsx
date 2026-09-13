@@ -192,7 +192,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
-        if (isWin) return { title: "VICTORY!", desc: "You escaped the bakery, slipped through the busy market, and rode the parade all the way home. Good girl, Onyx!" };
+        if (isWin) return { title: "VICTORY!", desc: "You crossed the busy town, reclaimed the backyard, and outsmarted the top-hatted trash-can king. You’re home! Good girl, Onyx!" };
         if (isLevelComplete) {
             const congrats = [
                 "The pound breakout has begun!",
@@ -206,7 +206,8 @@ export default function App() {
                 "The end is in sight!",
                 "You cleared the ultimate scaffolding obstacle!",
                 "Through the neon night — home is just ahead!",
-                "Warm buns! The Night Baker is beaten — home smells close!"
+                "Warm buns! The Night Baker is beaten — home smells close!",
+                "Past the parade! Just the backyard between you and home."
             ];
             return { title: `ZONE ${level} CLEAR!`, desc: congrats[level-1] || "Great job!" };
         }
@@ -229,6 +230,8 @@ export default function App() {
             return { title: "SPLASH!", desc: "Looks like you aren't much of a swimmer without your gear." };
         }
 
+        if (reason === 'raccoon') return { title: 'RACCOON RUCKUS!', desc: modalData.narrative || 'Jump on small raccoons. Dodge the Baron’s charge and bonk him when he is dizzy.' };
+        if (reason === 'trashlid') return { title: 'TRASH LID BONK!', desc: 'The Baron tosses lids before charging. Watch their arcs and leave room to jump.' };
         if (reason === 'cycled') return { title: "RING RING!", desc: "A delivery bike caught you! Wait on a bench when the bell rings, then cross behind it." };
         if (reason === 'appled') return { title: "APPLE BONK!", desc: "Watch for loose apples at the fruit cart, or take the awnings above the market." };
         if (reason === 'sprinkled') return { title: "SOAKED!", desc: "The jets hiss before spraying. Wait for a gap or hop across the stepping stones." };
@@ -262,7 +265,7 @@ export default function App() {
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
             <div className="flex gap-2 justify-center flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13].map(lvl => (
+                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(lvl => (
                     <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="w-8 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl}</button>
                 ))}
             </div>

@@ -155,7 +155,7 @@ try {
             check(deck.boarded && world.exit.locked === (i < 2), `Landing on float ${i + 1} advances the pass; only the third opens home`);
         }
         world.player.x = world.exit.x; world.player.y = world.exit.y; world.update(); world.update();
-        check(wins === 1, 'Completed town pass wins exactly once');
+        check(completed.filter(level => level === 13).length === 1 && wins === 0, 'Completed town pass advances to the backyard exactly once');
         world.loadLevel(13, false, Difficulty.EASY);
         check(world.exit.locked && world.platforms.filter(p => p.kind === 'float').every(p => !p.boarded), 'Restart resets the parade pass and home gate');
 
@@ -176,7 +176,7 @@ try {
         for (const [difficulty, period] of [[Difficulty.EASY, 88], [Difficulty.HARD, 52], [Difficulty.HARDCORE, 52]]) {
             for (const extraHeight of [10, 40, 70]) {
                 let death = '', won = false, previousJump = false;
-                const run = new World(1280, 800, { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete() {}, onGameOver(reason) { death = reason; }, onGameWon() { won = true; } });
+                const run = new World(1280, 800, { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete(level) { won = level === 13; }, onGameOver(reason) { death = reason; }, onGameWon() { won = true; } });
                 run.loadLevel(13, false, difficulty);
                 const floats = run.platforms.filter(p => p.kind === 'float');
                 Object.assign(inputManager.keys, idle);

@@ -41,6 +41,7 @@ export enum SoundType {
     DOG_BARK = 'dog_bark',
     WATER_JET = 'water_jet',
     ROADWORK = 'roadwork',
+    RACCOON_CHATTER = 'raccoon_chatter',
 
     // MUSIC TRACKS
     THEME_MENU = 'theme_menu',
@@ -59,6 +60,8 @@ export enum SoundType {
     THEME_BOSS_EXCAVATOR = 'theme_boss_excavator',
     THEME_NEON = 'theme_neon',
     THEME_TOWN = 'theme_town',
+    THEME_BACKYARD = 'theme_backyard',
+    THEME_BOSS_RACCOON = 'theme_boss_raccoon',
     THEME_BAKERY = 'theme_bakery',
     THEME_BOSS_BAKER = 'theme_boss_baker'
 }

@@ -1,3 +1,5 @@
+import { drawBackyardBackground, drawRaccoonIntro } from './BackyardArt';
+import { BossRaccoon } from '../entities/Backyard';
 
 import { TownPlatform } from "../entities/Town";
 import { drawTownBackground, drawTownPerson, townLabel } from "./TownArt";
@@ -32,7 +34,9 @@ export class Renderer {
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
-        if (currentLevel === 13) {
+        if (currentLevel === 14) {
+            drawBackyardBackground(this.ctx, width, height, cameraX, cameraY, performance.now() / 1000);
+        } else if (currentLevel === 13) {
             drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, cameraY);
         } else if (enhanced) {
             this.enhancedBackgrounds.draw(this.ctx, width, height, cameraX, currentLevel, cameraY);
@@ -65,10 +69,26 @@ export class Renderer {
             this.ctx.fillStyle = '#fff5d7'; this.ctx.shadowColor = '#29434d'; this.ctx.shadowBlur = 4;
             if (world.player.x >= 4750) {
                 const stamps = world.platforms.filter(p => p instanceof TownPlatform && p.kind === 'float' && p.boarded).length;
-                this.ctx.fillText(stamps === 3 ? '★ ★ ★  Home open →' : `★ ${stamps}/3  Parade floats`, 20, 76);
+                this.ctx.fillText(stamps === 3 ? '★ ★ ★  Backyard open →' : `★ ${stamps}/3  Parade floats`, 20, 76);
             }
             if (world.player.hasBandana) this.ctx.fillText('◆ Bandana · 1 save', 20, 96);
             this.ctx.restore();
+        }
+
+        if (currentLevel === 14 && world.player) {
+            const boss = world.enemies.find(e => e instanceof BossRaccoon) as BossRaccoon | undefined;
+            const ctx = this.ctx; ctx.save(); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+            if (boss?.isActive) {
+                const barWidth = Math.min(300, width - 80), x = (width - barWidth) / 2;
+                ctx.fillStyle = '#282c3dcc'; ctx.fillRect(x - 10, 72, barWidth + 20, 64);
+                ctx.fillStyle = '#fff1ce'; ctx.fillText('BARON VON BINS', width / 2, 89);
+                ctx.fillStyle = '#4f4652'; ctx.fillRect(x, 98, barWidth, 9); ctx.fillStyle = boss.isStunned ? '#f3d17b' : '#c76d7f'; ctx.fillRect(x, 98, barWidth * boss.health / boss.maxHealth, 9);
+                ctx.font = '12px sans-serif'; ctx.fillStyle = '#fff1ce'; ctx.fillText(boss.isStunned ? 'Dizzy! Jump on his head!' : boss.state === 'windup' ? 'Watch the arrow — charge coming!' : 'Dodge his charge. Wait for the stars.', width / 2, 125);
+            } else {
+                ctx.fillStyle = '#fff1ce'; ctx.shadowColor = '#263d40'; ctx.shadowBlur = 4;
+                ctx.fillText(boss ? 'THE BACKYARD · Follow the fence tops →' : 'The backyard is yours! Home →', width / 2, 82);
+            }
+            ctx.restore();
         }
 
         if (world.player && (world.player.magnetTimer > 0 || world.player.invincibleTimer > 0)) {
@@ -534,6 +554,8 @@ export class Renderer {
     public drawCutscene(manager: CutsceneManager, width: number, height: number) {
         const { frame, step, currentType } = manager;
         const ctx = this.ctx;
+
+        if (currentType === 'raccoon_intro') { drawRaccoonIntro(ctx, width, height, step, frame); return; }
 
         if (currentType === 'town_intro') {
             const rich = gfxSettings.visualMode === 'enhanced';

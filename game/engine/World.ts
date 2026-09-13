@@ -1,3 +1,4 @@
+import { BossRaccoon, Raccoon, TrashLid } from '../entities/Backyard';
 
 import { addSecretShop, Belongings, SHOP_GOODS, isSupply, type ShopGood, type SecretDoghouse } from "../Shop";
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
@@ -8,6 +9,7 @@ import { audioManager } from "../Audio";
 import { SoundType, Difficulty } from "../../types";
 
 export interface WorldEvents {
+    onRaccoonIntro?: () => void;
     onShopUpdate?: () => void;
     onScoreUpdate: (bones: number) => void;
     onTimeUpdate: (time: number) => void;
@@ -45,6 +47,7 @@ export class World {
     public belongings = new Belongings();
     public shopDoor: SecretDoghouse | null = null;
     public shopOpen = false;
+    public raccoonIntroPending = false;
     public shopMessage = '';
     private shopKeyHeld: Record<string, boolean> = {};
     private boneIds = new Map<Collectible, string>();
@@ -67,7 +70,7 @@ export class World {
         const newJourney = !persistBones || !this.player;
         if (newJourney) this.belongings = new Belongings();
         this.shopOpen = false; this.shopMessage = ''; this.shopKeyHeld = {}; inputManager.clear();
-        this.ended = false;
+        this.ended = false; this.raccoonIntroPending = false;
         this.currentLevel = level;
         this.difficulty = difficulty;
         
@@ -117,6 +120,7 @@ export class World {
             case 11: track = SoundType.THEME_NEON; break;
             case 12: track = SoundType.THEME_BAKERY; break;
             case 13: track = SoundType.THEME_TOWN; break;
+            case 14: track = SoundType.THEME_BACKYARD; break;
         }
         audioManager.playMusic(track);
         this.events.onShopUpdate?.();
@@ -134,6 +138,14 @@ export class World {
             else if (key.startsWith('Digit') && !this.shopOpen) this.useInventorySlot(Number(key.at(-1)) - 1);
         }
         if (this.shopOpen) return;
+
+        if (this.raccoonIntroPending) return;
+        const raccoonBoss = this.enemies.find(e => e instanceof BossRaccoon) as BossRaccoon | undefined;
+        if (raccoonBoss && !raccoonBoss.introPlayed && this.player.x >= raccoonBoss.arenaLeft + 100 && this.player.grounded) {
+            this.raccoonIntroPending = true; inputManager.clear(); this.player.velX = 0;
+            if (this.events.onRaccoonIntro) this.events.onRaccoonIntro(); else this.finishRaccoonIntro();
+            return;
+        }
 
         // Timer
         this.frameCounter++;
@@ -179,13 +191,14 @@ export class World {
 
         // Enemy Collisions
         this.enemies.forEach(enemy => {
-            if (this.ended) return;
+            if (this.ended || enemy.markedForDeletion) return;
             enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
+            if (enemy.markedForDeletion) return;
             const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownTimedHazard || enemy instanceof YardDog;
             if (enemy instanceof RollingApple && !enemy.active) return;
             if ((enemy instanceof TownCyclist || enemy instanceof TownTimedHazard || enemy instanceof YardDog) && !enemy.dangerous) return;
-            const pad = (enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian || enemy instanceof MarchingBand) ? 4 : 12;
+            const pad = (enemy instanceof Raccoon || enemy instanceof BossRaccoon || enemy instanceof TrashLid || enemy instanceof Pastry || townHazard || enemy instanceof TownPedestrian || enemy instanceof MarchingBand) ? 4 : 12;
             if (this.player && 
                 this.player.x + pad < enemy.x + enemy.w - pad &&
                 this.player.x + this.player.w - pad > enemy.x + pad &&
@@ -220,6 +233,20 @@ export class World {
                     }
                     return;
                 }
+
+                if (enemy instanceof BossRaccoon || enemy instanceof Raccoon) {
+                    if (enemy instanceof BossRaccoon && !enemy.isActive) return;
+                    const stomp = this.player.velY >= 0 && this.player.y + this.player.h <= enemy.y + 35;
+                    if (stomp) {
+                        this.player.velY = -12; this.player.grounded = false; this.player.jumpsLeft = 1;
+                        if (enemy instanceof BossRaccoon) enemy.takeHit(this.enemies);
+                        else { enemy.markedForDeletion = true; audioManager.playSFX(SoundType.BOSS_HIT); }
+                    } else if (!(enemy instanceof BossRaccoon && enemy.isStunned)) {
+                        this.triggerGameOver('raccoon', enemy instanceof BossRaccoon ? 'Baron von Bins charged into you! Dodge, then jump on his head while he is dizzy.' : 'Caught by a backyard raccoon! Jump over it or land on its head.');
+                    }
+                    return;
+                }
+                if (enemy instanceof TrashLid) { this.triggerGameOver('trashlid', 'Bonked by a flying trash lid! Watch the Baron’s hat before he charges.'); return; }
 
                 // BOSS COLLISION LOGIC
                 if (enemy instanceof BossCatcher || enemy instanceof BossWolf || enemy instanceof BossExcavator || enemy instanceof BossBaker) {
@@ -370,6 +397,13 @@ export class World {
         this.collectibles = this.collectibles.filter(c => !c.markedForDeletion);
     }
 
+    public finishRaccoonIntro() {
+        if (!this.raccoonIntroPending) return;
+        this.raccoonIntroPending = false; inputManager.clear();
+        const boss = this.enemies.find(e => e instanceof BossRaccoon) as BossRaccoon | undefined;
+        boss?.activate();
+    }
+
     public openShop() {
         if (this.ended || !this.player || !this.shopDoor?.unlocked || !this.shopDoor.nearby) return false;
         this.shopOpen = true; this.shopMessage = ''; this.player.velX = 0; inputManager.clear();
@@ -402,7 +436,7 @@ export class World {
     }
 
     public useInventorySlot(index: number) {
-        if (this.ended || this.shopOpen || !this.player || !Number.isInteger(index) || index < 0 || index > 2) return false;
+        if (this.ended || this.shopOpen || this.raccoonIntroPending || !this.player || !Number.isInteger(index) || index < 0 || index > 2) return false;
         const item = this.belongings.slots[index]; if (!item) return false;
         if (item === 'shield') {
             if (this.player.invincibleTimer > 0) return false;
@@ -444,7 +478,7 @@ export class World {
         this.ended = true;
         audioManager.stopMusic();
         audioManager.playSFX(SoundType.WIN_SHORT);
-        if (this.currentLevel < 13) {
+        if (this.currentLevel < 14) {
             this.events.onLevelComplete(this.currentLevel, this.player?.bonesCollected || 0);
         } else {
             this.events.onGameWon(this.player?.bonesCollected || 0);

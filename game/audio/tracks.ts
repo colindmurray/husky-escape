@@ -24,6 +24,16 @@ const {
 const DEFAULT_INSTRUMENT = { type: 'triangle' as OscillatorType, attack: 0.05, release: 0.05 };
 
 export const MUSIC_TRACKS: Partial<Record<SoundType, TrackData>> = {
+    [SoundType.THEME_BACKYARD]: {
+        tempo: 106,
+        instrument: { type: 'triangle', attack: .015, release: .04, isPlucky: true },
+        sequence: [[G3, 3], [B3, 1], [D4, 2], [G4, 2], [E4, 3], [D4, 1], [B3, 2], [0, 2], [C4, 3], [E4, 1], [G4, 2], [E4, 2], [D4, 4], [B3, 2], [G3, 2], [A3, 3], [C4, 1], [E4, 2], [A4, 2], [G4, 3], [E4, 1], [D4, 4]],
+    },
+    [SoundType.THEME_BOSS_RACCOON]: {
+        tempo: 140,
+        instrument: { type: 'square', attack: .012, release: .03, isPlucky: true },
+        sequence: [[A2, 2], [E3, 1], [A3, 1], [C4, 2], [B3, 2], [A3, 2], [E3, 2], [A2, 2], [0, 2], [F3, 2], [A3, 1], [C4, 1], [E4, 2], [D4, 2], [B3, 2], [E3, 2], [Ab3, 2], [E4, 2]],
+    },
     [SoundType.THEME_TOWN]: {
         tempo: 116,
         instrument: { type: 'triangle', attack: 0.012, release: 0.04, isPlucky: true },

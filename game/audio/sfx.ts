@@ -248,6 +248,15 @@ export function playSoundEffect(type: SoundType, ctx: AudioContext, masterGain: 
 }
 
 export function playTownSound(type: SoundType, ctx: AudioContext, masterGain: GainNode, enhanced: boolean): boolean {
+    if (type === SoundType.RACCOON_CHATTER) {
+        for (let i = 0; i < 5; i++) {
+            const start = ctx.currentTime + i * .065, osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.type = enhanced ? 'triangle' : 'square'; osc.frequency.setValueAtTime(330 + i % 2 * 180, start); osc.frequency.exponentialRampToValueAtTime(180, start + .055);
+            gain.gain.setValueAtTime(.055, start); gain.gain.exponentialRampToValueAtTime(.001, start + .06);
+            osc.connect(gain).connect(masterGain); osc.start(start); osc.stop(start + .065);
+        }
+        return true;
+    }
     if (type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET && type !== SoundType.ROADWORK) return false;
     const t = ctx.currentTime;
     if (type === SoundType.ROADWORK) {

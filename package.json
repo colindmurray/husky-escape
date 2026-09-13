@@ -7,6 +7,7 @@
     "cloudflare:mcp:login": "mcp-remote https://mcp.cloudflare.com/mcp 19987 --host 127.0.0.1 --auth-timeout 300 --transport http-only --static-oauth-client-metadata '{\"scope\":\"page.read page.write pages.metadata_read\"}'",
     "dev": "vite",
     "build": "vite build",
+    "test:backyard": "node scripts/test-backyard.mjs",
     "test:town": "node scripts/test-town.mjs",
     "test:shop": "node scripts/test-shop.mjs",
     "dsh:headless": "dsh-ox --profile headless",

@@ -7,7 +7,7 @@ A React/Vite platformer where you help Onyx the Husky escape the pound and find 
 The game ships with two presentation layers, switchable live from the ⚙️ settings panel (Visuals and Audio each have a Classic / Enhanced switch; choices persist in `localStorage`):
 
 - **Classic** — the original rendering and chiptune audio, fully preserved.
-- **Enhanced** — the modern presentation: multi-layer parallax backgrounds for all 13 zones, an animated title screen, fully composed cinematic cutscene scenes, redrawn sprites (Onyx, every enemy, bosses, platforms, hazards, machines), a particle system, per-level color grading/vignette/glow passes, and layered music (detuned doubles, sub-octave, echo, tempo-locked percussion) plus re-synthesized SFX.
+- **Enhanced** — the modern presentation: multi-layer parallax backgrounds for all 14 zones, an animated title screen, fully composed cinematic cutscene scenes, redrawn sprites (Onyx, every enemy, bosses, platforms, hazards, machines), a particle system, per-level color grading/vignette/glow passes, and layered music (detuned doubles, sub-octave, echo, tempo-locked percussion) plus re-synthesized SFX.
 
 Switching is seamless — even mid-level or mid-jump — because Enhanced layers only *draw around* the untouched classic logic; world state is never touched, so gameplay is identical in either mode. Reference comparisons live under `design-ref/`.
 
@@ -15,7 +15,7 @@ Controls: Arrows **or** WASD to move; Space/W to jump; double jump for height.
 
 ### Zones
 
-1–2 The Pound · 3 Dark Forest · 4 Beach · 5 Mountain · 6 Ski Slope · 7 The Chase · 8 Underwater Reef · 9 Stormy Pier · 10 Construction Site · **11 Neon Metropolis** — city night with industrial fan lifts (steady + pulsing), security drones with scan-and-chase AI, neon dash pads, roof cats, and a synthwave theme. **12 The Warm Bakery** — conveyor belts, falling pastries, and the Night Baker. **13 Market Day** — busy sidewalks, delivery bikes, market awnings, a fountain, garden dogs, and a parade home.
+1–2 The Pound · 3 Dark Forest · 4 Beach · 5 Mountain · 6 Ski Slope · 7 The Chase · 8 Underwater Reef · 9 Stormy Pier · 10 Construction Site · **11 Neon Metropolis** — city night with industrial fan lifts (steady + pulsing), security drones with scan-and-chase AI, neon dash pads, roof cats, and a synthwave theme. **12 The Warm Bakery** — conveyor belts, falling pastries, and the Night Baker. **13 Market Day** — busy sidewalks, delivery bikes, market awnings, a fountain, garden dogs, and a parade to the backyard. **14 The Backyard** — leaking hydrants, fence platforms, raccoon patrols, and Baron von Bins, a top-hatted raccoon boss.
 
 
 ## Market Day (level 13)
@@ -32,6 +32,19 @@ The bakery exit leads to town; level 13 is also available through the Dev Mode w
 - Pedestrians bump rather than kill Onyx. Bells, barks, hissing water, mechanical beeps, and flashing beacons warn before hazards activate. The fountain stays in the square; leaking hydrants belong to the gardens and retractable roadwork posts guard the parade route. Benches, awnings, stones, and floats can be jumped through from below.
 
 Run `npm run test:town` after installing dependencies. It uses the existing Playwright installation and local Google Chrome, starts its own temporary Vite server, and checks mechanics, full playable routes with hazards active, both rendering modes, and synthesized audio.
+
+## The Backyard (level 14)
+
+The town exit advances to the backyard; Dev Mode also offers a direct warp to 14. Follow the fence tops past leaking hydrants and raccoon patrols. Small raccoons hurt on side contact and can be defeated by landing on their heads.
+
+- **Easy:** broad, fixed fences above a continuous lawn, five timed hydrants, four patrolling raccoons, and a three-hit boss.
+- **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, two moving sections, and seven raccoons that telegraph a pounce. The boss needs four hits and throws two arcing trash lids before charging.
+- **Boss:** approaching the arena starts a nine-second cutscene: a trash can rattles, its lid flies off, and Baron von Bins leaps out wearing a top hat. Skip resumes the same run. The level clock, player, hazards, and inventory effects pause throughout the reveal.
+- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. Defeating him lowers the arena gates and opens home. Entering home completes the game.
+
+Classic and Enhanced share gameplay, with flat versus shaded art, parallax houses and hedges, ringed raccoon tails, metallic trash cans, a backyard melody, a boss theme, and raccoon chatter. Existing shop outfits and supplies work here.
+
+`npm run test:backyard` covers collisions, boss phases and victory, real cutscene pause/resume, sounds, rendering, and full movement-only runs through live hazards and the boss at two screen heights and two jump timings in each difficulty.
 
 ## Secret doghouse shops
 
