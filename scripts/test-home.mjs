@@ -121,7 +121,9 @@ try {
     await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);
     await page.setViewportSize({ width: 1100, height: 720 });
+    await page.waitForFunction(() => window.__husky.engine.world.width === 1100 && window.__husky.engine.world.height === 720);
     await page.evaluate(() => { const h = window.__husky; h.gfxSettings.setVisualMode('classic'); h.engine.goHome(); h.engine.stop(); h.engine.renderer.drawGame(h.engine.world); });
+    assert.equal(await page.locator('canvas[tabindex]').evaluate(c => c.getContext('2d').getImageData(500, 400, 1, 1).data[3] > 0), true);
     await page.screenshot({ path: '.playwright-mcp/home-classic.png' });
     // Postgame Hardcore retry must not erase the completed story.
     await page.evaluate(() => { const e = window.__husky.engine; e.revisitLevel(5); e.stop(); e.world.triggerGameOver('fall', 'Fell off the trail'); });
