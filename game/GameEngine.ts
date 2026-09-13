@@ -1,4 +1,6 @@
 
+import { CUSTOM_LEVEL, validateLevel } from './LevelBuilder';
+import { Belongings } from './Shop';
 import { HOME_LEVEL } from './Home';
 import { GameState, SoundType, Difficulty } from "../types";
 import { audioManager } from "./Audio";
@@ -26,6 +28,7 @@ export class GameEngine {
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
     private isLoopRunning = false;
+    private practiceSession: { belongings: Belongings; bones: number; difficulty: Difficulty; level: number } | null = null;
 
     constructor(canvas: HTMLCanvasElement, options: GameEngineOptions) {
         this.options = options;
@@ -75,7 +78,7 @@ export class GameEngine {
         this.world.resize(w, h);
     }
 
-    public setDifficulty(difficulty: Difficulty) { this.difficulty = difficulty; }
+    public setDifficulty(difficulty: Difficulty) { this.difficulty = difficulty; if (this.practiceSession) this.practiceSession.difficulty = difficulty; }
 
     public startLevel(level: number, difficulty: Difficulty = Difficulty.EASY) {
         if (level === HOME_LEVEL && !this.world.belongings.homeUnlocked) return;
@@ -88,7 +91,34 @@ export class GameEngine {
 
     public goHome() {
         if (!this.world.belongings.homeUnlocked) return;
+        if (this.practiceSession) {
+            const saved = this.practiceSession;
+            this.world.belongings = saved.belongings;
+            this.world.player!.bonesCollected = saved.bones;
+            this.difficulty = saved.difficulty; this.world.homeFloor = 'basement';
+            this.world.practice = false; this.practiceSession = null;
+        } else this.world.homeFloor = 'ground';
         this.startLevel(HOME_LEVEL, this.difficulty);
+    }
+
+    public startPractice(level: number) {
+        if (!this.world.isHome || this.world.homeFloor !== 'basement' || !this.world.belongings.homeUnlocked || !this.world.player || this.practiceSession ||
+            !Number.isInteger(level) || (level !== CUSTOM_LEVEL && (level < 1 || level > 14)) || (level === CUSTOM_LEVEL && validateLevel(this.world.editorDraft))) return false;
+        this.practiceSession = { belongings: this.world.belongings, bones: this.world.player.bonesCollected, difficulty: this.difficulty, level };
+        this.retryPractice(); return true;
+    }
+
+    public retryPractice() {
+        const saved = this.practiceSession; if (!saved || !this.world.player) return;
+        this.world.belongings = Object.assign(new Belongings(), structuredClone(saved.belongings));
+        this.world.player.bonesCollected = saved.bones;
+        this.world.practice = true;
+        this.startLevel(saved.level, Difficulty.HARDCORE);
+    }
+
+    public returnToEditor() {
+        if (!this.practiceSession || this.practiceSession.level !== CUSTOM_LEVEL) return;
+        this.goHome(); this.world.openHomePanel('builder');
     }
 
     public revisitLevel(level: number) {
@@ -97,6 +127,7 @@ export class GameEngine {
     }
 
     public startGame(difficulty: Difficulty = Difficulty.EASY) {
+        this.practiceSession = null; this.world.practice = false;
         this.world.player = null; // Force reset
         this.startLevel(1, difficulty);
     }

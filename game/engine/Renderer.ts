@@ -36,7 +36,10 @@ export class Renderer {
         this.ctx.clearRect(0, 0, width, height);
 
         if (world.isHome) {
-            drawHome(this.ctx, width, height, cameraX);
+            drawHome(this.ctx, width, height, cameraX, world.homeFloor);
+        } else if (world.isCustom) {
+            this.ctx.fillStyle = enhanced ? '#2d4652' : '#536c72'; this.ctx.fillRect(0, 0, width, height);
+            this.ctx.strokeStyle = '#9fc7bb25'; for (let y = 0; y < height; y += 64) { this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); }
         } else if (currentLevel === 14) {
             drawBackyardBackground(this.ctx, width, height, cameraX, cameraY, performance.now() / 1000);
         } else if (currentLevel === 13) {
@@ -53,10 +56,15 @@ export class Renderer {
         if (cameraY) this.ctx.translate(0, -cameraY);
         (world as any).props?.forEach?.((pr: any) => pr.draw?.(this.ctx, cameraX));
         if (!world.isHome) world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
-        world.waters.forEach(w => w.draw(this.ctx, cameraX));
+        world.waters.forEach(w => {
+            this.ctx.save();
+            if (world.isCustom) { this.ctx.beginPath(); this.ctx.rect(w.x - cameraX, w.y - 5, w.w, w.h + 5); this.ctx.clip(); }
+            w.draw(this.ctx, cameraX); this.ctx.restore();
+        });
         if (world.exit && !world.isHome) world.exit.draw(this.ctx, cameraX);
         world.collectibles.forEach(c => !c.markedForDeletion && c.draw(this.ctx, cameraX));
         world.enemies.forEach(e => e.draw(this.ctx, cameraX));
+        world.followingDogs.forEach(dog => dog.draw(this.ctx, cameraX));
         if (world.player) world.player.draw(this.ctx, cameraX, currentLevel);
         this.ctx.restore();
 

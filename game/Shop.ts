@@ -27,6 +27,7 @@ export const isSupply = (id: ShopGood): id is Supply => id === 'shield' || id ==
 
 export class Belongings {
     public homeUnlocked = false;
+    public companions = new Set<string>();
     public quests: Record<string, QuestStatus> = {};
     public slots: (Supply | null)[] = [null, null, null];
     public owned = new Set<Accessory>();

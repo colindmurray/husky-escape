@@ -149,6 +149,7 @@ export default function App() {
     };
 
     const restartLevel = () => {
+        if (engineRef.current?.world.practice) { engineRef.current.retryPractice(); return; }
         setHuskyWisdom("");
         // During the story, Hardcore deaths restart the journey. Completed runs unlock free travel.
         if (difficulty === Difficulty.HARDCORE && gameState === GameState.GAME_OVER && !engineRef.current?.world.belongings.homeUnlocked) {
@@ -189,6 +190,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
+        if (engineRef.current?.world.practice) return { title: isLevelComplete ? 'PRACTICE CLEAR!' : 'TRY THAT AGAIN!', desc: isLevelComplete ? 'Nice work! Keep practicing, build another course, or head upstairs to your friends.' : 'That’s what training is for. Try again with your original supplies; your real journey is safe.' };
         if (isWin) return { title: "VICTORY!", desc: "You crossed the busy town, reclaimed the backyard, and outsmarted the top-hatted trash-can king. You’re home! Good girl, Onyx! Go inside to meet your friends, visit Juniper’s shop, and unlock free travel to every level." };
         if (isLevelComplete) {
             const congrats = [
@@ -408,8 +410,10 @@ export default function App() {
                                 )}
                             </div>
                             <div className="flex flex-col gap-3 w-full">
-                                {gameState === GameState.LEVEL_COMPLETE ? ( <button onClick={nextLevel} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">{homeUnlocked ? "Back home" : "Next Area"}</button> ) : gameState === GameState.GAME_WON ? null : ( <button onClick={restartLevel} className={`hover:brightness-110 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150 ${difficulty === Difficulty.HARDCORE ? 'bg-red-600' : 'bg-blue-500'}`}>{difficulty === Difficulty.HARDCORE && !homeUnlocked ? "Restart Game (Hardcore)" : "Try Again"}</button> )}
-                                {homeUnlocked && gameState !== GameState.LEVEL_COMPLETE && <button onClick={goHome} className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg text-xl">{gameState === GameState.GAME_WON ? 'Go inside · Home' : 'Return home'}</button>}
+                                {gameState === GameState.LEVEL_COMPLETE ? ( <button onClick={nextLevel} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">{engineRef.current?.world.practice ? "Back to basement" : homeUnlocked ? "Back home" : "Next Area"}</button> ) : gameState === GameState.GAME_WON ? null : ( <button onClick={restartLevel} className={`hover:brightness-110 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150 ${difficulty === Difficulty.HARDCORE ? 'bg-red-600' : 'bg-blue-500'}`}>{difficulty === Difficulty.HARDCORE && !homeUnlocked ? "Restart Game (Hardcore)" : "Try Again"}</button> )}
+                                {homeUnlocked && gameState !== GameState.LEVEL_COMPLETE && <button onClick={goHome} className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg text-xl">{gameState === GameState.GAME_WON ? 'Go inside · Home' : engineRef.current?.world.practice ? 'Back to basement' : 'Return home'}</button>}
+                                {engineRef.current?.world.practice && <button onClick={() => engineRef.current?.retryPractice()} className="bg-teal-700 text-white py-3 rounded-lg">Practice again</button>}
+                                {engineRef.current?.world.practice && engineRef.current.world.isCustom && <button onClick={() => engineRef.current?.returnToEditor()} className="bg-teal-700 text-white py-3 rounded-lg">Back to editor</button>}
                                 <button onClick={() => setGameState(GameState.INTRO)} className="text-sm text-gray-500 hover:text-white transition">Main Menu</button>
                             </div>
                             
