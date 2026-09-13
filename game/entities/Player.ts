@@ -326,8 +326,8 @@ export class Player extends Entity {
             ctx.translate(-(x + this.w / 2), -y);
         }
 
-        // Enhanced mode: fully redrawn animated husky (purely visual)
-        if (gfxSettings.visualMode === 'enhanced') {
+        const skin = this.accessories.has('cat') ? 'cat' : this.accessories.has('fox') ? 'fox' : undefined;
+        if (gfxSettings.visualMode === 'enhanced' || skin) {
             if (this.hasUmbrella && this.facingRight) this.drawHeldUmbrella(ctx, x, y);
             drawHuskyEnhanced(ctx, x, y, {
                 velX: this.velX,
@@ -335,6 +335,8 @@ export class Player extends Entity {
                 grounded: this.grounded,
                 level: currentLevel,
                 t: Date.now() / 1000,
+                skin,
+                classic: gfxSettings.visualMode === 'classic',
             });
             if (this.hasUmbrella && !this.facingRight) this.drawHeldUmbrella(ctx, x, y);
             drawAccessories(ctx, x, y, this.accessories);

@@ -384,7 +384,7 @@ export class World {
         if (!this.shopOpen || this.ended || !this.player || !Object.hasOwn(SHOP_GOODS, id)) return false;
         const good = SHOP_GOODS[id];
         if (!isSupply(id) && this.belongings.owned.has(id)) {
-            this.belongings.equipped.has(id) ? this.belongings.equipped.delete(id) : this.belongings.equipped.add(id);
+            this.belongings.toggleAccessory(id);
             this.shopMessage = this.belongings.equipped.has(id) ? `${good.name} equipped.` : `${good.name} put away.`;
         } else {
             const slot = this.belongings.slots.indexOf(null);
@@ -394,7 +394,7 @@ export class World {
             }
             this.player.bonesCollected -= good.price;
             if (isSupply(id)) this.belongings.slots[slot] = id;
-            else { this.belongings.owned.add(id); this.belongings.equipped.add(id); }
+            else { this.belongings.owned.add(id); this.belongings.toggleAccessory(id); }
             this.shopMessage = isSupply(id) ? `${good.name} tucked into pocket ${slot + 1}.` : `${good.name} is yours!`;
             audioManager.playSFX(SoundType.COLLECT); this.events.onScoreUpdate(this.player.bonesCollected);
         }

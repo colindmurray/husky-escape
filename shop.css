@@ -38,3 +38,9 @@
 .shop-backdrop.classic { backdrop-filter:none; }
 .classic .husky-shop,.classic .shop-cards article,.classic .shop-welcome canvas,.classic .husky-shop button { border-radius:2px; box-shadow:none; }
 @media(max-width:650px) { .shop-backdrop{padding:8px}.husky-shop header{padding:14px;gap:8px}.husky-shop h1{font-size:26px}.shop-welcome{grid-template-columns:110px 1fr;padding:14px;gap:12px}.shop-welcome canvas{height:120px;object-fit:cover}.shop-welcome p{font-size:12px}.shop-welcome h2{font-size:17px}.shop-shelves{padding:0 14px}.shop-cards{gap:7px}.shop-cards article{padding:9px}.shop-cards h3{font-size:13px}.shop-cards p{font-size:11px}.husky-shop footer{padding:12px 14px}.pocket-hud button{min-width:65px;padding:5px 8px}.pocket-hud{bottom:10px}.shop-pockets{gap:5px;font-size:10px} }
+
+.outfit-preview { width:100%; height:100px; object-fit:contain; border-radius:9px; background:#ead9b54d; }
+
+.shop-shelves section:nth-child(2) .shop-cards { grid-template-columns:repeat(4,1fr); }
+.shop-shelves section:nth-child(3) .shop-cards { grid-template-columns:repeat(2,1fr); }
+@media(max-width:650px) { .shop-shelves section:nth-child(2) .shop-cards { grid-template-columns:repeat(2,1fr); } }

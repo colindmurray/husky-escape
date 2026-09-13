@@ -1,8 +1,22 @@
 import React, { useEffect, useRef } from 'react';
 import type { World } from './game/engine/World';
 import { Player } from './game/entities/Player';
-import { SHOP_GOODS, isSupply, type ShopGood } from './game/Shop';
+import { SHOP_GOODS, isSupply, isSkin, Belongings, type Accessory, type ShopGood } from './game/Shop';
 import './shop.css';
+
+function OutfitPreview({ id, equipped, visualMode }: { id: Accessory; equipped: ReadonlySet<Accessory>; visualMode: string }) {
+    const canvas = useRef<HTMLCanvasElement>(null);
+    const outfit = [...equipped].join(',');
+    useEffect(() => {
+        const ctx = canvas.current?.getContext('2d'); if (!ctx) return;
+        const look = new Belongings();
+        look.equipped = new Set(outfit ? outfit.split(',') as Accessory[] : []);
+        if (!look.equipped.has(id)) look.toggleAccessory(id);
+        const onyx = new Player(29, 25); onyx.accessories = look.equipped; onyx.grounded = true;
+        ctx.clearRect(0, 0, 200, 140); ctx.save(); ctx.scale(2, 2); onyx.draw(ctx, 0, 0); ctx.restore();
+    }, [id, outfit, visualMode]);
+    return <canvas ref={canvas} className="outfit-preview" width={200} height={140} role="img" aria-label={`Onyx wearing ${SHOP_GOODS[id].name}`} />;
+}
 
 export function ShopUI({ world, visualMode }: { world: World; visualMode: string }) {
     const dialog = useRef<HTMLDivElement>(null);
@@ -51,12 +65,12 @@ export function ShopUI({ world, visualMode }: { world: World; visualMode: string
             <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="shop-title" className="husky-shop">
                 <header><div><small>SECRET DOGHOUSE · {world.shopDoor?.title}</small><h1 id="shop-title">The Hidden Paw</h1></div><button className="leave-shop" onClick={leave} aria-label="Leave shop">Back to trail <kbd>Esc</kbd></button></header>
                 <div className="shop-welcome"><canvas ref={portrait} width={320} height={145} role="img" aria-label="Juniper the husky shopkeeper behind a wooden counter" /><div><h2>Awoo, fellow explorer!</h2><p>I'm Juniper. Pick a treat for the trail, or try on something lovely.</p><strong>🍖 {world.player?.bonesCollected ?? 0} bones</strong><small>The trail is paused. Your belongings stay with you through this journey.</small></div></div>
-                <div className="shop-shelves">{(['Treats for the trail', 'Wear something lovely'] as const).map((title, section) => <section key={title}><h2>{title}</h2><div className="shop-cards">{(Object.keys(SHOP_GOODS) as ShopGood[]).filter(id => isSupply(id) === (section === 0)).map(id => {
+                <div className="shop-shelves">{(['Treats for the trail', 'Wear something lovely', 'A different look'] as const).map((title, section) => <section key={title}><h2>{title}</h2><div className="shop-cards">{(Object.keys(SHOP_GOODS) as ShopGood[]).filter(id => section === 0 ? isSupply(id) : section === 1 ? !isSupply(id) && !isSkin(id) : isSkin(id)).map(id => {
                     const good = SHOP_GOODS[id], supply = isSupply(id), owned = !supply && belongings.owned.has(id), equipped = !supply && belongings.equipped.has(id);
                     const full = supply && !belongings.slots.includes(null), affordable = (world.player?.bonesCollected ?? 0) >= good.price;
-                    return <article key={id}><span className={`shop-item-icon ${id}`} aria-hidden="true">{good.icon}</span><h3>{good.name}</h3><p>{good.description}</p><button disabled={!owned && (full || !affordable)} onClick={() => world.buyGood(id)}>{owned ? (equipped ? 'Take off' : 'Wear') : full ? 'Pockets full' : `Buy · ${good.price} bones`}</button>{equipped && <small>Wearing ✓</small>}</article>;
+                    return <article key={id}>{isSupply(id) ? <span className={`shop-item-icon ${id}`} aria-hidden="true">{good.icon}</span> : <OutfitPreview id={id} equipped={belongings.equipped} visualMode={visualMode} />}<h3>{good.name}</h3><p>{good.description}</p><button disabled={!owned && (full || !affordable)} onClick={() => world.buyGood(id)}>{owned ? (equipped ? 'Take off' : 'Wear') : full ? 'Pockets full' : `Buy · ${good.price} bones`}</button>{equipped && <small>Wearing ✓</small>}</article>;
                 })}</div></section>)}</div>
-                <footer><div className="shop-pockets" aria-label="Your three pockets">{belongings.slots.map((item, i) => <span key={i}>{i + 1} · {item ? SHOP_GOODS[item].name : 'Empty pocket'}</span>)}</div><p role="status" aria-live="polite">{world.shopMessage || 'Use pockets 1–3 on the trail, or tap their buttons. Accessories are just for style.'}</p></footer>
+                <footer><div className="shop-pockets" aria-label="Your three pockets">{belongings.slots.map((item, i) => <span key={i}>{i + 1} · {item ? SHOP_GOODS[item].name : 'Empty pocket'}</span>)}</div><p role="status" aria-live="polite">{world.shopMessage || 'Use pockets 1–3 on the trail, or tap their buttons. Outfits are just for style. Wear one hat and one skin at a time; take off a skin to be husky Onyx again.'}</p></footer>
             </div>
         </div>}
     </>;

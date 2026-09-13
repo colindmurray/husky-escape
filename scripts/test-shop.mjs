@@ -145,12 +145,54 @@ try {
                 const state = paused(); renderer.drawGame(world); check(state === paused(), `${mode} shop route and accessories draw without changing gameplay`);
             }
         }
+        world.loadLevel(3, false, 'EASY');
+        world.shopDoor.unlocked = true;
+        world.player.x = world.shopDoor.x + 20; world.player.y = world.shopDoor.y + world.shopDoor.h - world.player.h; world.player.grounded = true;
+        world.shopDoor.update(world.player); world.openShop(); world.player.bonesCollected = 50;
+        for (const id of ['hat', 'coat', 'collar', 'crown', 'cat', 'fox']) check(world.buyGood(id), `Purchase new wardrobe: ${id}`);
+        check(world.player.bonesCollected === 13, 'Expanded wardrobe charges exactly the listed prices');
+        check(world.player.accessories.has('crown') && !world.player.accessories.has('hat') && world.player.accessories.has('fox') && !world.player.accessories.has('cat'), 'Purchasing headwear and skins replaces the previous item in the same category');
+        world.buyGood('cat'); world.buyGood('hat');
+        check(world.player.bonesCollected === 13 && world.player.accessories.has('cat') && !world.player.accessories.has('fox') && world.player.accessories.has('hat') && !world.player.accessories.has('crown'), 'Owned skins and headwear switch for free without stacking');
+        world.buyGood('cat');
+        check(!world.player.accessories.has('cat') && !world.player.accessories.has('fox') && world.player.accessories.has('coat') && world.player.accessories.has('collar'), 'Taking off a skin returns to Onyx while retaining clothing');
+        world.buyGood('cat'); world.buyGood('crown'); world.closeShop(); world.loadLevel(6, true, 'HARD');
+        check(world.player.accessories.has('cat') && world.player.accessories.has('crown') && world.player.bonesCollected === 13 && world.belongings.owned.size === 6, 'Skins and crown persist with ownership and wallet through level transitions');
+        const portrait = document.createElement('canvas'); portrait.width = 180; portrait.height = 130;
+        const ctx = portrait.getContext('2d'); const images = new Set();
+        world.player.x = 60; world.player.y = 45; world.player.hasUmbrella = true; world.player.hasBandana = true;
+        for (const mode of ['classic', 'enhanced']) for (const skin of ['cat', 'fox']) for (const level of [3, 6, 8, 13]) for (const facing of [true, false]) {
+            gfxSettings.setVisualMode(mode); world.player.accessories = new Set([skin, 'crown', 'coat', 'collar']); world.player.facingRight = facing;
+            const before = JSON.stringify(world.player); ctx.clearRect(0, 0, 180, 130); world.player.draw(ctx, 0, level);
+            check(JSON.stringify(world.player) === before && world.player.w === 40 && world.player.h === 40, `${mode} ${skin} keeps physics unchanged with gear on level ${level}, facing ${facing ? 'right' : 'left'}`);
+            if (level === 3 && facing) images.add(portrait.toDataURL());
+        }
+        check(images.size === 4, 'Both skins and both graphics modes produce distinct artwork');
         const engine = window.__husky.engine;
         engine.setDifficulty('HARD'); engine.startPoundEscapeCutscene(); engine.skipCutscene(); engine.stop();
         check(engine.world.difficulty === 'HARD' && engine.world.platforms.some(p => p.x === 2160 && p.w === 85), 'Selected Hard difficulty carries through the forest intro to the shop route');
         inputManager.clear();
         return passed;
     });
+    await page.evaluate(() => {
+        const engine = window.__husky.engine; engine.startLevel(3, 'EASY'); engine.stop(); const w = engine.world;
+        w.player.bonesCollected = 50; w.shopDoor.unlocked = true;
+        w.player.x = w.shopDoor.x + 20; w.player.y = w.shopDoor.y + w.shopDoor.h - w.player.h; w.player.grounded = true;
+        w.shopDoor.update(w.player); w.openShop();
+    });
+    await page.getByRole('dialog').waitFor();
+    assert.equal(await page.getByRole('article').count(), 9);
+    for (const name of ['Little crown', 'Tuxedo cat', 'Red fox']) {
+        const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
+        await card.getByRole('button').click();
+        assert.equal(await card.getByRole('button').innerText(), 'Take off');
+    }
+    assert.deepEqual(await page.evaluate(() => { const w = window.__husky.engine.world; return [w.player.bonesCollected, ...w.player.accessories]; }), [28, 'crown', 'fox']);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('img', { name: 'Onyx wearing Red fox', exact: true }).scrollIntoViewIfNeeded();
+    assert.ok(await page.getByRole('img', { name: 'Onyx wearing Red fox', exact: true }).isVisible());
+    assert.ok(await page.evaluate(() => { const shop = document.querySelector('.husky-shop'); return shop.scrollWidth <= shop.clientWidth; }));
+    checks.push('Shop buttons purchase and switch crown and skins with exact charges; mobile previews fit the dialog');
     assert.equal(errors.length, 0, errors.join('\n'));
     for (const check of checks) console.log(`✓ ${check}`);
     console.log(`${checks.length} shop checks passed.`);

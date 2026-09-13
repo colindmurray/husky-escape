@@ -11,12 +11,17 @@ export const SHOP_GOODS = {
     magnet: { name: 'Bone magnet', icon: '🧲', price: 4, description: 'Nearby bones fly to you for 10 seconds.' },
     time: { name: 'Time biscuit', icon: '◷', price: 3, description: 'Adds 30 seconds to the level clock.' },
     hat: { name: 'Trail cap', icon: '🧢', price: 5, description: 'A little teal cap for a big adventure.' },
+    crown: { name: 'Little crown', icon: '👑', price: 6, description: 'Three golden points and a tiny rose jewel. Fit for Queen Onyx.' },
+    cat: { name: 'Tuxedo cat', icon: '🐈‍⬛', price: 8, description: 'White socks, green eyes and whiskers. Same brave Onyx underneath.' },
+    fox: { name: 'Red fox', icon: '🦊', price: 8, description: 'Russet fur, dark paws and a big cream-tipped brush.' },
     coat: { name: 'Berry sweater', icon: '🧥', price: 6, description: 'A cozy knit with a cream zigzag.' },
     collar: { name: 'Moonstone collar', icon: '💎', price: 4, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
 export type Supply = 'shield' | 'magnet' | 'time';
-export type Accessory = 'hat' | 'coat' | 'collar';
+export type Skin = 'cat' | 'fox';
+export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | Skin;
+export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox';
 export const isSupply = (id: ShopGood): id is Supply => id === 'shield' || id === 'magnet' || id === 'time';
 
 export class Belongings {
@@ -25,6 +30,13 @@ export class Belongings {
     public equipped = new Set<Accessory>();
     public collectedBones = new Set<string>();
     public unlockedShops = new Set<number>();
+
+    public toggleAccessory(id: Accessory) {
+        if (this.equipped.delete(id)) return;
+        if (isSkin(id)) { this.equipped.delete('cat'); this.equipped.delete('fox'); }
+        if (id === 'hat' || id === 'crown') { this.equipped.delete('hat'); this.equipped.delete('crown'); }
+        this.equipped.add(id);
+    }
 }
 
 export class SecretDoghouse extends Entity {
@@ -112,5 +124,14 @@ export function drawAccessories(ctx: CanvasRenderingContext2D, x: number, y: num
         ctx.fillStyle = '#398d8b'; ctx.beginPath(); ctx.arc(x + 31, y + 1, 11, Math.PI, 0); ctx.fill();
         ctx.fillRect(x + 23, y, 24, 4); ctx.fillStyle = '#edcf86'; ctx.fillRect(x + 28, y - 4, 5, 4);
         if (rich) { ctx.strokeStyle = '#94c9b3'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + 31, y + 1, 8, Math.PI, Math.PI * 1.6); ctx.stroke(); }
+    }
+    if (equipped.has('crown')) {
+        ctx.fillStyle = '#efbd44';
+        if (rich) { const gold = ctx.createLinearGradient(0, y - 14, 0, y + 1); gold.addColorStop(0, '#fff1a1'); gold.addColorStop(.5, '#f5c84e'); gold.addColorStop(1, '#bf791d'); ctx.fillStyle = gold; }
+        ctx.strokeStyle = '#95601d'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x + 23, y); ctx.lineTo(x + 21, y - 12); ctx.lineTo(x + 27, y - 7); ctx.lineTo(x + 31, y - 16); ctx.lineTo(x + 35, y - 7); ctx.lineTo(x + 41, y - 12); ctx.lineTo(x + 39, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffe59a'; ctx.fillRect(x + 23, y - 3, 16, 3);
+        ctx.fillStyle = '#d84f83'; ctx.beginPath(); ctx.moveTo(x + 31, y - 9); ctx.lineTo(x + 34, y - 6); ctx.lineTo(x + 31, y - 3); ctx.lineTo(x + 28, y - 6); ctx.closePath(); ctx.fill();
+        if (rich) { ctx.fillStyle = '#fff7dd'; ctx.fillRect(x + 30, y - 8, 1.5, 2); }
     }
 }
