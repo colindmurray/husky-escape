@@ -41,15 +41,15 @@ Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper the husk
 
 | Purchase | Bones | Effect |
 | --- | ---: | --- |
-| Star treat | 3 | 5 seconds of protection from enemies; water, falls, timeout, and the packed parade band still defeat Onyx |
-| Bone magnet | 4 | Pulls nearby bones toward Onyx for 10 seconds |
-| Time biscuit | 3 | Adds 30 seconds to the current level |
-| Trail cap | 5 | Teal hat; cosmetic |
-| Little crown | 6 | Gold crown with a rose jewel; cosmetic |
-| Tuxedo cat | 8 | Dark fur, white socks, green eyes and whiskers; cosmetic skin |
-| Red fox | 8 | Russet fur and a cream-tipped brush; cosmetic skin |
-| Berry sweater | 6 | Knitted coat; cosmetic |
-| Moonstone collar | 4 | Violet collar and pendant; cosmetic |
+| Star treat | 6 | 5 seconds of protection from enemies; water, falls, timeout, and the packed parade band still defeat Onyx |
+| Bone magnet | 8 | Pulls nearby bones toward Onyx for 10 seconds |
+| Time biscuit | 6 | Adds 30 seconds to the current level |
+| Trail cap | 10 | Teal hat; cosmetic |
+| Little crown | 12 | Gold crown with a rose jewel; cosmetic |
+| Tuxedo cat | 16 | Dark fur, white socks, green eyes and whiskers; cosmetic skin |
+| Red fox | 16 | Russet fur and a cream-tipped brush; cosmetic skin |
+| Berry sweater | 12 | Knitted coat; cosmetic |
+| Moonstone collar | 8 | Violet collar and pendant; cosmetic |
 
 Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket on the trail. Full pockets and insufficient bones block a purchase without charging. Already-active effects cannot consume another matching treat. Owned accessories can be worn or removed in any shop without paying again, and headwear, sweater, collar, and a skin can be worn together in both visual modes. One headwear item and one skin can be active at a time. Taking off a skin restores husky Onyx. Shop previews show each cosmetic with the current outfit; all skins retain Onyx’s movement, hitbox, and level equipment.
 

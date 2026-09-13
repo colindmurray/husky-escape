@@ -7,15 +7,15 @@ import { audioManager } from './Audio';
 import { Difficulty, SoundType } from '../types';
 
 export const SHOP_GOODS = {
-    shield: { name: 'Star treat', icon: '✦', price: 3, description: '5 seconds safe from enemies. Falls, water and the parade band still end the run.' },
-    magnet: { name: 'Bone magnet', icon: '🧲', price: 4, description: 'Nearby bones fly to you for 10 seconds.' },
-    time: { name: 'Time biscuit', icon: '◷', price: 3, description: 'Adds 30 seconds to the level clock.' },
-    hat: { name: 'Trail cap', icon: '🧢', price: 5, description: 'A little teal cap for a big adventure.' },
-    crown: { name: 'Little crown', icon: '👑', price: 6, description: 'Three golden points and a tiny rose jewel. Fit for Queen Onyx.' },
-    cat: { name: 'Tuxedo cat', icon: '🐈‍⬛', price: 8, description: 'White socks, green eyes and whiskers. Same brave Onyx underneath.' },
-    fox: { name: 'Red fox', icon: '🦊', price: 8, description: 'Russet fur, dark paws and a big cream-tipped brush.' },
-    coat: { name: 'Berry sweater', icon: '🧥', price: 6, description: 'A cozy knit with a cream zigzag.' },
-    collar: { name: 'Moonstone collar', icon: '💎', price: 4, description: 'A violet collar with a shining pendant.' },
+    shield: { name: 'Star treat', icon: '✦', price: 6, description: '5 seconds safe from enemies. Falls, water and the parade band still end the run.' },
+    magnet: { name: 'Bone magnet', icon: '🧲', price: 8, description: 'Nearby bones fly to you for 10 seconds.' },
+    time: { name: 'Time biscuit', icon: '◷', price: 6, description: 'Adds 30 seconds to the level clock.' },
+    hat: { name: 'Trail cap', icon: '🧢', price: 10, description: 'A little teal cap for a big adventure.' },
+    crown: { name: 'Little crown', icon: '👑', price: 12, description: 'Three golden points and a tiny rose jewel. Fit for Queen Onyx.' },
+    cat: { name: 'Tuxedo cat', icon: '🐈‍⬛', price: 16, description: 'White socks, green eyes and whiskers. Same brave Onyx underneath.' },
+    fox: { name: 'Red fox', icon: '🦊', price: 16, description: 'Russet fur, dark paws and a big cream-tipped brush.' },
+    coat: { name: 'Berry sweater', icon: '🧥', price: 12, description: 'A cozy knit with a cream zigzag.' },
+    collar: { name: 'Moonstone collar', icon: '💎', price: 8, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
 export type Supply = 'shield' | 'magnet' | 'time';

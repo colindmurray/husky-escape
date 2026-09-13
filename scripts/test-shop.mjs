@@ -59,10 +59,14 @@ try {
         check(paused() === before, 'Shop pauses physics, enemies, item timers, and the level clock');
         check(!world.buyGood('shield') && world.player.bonesCollected === 0, 'Cannot buy without enough bones');
         check(!world.buyGood('unknown') && world.belongings.slots.every(x => x === null), 'Unknown goods cannot alter inventory');
-        world.player.bonesCollected = 30;
+        for (const [id, good] of Object.entries(SHOP_GOODS)) {
+            world.player.bonesCollected = good.price - 1;
+            check(!world.buyGood(id) && world.player.bonesCollected === good.price - 1 && world.belongings.owned.size === 0 && world.belongings.slots.every(x => x === null), `${good.name} requires its full bone price without charging or granting the item`);
+        }
+        world.player.bonesCollected = 55;
         for (const id of ['shield', 'magnet', 'time']) check(world.buyGood(id), `Buy ${id} into a free pocket`);
-        check(world.player.bonesCollected === 20 && world.belongings.slots.join(',') === 'shield,magnet,time', 'Purchases debit exact prices and occupy three distinct pockets');
-        check(!world.buyGood('time') && world.player.bonesCollected === 20, 'Full pockets reject purchases without charging');
+        check(world.player.bonesCollected === 35 && world.belongings.slots.join(',') === 'shield,magnet,time', 'Purchases debit exact prices and occupy three distinct pockets');
+        check(!world.buyGood('time') && world.player.bonesCollected === 35, 'Full pockets reject purchases without charging');
         check(!world.useInventorySlot(0), 'Consumables cannot be used while shopping');
         for (const id of ['hat', 'coat', 'collar']) check(world.buyGood(id), `Buy and equip ${id}`);
         check(world.player.bonesCollected === 5 && world.player.accessories.size === 3, 'All accessory categories can be worn together');
@@ -148,7 +152,7 @@ try {
         world.loadLevel(3, false, 'EASY');
         world.shopDoor.unlocked = true;
         world.player.x = world.shopDoor.x + 20; world.player.y = world.shopDoor.y + world.shopDoor.h - world.player.h; world.player.grounded = true;
-        world.shopDoor.update(world.player); world.openShop(); world.player.bonesCollected = 50;
+        world.shopDoor.update(world.player); world.openShop(); world.player.bonesCollected = 87;
         for (const id of ['hat', 'coat', 'collar', 'crown', 'cat', 'fox']) check(world.buyGood(id), `Purchase new wardrobe: ${id}`);
         check(world.player.bonesCollected === 13, 'Expanded wardrobe charges exactly the listed prices');
         check(world.player.accessories.has('crown') && !world.player.accessories.has('hat') && world.player.accessories.has('fox') && !world.player.accessories.has('cat'), 'Purchasing headwear and skins replaces the previous item in the same category');
@@ -187,7 +191,7 @@ try {
         await card.getByRole('button').click();
         assert.equal(await card.getByRole('button').innerText(), 'Take off');
     }
-    assert.deepEqual(await page.evaluate(() => { const w = window.__husky.engine.world; return [w.player.bonesCollected, ...w.player.accessories]; }), [28, 'crown', 'fox']);
+    assert.deepEqual(await page.evaluate(() => { const w = window.__husky.engine.world; return [w.player.bonesCollected, ...w.player.accessories]; }), [6, 'crown', 'fox']);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('img', { name: 'Onyx wearing Red fox', exact: true }).scrollIntoViewIfNeeded();
     assert.ok(await page.getByRole('img', { name: 'Onyx wearing Red fox', exact: true }).isVisible());
