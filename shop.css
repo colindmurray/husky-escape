@@ -1,0 +1,40 @@
+.pocket-hud { position:absolute; z-index:55; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:7px; align-items:center; max-width:96vw; }
+.pocket-hud button { position:relative; min-width:80px; min-height:58px; border:1px solid #e3c88b88; border-radius:12px; background:#203b3de8; color:#fff0cf; padding:7px 12px; cursor:pointer; box-shadow:0 3px 8px #172b3850; }
+.pocket-hud button:disabled { opacity:.48; cursor:default; }
+.pocket-hud button span { font-size:22px; display:block; }
+.pocket-hud button small { display:block; font-size:10px; }
+.pocket-hud kbd { position:absolute; top:4px; left:7px; font-size:10px; color:#d4ba82; }
+.pocket-hud button.enter-shop { min-height:46px; background:#44877a; font-weight:700; white-space:nowrap; }
+.shop-backdrop { position:absolute; z-index:100; inset:0; padding:22px; display:flex; justify-content:center; align-items:center; background:#142d32c9; backdrop-filter:blur(8px); color:#3f3430; }
+.husky-shop { width:min(920px,100%); max-height:100%; overflow:auto; border:3px solid #be9662; border-radius:24px; background:#f4e7cd; box-shadow:0 24px 70px #102c3e80; }
+.husky-shop header { display:flex; justify-content:space-between; gap:20px; align-items:center; padding:20px 26px 14px; border-bottom:1px solid #cfae774d; }
+.husky-shop header small { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#82624b; }
+.husky-shop h1 { font-family:Georgia,serif; font-size:32px; line-height:1.2; margin:4px 0 0; font-weight:700; }
+.husky-shop h2 { font-family:Georgia,serif; font-size:20px; font-weight:700; margin:0 0 8px; }
+.husky-shop button { border:1px solid #336d66; background:#3c8176; color:#fff7df; border-radius:9px; padding:9px 12px; font-weight:700; cursor:pointer; min-height:40px; }
+.husky-shop button:disabled { background:#c9bca3; border-color:#b6aa94; color:#675d4d; cursor:default; }
+.husky-shop button:hover:not(:disabled),.pocket-hud button:hover:not(:disabled) { filter:brightness(1.12); }
+.husky-shop button:focus-visible,.pocket-hud button:focus-visible { outline:3px solid #dc9438; outline-offset:3px; }
+.husky-shop button.leave-shop { background:transparent; border-color:#bb9b70; color:#66513c; font-size:12px; flex-shrink:0; }
+.husky-shop kbd { margin-left:7px; opacity:.65; font-size:10px; }
+.shop-welcome { display:grid; grid-template-columns:320px 1fr; gap:24px; padding:18px 26px; align-items:center; }
+.shop-welcome canvas { width:100%; border-radius:13px; }
+.shop-welcome p { font-size:14px; line-height:1.45; margin:0 0 10px; }
+.shop-welcome strong { display:block; color:#3b7769; font-size:20px; }
+.shop-welcome small { display:block; color:#866e58; font-size:11px; margin-top:6px; }
+.shop-shelves { padding:0 26px; }
+.shop-shelves section { margin-bottom:20px; }
+.shop-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.shop-cards article { position:relative; border:1px solid #d6bd9566; border-radius:14px; padding:14px; background:#fff9e9b3; display:flex; flex-direction:column; align-items:flex-start; }
+.shop-item-icon { height:34px; font-size:27px; color:#bb8845; }
+.shop-cards h3 { font-weight:700; font-size:15px; margin:6px 0; }
+.shop-cards p { font-size:12px; line-height:1.4; color:#79634e; margin:0 0 12px; flex:1; }
+.shop-cards button { width:100%; font-size:12px; }
+.shop-cards small { color:#368274; font-size:10px; margin-top:5px; }
+.husky-shop footer { padding:12px 26px 17px; background:#e9d8b9; }
+.shop-pockets { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; }
+.shop-pockets span { border:1px solid #c5a779; padding:6px 9px; border-radius:7px; }
+.husky-shop footer p { font-size:12px; margin:10px 0 0; min-height:18px; }
+.shop-backdrop.classic { backdrop-filter:none; }
+.classic .husky-shop,.classic .shop-cards article,.classic .shop-welcome canvas,.classic .husky-shop button { border-radius:2px; box-shadow:none; }
+@media(max-width:650px) { .shop-backdrop{padding:8px}.husky-shop header{padding:14px;gap:8px}.husky-shop h1{font-size:26px}.shop-welcome{grid-template-columns:110px 1fr;padding:14px;gap:12px}.shop-welcome canvas{height:120px;object-fit:cover}.shop-welcome p{font-size:12px}.shop-welcome h2{font-size:17px}.shop-shelves{padding:0 14px}.shop-cards{gap:7px}.shop-cards article{padding:9px}.shop-cards h3{font-size:13px}.shop-cards p{font-size:11px}.husky-shop footer{padding:12px 14px}.pocket-hud button{min-width:65px;padding:5px 8px}.pocket-hud{bottom:10px}.shop-pockets{gap:5px;font-size:10px} }

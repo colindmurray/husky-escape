@@ -1,4 +1,5 @@
 
+import { ShopUI } from './ShopUI';
 import React, { useEffect, useRef, useState } from 'react';
 import { GameEngine } from './game/GameEngine';
 import { GameState, Difficulty } from './types';
@@ -12,6 +13,7 @@ export default function App() {
     const engineRef = useRef<GameEngine | null>(null);
     const [gameState, setGameState] = useState<GameState>(GameState.INTRO);
     const [bones, setBones] = useState(0);
+    const [, refreshShop] = useState(0);
     const [timeLeft, setTimeLeft] = useState(300);
     const [cutsceneText, setCutsceneText] = useState("");
     const [modalData, setModalData] = useState<any>({});
@@ -40,6 +42,7 @@ export default function App() {
     useEffect(() => {
         if (!canvasRef.current || engineRef.current) return;
         const engine = new GameEngine(canvasRef.current, {
+            onShopUpdate: () => refreshShop(n => n + 1),
             onStateChange: async (state, data) => {
                 setGameState(state);
                 if (data) {
@@ -99,6 +102,7 @@ export default function App() {
 
     const changeDifficulty = (diff: Difficulty) => {
         setDifficulty(diff);
+        engineRef.current?.setDifficulty(diff);
         // If changing mid-game, it will apply on next level load/restart
     };
 
@@ -148,14 +152,14 @@ export default function App() {
         if (difficulty === Difficulty.HARDCORE && gameState === GameState.GAME_OVER) {
              levelFailuresRef.current = 0;
              levelHistoryRef.current = [];
-             engineRef.current?.startLevel(1, difficulty);
+             engineRef.current?.startGame(difficulty);
              return;
         }
 
         if (gameState === GameState.GAME_WON) {
             levelFailuresRef.current = 0;
             levelHistoryRef.current = [];
-            engineRef.current?.startLevel(1, difficulty);
+            engineRef.current?.startGame(difficulty);
         }
         else if (modalData.level) {
             engineRef.current?.startLevel(modalData.level, difficulty);
@@ -163,7 +167,7 @@ export default function App() {
         else {
             levelFailuresRef.current = 0;
             levelHistoryRef.current = [];
-            engineRef.current?.startLevel(1, difficulty);
+            engineRef.current?.startGame(difficulty);
         }
     };
     
@@ -267,13 +271,14 @@ export default function App() {
 
     return (
         <div className="relative w-screen h-screen bg-gray-900 overflow-hidden font-sans">
-            <canvas ref={canvasRef} className="block w-full h-full" />
+            <canvas ref={canvasRef} tabIndex={0} className="block w-full h-full" />
+            {gameState === GameState.PLAYING && engineRef.current && <ShopUI world={engineRef.current.world} visualMode={visualMode} />}
             <div className="absolute inset-0 pointer-events-none flex flex-col justify-between">
                 <div className="p-5 flex justify-between items-start w-full z-50 text-white pointer-events-none">
                     {(gameState === GameState.PLAYING || gameState === GameState.LEVEL_COMPLETE) ? (
                          <div className="text-2xl drop-shadow-md font-bold flex gap-4 pointer-events-auto">
                             <span>Onyx Escape</span>
-                            <span>🍖 {bones}/3</span>
+                            <span>🍖 {bones}</span>
                         </div>
                     ) : <div></div>}
                     {(gameState === GameState.PLAYING) && (

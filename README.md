@@ -33,6 +33,27 @@ The bakery exit leads to town; level 13 is also available through the Dev Mode w
 
 Run `npm run test:town` after installing dependencies. It uses the existing Playwright installation and local Google Chrome, starts its own temporary Vite server, and checks mechanics, full playable routes with hazards active, both rendering modes, and synthesized audio.
 
+## Secret doghouse shops
+
+Optional shops appear every three levels: a canopy trail in 3, snowy ledges in 6, lighthouse perches in 9, and bakery rafters in 12. Follow the three gold paw seals above the main path to unlock a doghouse. Hard and Hardcore have narrower approach ledges. These challenges never gate the normal exit.
+
+Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper the husky sells three consumables and three cosmetics. Shopping pauses the level, enemies, and active effects; **Escape**, **E**, or **Back to trail** returns to the same spot.
+
+| Purchase | Bones | Effect |
+| --- | ---: | --- |
+| Star treat | 3 | 5 seconds of protection from enemies; water, falls, timeout, and the packed parade band still defeat Onyx |
+| Bone magnet | 4 | Pulls nearby bones toward Onyx for 10 seconds |
+| Time biscuit | 3 | Adds 30 seconds to the current level |
+| Trail cap | 5 | Teal hat; cosmetic |
+| Berry sweater | 6 | Knitted coat; cosmetic |
+| Moonstone collar | 4 | Violet collar and pendant; cosmetic |
+
+Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket on the trail. Full pockets and insufficient bones block a purchase without charging. Already-active effects cannot consume another matching treat. Owned accessories can be worn or removed in any shop without paying again, and hat, sweater, and collar can be worn together in both visual modes.
+
+Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access also survives retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
+
+`npm run test:shop` checks purchases, the run economy, item use, pause behavior, cosmetics, and movement-only access from each side-route approach with hazards active on Easy, Hard, and Hardcore. It uses the same local Chrome setup as `test:town`.
+
 ## Local development
 
 ```bash

@@ -71,6 +71,13 @@ export class Renderer {
             this.ctx.restore();
         }
 
+        if (world.player && (world.player.magnetTimer > 0 || world.player.invincibleTimer > 0)) {
+            this.ctx.save(); this.ctx.font = 'bold 13px sans-serif'; this.ctx.textAlign = 'center';
+            this.ctx.fillStyle = '#fff3c9'; this.ctx.shadowColor = '#23454c'; this.ctx.shadowBlur = 4;
+            const effects = [world.player.invincibleTimer > 0 ? `✦ ${Math.ceil(world.player.invincibleTimer / 60)}s` : '', world.player.magnetTimer > 0 ? `Magnet ${Math.ceil(world.player.magnetTimer / 60)}s` : ''].filter(Boolean);
+            this.ctx.fillText(effects.join(' · '), width / 2, height - 88); this.ctx.restore();
+        }
+
         // --- LEVEL 9: ATMOSPHERIC OVERLAY (classic only — enhanced has its own storm) ---
         if (!enhanced && currentLevel === 9) {
             this.drawPierAtmosphere(world);

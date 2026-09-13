@@ -7,6 +7,7 @@ import { CutsceneManager } from "./engine/CutsceneManager";
 import { gfxSettings } from "./GfxSettings";
 
 interface GameEngineOptions {
+    onShopUpdate?: () => void;
     onStateChange: (state: GameState, data?: any) => void;
     onScoreUpdate: (bones: number) => void;
     onTimeUpdate: (time: number) => void;
@@ -31,6 +32,7 @@ export class GameEngine {
         
         // Initialize World
         this.world = new World(window.innerWidth, window.innerHeight, {
+            onShopUpdate: options.onShopUpdate,
             onScoreUpdate: options.onScoreUpdate,
             onTimeUpdate: options.onTimeUpdate,
             onLevelComplete: (level, bones) => {
@@ -66,6 +68,8 @@ export class GameEngine {
         this.renderer.resize(w, h);
         this.world.resize(w, h);
     }
+
+    public setDifficulty(difficulty: Difficulty) { this.difficulty = difficulty; }
 
     public startLevel(level: number, difficulty: Difficulty = Difficulty.EASY) {
         this.difficulty = difficulty;
