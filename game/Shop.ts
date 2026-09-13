@@ -1,3 +1,4 @@
+import type { QuestStatus } from './Home';
 import { Entity } from './entities/Entity';
 import { TownPlatform } from './entities/Town';
 import type { Player } from './entities/Player';
@@ -25,6 +26,8 @@ export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox'
 export const isSupply = (id: ShopGood): id is Supply => id === 'shield' || id === 'magnet' || id === 'time';
 
 export class Belongings {
+    public homeUnlocked = false;
+    public quests: Record<string, QuestStatus> = {};
     public slots: (Supply | null)[] = [null, null, null];
     public owned = new Set<Accessory>();
     public equipped = new Set<Accessory>();

@@ -40,11 +40,19 @@ The town exit advances to the backyard; Dev Mode also offers a direct warp to 14
 - **Easy:** fixed fences with raised, narrower tops above a continuous lawn, five hydrants with longer bursts, six ground patrols plus a raccoon on a fence, and a three-hit boss.
 - **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, three faster moving sections, and eight raccoons that telegraph a pounce. The boss needs four hits and throws two arcing trash lids before charging.
 - **Boss:** approaching the arena starts a nine-second cutscene: a trash can rattles, its lid flies off, and Baron von Bins leaps out wearing a top hat. Skip resumes the same run. The level clock, player, hazards, and inventory effects pause throughout the reveal.
-- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. After recovering at either end, he charges back across the arena, so camping beside one endpoint cannot repeatedly stun him. Reposition during the warning, then use the opening after his crash. Successful stomps lift Onyx clear of his body before she bounces. Defeating him lowers the arena gates and opens home. Entering home completes the game.
+- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. After recovering at either end, he charges back across the arena, so camping beside one endpoint cannot repeatedly stun him. Reposition during the warning, then use the opening after his crash. Successful stomps lift Onyx clear of his body before she bounces. Defeating him lowers the arena gates and opens home. Reaching the exit completes the story and unlocks the house. Choose **Go inside · Home** on the victory screen.
 
 Classic and Enhanced share gameplay, with flat versus shaded art, parallax houses and hedges, ringed raccoon tails, metallic trash cans, a backyard melody, a boss theme, and raccoon chatter. Existing shop outfits and supplies work here.
 
 `npm run test:backyard` covers collisions, boss phases and victory, real cutscene pause/resume, sounds, rendering, and full movement-only runs through live hazards and the boss at two screen heights and two jump timings in each difficulty.
+
+## Home and fetch quests (after level 14)
+
+Finish the backyard, then choose **Go inside · Home**. Walk through Onyx’s house with arrows/WASD and press **E** near a dog to talk. Pippin wants his red ball from level 5 (12 bones), Pearl wants her pink shell from level 4 (10 bones), and Biscuit wants his squeaky duck from level 1 (8 bones). Accept a request before searching; touch the glowing item, return home, and talk to its owner for the one-time reward. The travel list includes hints and quest progress.
+
+**Explore old levels** unlocks all 14 levels without Dev Mode. **Return home** is available during a replay and after a failed attempt; completing a replay also leads home. Free travel preserves the chosen difficulty, but Hardcore deaths after finishing the story allow retries. Juniper’s doghouse on the right is always open, with the same stock, wallet, outfits, and three pockets as the secret shops. Home has no countdown or hazards, conversations pause movement, and consumables cannot be wasted there. Quest items use a separate bag.
+
+Home access, quests, bones, and purchases persist within the current journey, including retries and return trips. Starting a new journey or reloading the page resets them. Both Classic and Enhanced graphics and audio are supported. Run `npm run test:home` for quest, reward, travel, non-dev UI, keyboard, and mobile checks.
 
 ## Secret doghouse shops
 

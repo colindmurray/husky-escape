@@ -1,3 +1,4 @@
+import { drawHome } from '../Home';
 import { drawBackyardBackground, drawRaccoonIntro } from './BackyardArt';
 import { BossRaccoon } from '../entities/Backyard';
 
@@ -34,7 +35,9 @@ export class Renderer {
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
-        if (currentLevel === 14) {
+        if (world.isHome) {
+            drawHome(this.ctx, width, height, cameraX);
+        } else if (currentLevel === 14) {
             drawBackyardBackground(this.ctx, width, height, cameraX, cameraY, performance.now() / 1000);
         } else if (currentLevel === 13) {
             drawTownBackground(this.ctx, width, height, cameraX, enhanced, performance.now() / 1000, cameraY);
@@ -49,16 +52,16 @@ export class Renderer {
         // Entities draw in world coords, so a single translate covers them all.
         if (cameraY) this.ctx.translate(0, -cameraY);
         (world as any).props?.forEach?.((pr: any) => pr.draw?.(this.ctx, cameraX));
-        world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
+        if (!world.isHome) world.platforms.forEach(p => p.draw(this.ctx, cameraX, currentLevel));
         world.waters.forEach(w => w.draw(this.ctx, cameraX));
-        if (world.exit) world.exit.draw(this.ctx, cameraX);
+        if (world.exit && !world.isHome) world.exit.draw(this.ctx, cameraX);
         world.collectibles.forEach(c => !c.markedForDeletion && c.draw(this.ctx, cameraX));
         world.enemies.forEach(e => e.draw(this.ctx, cameraX));
         if (world.player) world.player.draw(this.ctx, cameraX, currentLevel);
         this.ctx.restore();
 
         // --- ENHANCED: particles + glow + grade (drawn last, purely cosmetic) ---
-        if (enhanced) {
+        if (enhanced && !world.isHome) {
             this.particles.updateAndDraw(this.ctx, world);
             this.postFX.drawGlows(this.ctx, world);
             this.postFX.apply(this.ctx, world);

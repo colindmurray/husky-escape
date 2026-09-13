@@ -1,4 +1,5 @@
 
+import { HomeUI } from './HomeUI';
 import { ShopUI } from './ShopUI';
 import React, { useEffect, useRef, useState } from 'react';
 import { GameEngine } from './game/GameEngine';
@@ -132,6 +133,7 @@ export default function App() {
     const skipCutscene = () => { engineRef.current?.skipCutscene(); };
 
     const nextLevel = () => {
+        if (engineRef.current?.world.belongings.homeUnlocked) { engineRef.current.goHome(); return; }
         setHuskyWisdom("");
         levelFailuresRef.current = 0;
         levelHistoryRef.current = [];
@@ -148,20 +150,15 @@ export default function App() {
 
     const restartLevel = () => {
         setHuskyWisdom("");
-        // HARDCORE MODE: If you die, you restart at Level 1
-        if (difficulty === Difficulty.HARDCORE && gameState === GameState.GAME_OVER) {
+        // During the story, Hardcore deaths restart the journey. Completed runs unlock free travel.
+        if (difficulty === Difficulty.HARDCORE && gameState === GameState.GAME_OVER && !engineRef.current?.world.belongings.homeUnlocked) {
              levelFailuresRef.current = 0;
              levelHistoryRef.current = [];
              engineRef.current?.startGame(difficulty);
              return;
         }
 
-        if (gameState === GameState.GAME_WON) {
-            levelFailuresRef.current = 0;
-            levelHistoryRef.current = [];
-            engineRef.current?.startGame(difficulty);
-        }
-        else if (modalData.level) {
+        if (modalData.level) {
             engineRef.current?.startLevel(modalData.level, difficulty);
         }
         else {
@@ -192,7 +189,7 @@ export default function App() {
         const isWin = gameState === GameState.GAME_WON;
         const isLevelComplete = gameState === GameState.LEVEL_COMPLETE;
         
-        if (isWin) return { title: "VICTORY!", desc: "You crossed the busy town, reclaimed the backyard, and outsmarted the top-hatted trash-can king. You’re home! Good girl, Onyx!" };
+        if (isWin) return { title: "VICTORY!", desc: "You crossed the busy town, reclaimed the backyard, and outsmarted the top-hatted trash-can king. You’re home! Good girl, Onyx! Go inside to meet your friends, visit Juniper’s shop, and unlock free travel to every level." };
         if (isLevelComplete) {
             const congrats = [
                 "The pound breakout has begun!",
@@ -212,7 +209,7 @@ export default function App() {
             return { title: `ZONE ${level} CLEAR!`, desc: congrats[level-1] || "Great job!" };
         }
         
-        if (difficulty === Difficulty.HARDCORE) {
+        if (difficulty === Difficulty.HARDCORE && !engineRef.current?.world.belongings.homeUnlocked) {
              return { title: "GAME OVER (HARDCORE)", desc: "One mistake is all it takes! Back to the pound with you!" };
         }
         
@@ -261,6 +258,9 @@ export default function App() {
     const modalContent = (gameState === GameState.LEVEL_COMPLETE || gameState === GameState.GAME_OVER || gameState === GameState.GAME_WON) 
         ? getModalContent() : { title: "", desc: "" };
 
+    const homeUnlocked = !!engineRef.current?.world.belongings.homeUnlocked;
+    const goHome = () => { engineRef.current?.goHome(); canvasRef.current?.focus(); };
+
     const LevelSelector = () => (
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
@@ -275,7 +275,7 @@ export default function App() {
     return (
         <div className="relative w-screen h-screen bg-gray-900 overflow-hidden font-sans">
             <canvas ref={canvasRef} tabIndex={0} className="block w-full h-full" />
-            {gameState === GameState.PLAYING && engineRef.current && <ShopUI world={engineRef.current.world} visualMode={visualMode} />}
+            {gameState === GameState.PLAYING && engineRef.current && <><ShopUI world={engineRef.current.world} visualMode={visualMode} /><HomeUI engine={engineRef.current} /></>}
             <div className="absolute inset-0 pointer-events-none flex flex-col justify-between">
                 <div className="p-5 flex justify-between items-start w-full z-50 text-white pointer-events-none">
                     {(gameState === GameState.PLAYING || gameState === GameState.LEVEL_COMPLETE) ? (
@@ -284,7 +284,7 @@ export default function App() {
                             <span>🍖 {bones}</span>
                         </div>
                     ) : <div></div>}
-                    {(gameState === GameState.PLAYING) && (
+                    {(gameState === GameState.PLAYING && !engineRef.current?.world.isHome) && (
                         <div className="absolute top-5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
                             <span className="text-xs uppercase tracking-[0.3em] font-bold text-gray-400">Time</span>
                             <span className={`text-4xl drop-shadow-lg font-bold tabular-nums ${timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-white'}`}>{timeLeft}</span>
@@ -363,6 +363,7 @@ export default function App() {
 
                 {gameState === GameState.INTRO && (
                     <div className={`absolute inset-0 text-white flex flex-col justify-center items-center z-30 pointer-events-auto ${visualMode === 'enhanced' ? 'bg-slate-950/55 backdrop-blur-[1.5px]' : 'bg-slate-800'}`}>
+                        {homeUnlocked && <button onClick={goHome} className="bg-emerald-700 text-white rounded-lg py-3 px-8 mb-5">Return home</button>}
                         <h1 className="text-7xl text-blue-400 mb-6 font-bold drop-shadow-2xl">Husky Escape</h1>
                         {!modalData.showMenu ? ( <button onClick={startStory} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Start Journey</button> ) : (
                             <div className="bg-black/80 p-10 rounded-2xl border-4 border-blue-500 text-center scale-up max-w-lg">
@@ -407,7 +408,8 @@ export default function App() {
                                 )}
                             </div>
                             <div className="flex flex-col gap-3 w-full">
-                                {gameState === GameState.LEVEL_COMPLETE ? ( <button onClick={nextLevel} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Next Area</button> ) : ( <button onClick={restartLevel} className={`hover:brightness-110 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150 ${difficulty === Difficulty.HARDCORE ? 'bg-red-600' : 'bg-blue-500'}`}>{gameState === GameState.GAME_WON ? "Start Over" : (difficulty === Difficulty.HARDCORE ? "Restart Game (Hardcore)" : "Try Again")}</button> )}
+                                {gameState === GameState.LEVEL_COMPLETE ? ( <button onClick={nextLevel} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">{homeUnlocked ? "Back home" : "Next Area"}</button> ) : gameState === GameState.GAME_WON ? null : ( <button onClick={restartLevel} className={`hover:brightness-110 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150 ${difficulty === Difficulty.HARDCORE ? 'bg-red-600' : 'bg-blue-500'}`}>{difficulty === Difficulty.HARDCORE && !homeUnlocked ? "Restart Game (Hardcore)" : "Try Again"}</button> )}
+                                {homeUnlocked && gameState !== GameState.LEVEL_COMPLETE && <button onClick={goHome} className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg text-xl">{gameState === GameState.GAME_WON ? 'Go inside · Home' : 'Return home'}</button>}
                                 <button onClick={() => setGameState(GameState.INTRO)} className="text-sm text-gray-500 hover:text-white transition">Main Menu</button>
                             </div>
                             
