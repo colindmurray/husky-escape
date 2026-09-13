@@ -6,6 +6,8 @@
   "scripts": {
     "cloudflare:mcp:login": "mcp-remote https://mcp.cloudflare.com/mcp 19987 --host 127.0.0.1 --auth-timeout 300 --transport http-only --static-oauth-client-metadata '{\"scope\":\"page.read page.write pages.metadata_read\"}'",
     "dev": "vite",
+    "test:level-export": "node scripts/test-level-export.mjs",
+    "export:levels": "node scripts/export-levels.mjs",
     "build": "vite build",
     "test:house-floors": "node scripts/test-house-floors.mjs",
     "test:home": "node scripts/test-home.mjs",
