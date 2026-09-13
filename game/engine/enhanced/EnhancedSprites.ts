@@ -565,26 +565,31 @@ export interface HuskyOpts {
     grounded: boolean;
     level: number;
     t: number; // seconds
+    skin?: 'cat' | 'fox';
+    classic?: boolean;
 }
 
 /**
- * Fully redrawn husky for Enhanced mode (drawn facing right; the caller flips
- * via transform for left-facing). Adds run cycle, tail wag, ear wiggle, blink,
- * squash & stretch, and level-appropriate gear — same hitbox, zero gameplay
- * impact.
+ * Onyx and shop skins share animation and level gear, facing right.
+ * Classic skins use flat colors and a simpler trot; the caller handles facing.
  */
 export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, o: HuskyOpts) {
     const { velX, velY, grounded, level, t } = o;
+    const cat = o.skin === 'cat', fox = o.skin === 'fox';
+    const fur = cat ? '#303441' : fox ? '#cc682e' : '#8a99a5';
+    const light = cat ? '#596071' : fox ? '#f4ac58' : '#bcc8d0';
+    const dark = cat ? '#202431' : fox ? '#9f4629' : '#75858f';
+    const cream = cat ? '#f5efe4' : fox ? '#fff0cf' : '#f2f5f7';
     const speed = Math.abs(velX);
     const moving = grounded && speed > 0.5;
     const runPhase = t * (7 + speed * 1.4);
     const legSwing = moving ? Math.sin(runPhase) : 0;
-    const bob = moving ? Math.abs(Math.sin(runPhase)) * 1.8 : 0;
+    const bob = moving && !o.classic ? Math.abs(Math.sin(runPhase)) * 1.8 : 0;
 
     ctx.save();
 
     // Squash & stretch anchored at the feet
-    const stretch = clamp(-velY * 0.014, -0.06, 0.12);
+    const stretch = o.classic ? 0 : clamp(-velY * 0.014, -0.06, 0.12);
     ctx.translate(x + 20, y + 40);
     ctx.scale(1 - stretch * 0.45, 1 + stretch);
     ctx.translate(-(x + 20), -(y + 40));
@@ -593,35 +598,45 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
     // ---- Tail (behind everything), wagging harder the faster he runs ----
     const wag = Math.sin(t * 9) * clamp(speed * 1.1 + 2, 2, 8);
     ctx.lineCap = 'round';
-    const tailGrad = ctx.createLinearGradient(x + 8, y + 24, x - 8, y + 10);
-    tailGrad.addColorStop(0, '#8a99a5');
-    tailGrad.addColorStop(1, '#b8c4cc');
-    ctx.strokeStyle = tailGrad;
-    ctx.lineWidth = 6.5;
-    ctx.beginPath();
-    ctx.moveTo(x + 10, y + 25);
-    ctx.quadraticCurveTo(x - 2, y + 22 + wag * 0.25, x - 8 - wag * 0.35, y + 12 + wag * 0.2);
-    ctx.stroke();
-    // white tail tip
-    ctx.strokeStyle = '#eef3f6';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(x - 5 - wag * 0.28, y + 15 + wag * 0.16);
-    ctx.lineTo(x - 8 - wag * 0.35, y + 12 + wag * 0.2);
-    ctx.stroke();
+    if (cat) {
+        ctx.strokeStyle = fur; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(x + 8, y + 27); ctx.bezierCurveTo(x - 13, y + 29, x - 13, y - 3 + wag, x - 5, y + 2 + wag); ctx.stroke();
+    } else if (fox) {
+        ctx.fillStyle = fur;
+        ctx.beginPath(); ctx.moveTo(x + 10, y + 24); ctx.quadraticCurveTo(x - 4, y + 4 + wag, x - 23, y + 15 + wag); ctx.quadraticCurveTo(x - 10, y + 40, x + 10, y + 30); ctx.fill();
+        ctx.fillStyle = cream;
+        ctx.beginPath(); ctx.moveTo(x - 23, y + 15 + wag); ctx.lineTo(x - 10, y + 17 + wag * .6); ctx.lineTo(x - 12, y + 23); ctx.lineTo(x - 7, y + 25); ctx.lineTo(x - 11, y + 29); ctx.quadraticCurveTo(x - 19, y + 25, x - 23, y + 15 + wag); ctx.fill();
+    } else {
+        const tailGrad = ctx.createLinearGradient(x + 8, y + 24, x - 8, y + 10);
+        tailGrad.addColorStop(0, fur);
+        tailGrad.addColorStop(1, '#b8c4cc');
+        ctx.strokeStyle = tailGrad;
+        ctx.lineWidth = 6.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 25);
+        ctx.quadraticCurveTo(x - 2, y + 22 + wag * 0.25, x - 8 - wag * 0.35, y + 12 + wag * 0.2);
+        ctx.stroke();
+        // white tail tip
+        ctx.strokeStyle = '#eef3f6';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(x - 5 - wag * 0.28, y + 15 + wag * 0.16);
+        ctx.lineTo(x - 8 - wag * 0.35, y + 12 + wag * 0.2);
+        ctx.stroke();
+    }
 
     // ---- Back haunch ----
     const body = ctx.createLinearGradient(0, y + 12, 0, y + 38);
-    body.addColorStop(0, '#aebcc6');
-    body.addColorStop(0.55, '#93a3ad');
-    body.addColorStop(1, '#75858f');
-    ctx.fillStyle = body;
+    body.addColorStop(0, o.skin ? light : '#aebcc6');
+    body.addColorStop(0.55, o.skin ? fur : '#93a3ad');
+    body.addColorStop(1, dark);
+    ctx.fillStyle = o.classic ? fur : body;
     ctx.beginPath();
     ctx.ellipse(x + 17, y + 26, 15.5, 12.5, 0, 0, TAU);
     ctx.fill();
 
     // ---- Belly patch ----
-    ctx.fillStyle = '#f2f5f7';
+    ctx.fillStyle = cream;
     ctx.beginPath();
     ctx.ellipse(x + 21, y + 30, 10, 7, 0, 0, TAU);
     ctx.fill();
@@ -656,10 +671,10 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
             ctx.fill();
         };
         // Far legs slightly darker
-        drawLeg(9, -1, '#7c8c96');
-        drawLeg(31, 1, '#7c8c96');
-        drawLeg(13, 1, '#98a8b2');
-        drawLeg(27, -1, '#98a8b2');
+        if (!o.classic) drawLeg(9, -1, fox ? '#3d3031' : cat ? dark : '#7c8c96');
+        if (!o.classic) drawLeg(31, 1, fox ? '#3d3031' : cat ? dark : '#7c8c96');
+        drawLeg(13, 1, cat ? cream : fox ? '#493333' : '#98a8b2');
+        drawLeg(27, -1, cat ? cream : fox ? '#493333' : '#98a8b2');
     }
 
     // ---- Ski (level 6): drawn under the paws ----
@@ -675,7 +690,7 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
     }
 
     // ---- Chest fluff zigzag ----
-    ctx.fillStyle = '#f2f5f7';
+    ctx.fillStyle = cream;
     ctx.beginPath();
     ctx.moveTo(x + 30, y + 20);
     ctx.lineTo(x + 34, y + 23);
@@ -687,27 +702,27 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
 
     // ---- Head ----
     const head = ctx.createRadialGradient(x + 28, y + 6, 3, x + 32, y + 11, 13);
-    head.addColorStop(0, '#bcc8d0');
-    head.addColorStop(1, '#8a99a5');
-    ctx.fillStyle = head;
+    head.addColorStop(0, light);
+    head.addColorStop(1, fur);
+    ctx.fillStyle = o.classic ? fur : head;
     ctx.beginPath();
     ctx.arc(x + 31.5, y + 11, 11.5, 0, TAU);
     ctx.fill();
 
     // Grey cap marking over top of head
-    ctx.fillStyle = '#77878f';
+    ctx.fillStyle = o.skin ? dark : '#77878f';
     ctx.beginPath();
     ctx.ellipse(x + 29.5, y + 4.5, 9, 5.5, -0.15, Math.PI, TAU);
     ctx.fill();
 
     // White face mask / muzzle
-    ctx.fillStyle = '#f2f5f7';
+    ctx.fillStyle = cream;
     ctx.beginPath();
-    ctx.ellipse(x + 36, y + 15, 6.4, 5, 0.1, 0, TAU);
+    ctx.ellipse(x + 36, y + 15, cat ? 5 : fox ? 8 : 6.4, cat ? 4 : 5, 0.1, 0, TAU);
     ctx.fill();
 
     // Nose
-    ctx.fillStyle = '#232a33';
+    ctx.fillStyle = cat ? '#db91a6' : '#232a33';
     ctx.beginPath();
     ctx.moveTo(x + 41.5, y + 12.4);
     ctx.quadraticCurveTo(x + 43.4, y + 13.6, x + 41.6, y + 15.2);
@@ -726,7 +741,7 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
     const blinkT = t % 4.6;
     const eyeOpen = blinkT > 0.14;
     if (eyeOpen) {
-        ctx.fillStyle = '#3d9be9';
+        ctx.fillStyle = cat ? '#a4d67c' : fox ? '#edbc4e' : '#3d9be9';
         ctx.beginPath();
         ctx.ellipse(x + 34.5, y + 9, 2.5, 2.9, 0, 0, TAU);
         ctx.fill();
@@ -747,13 +762,21 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
         ctx.stroke();
     }
 
+    if (cat) {
+        ctx.strokeStyle = '#e5e2d6'; ctx.lineWidth = o.classic ? 1 : .8;
+        for (const offset of [-3, 1, 4]) {
+            ctx.beginPath(); ctx.moveTo(x + 37, y + 15); ctx.lineTo(x + 48, y + 14 + offset); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 33, y + 15); ctx.lineTo(x + 22, y + 14 + offset); ctx.stroke();
+        }
+    }
+
     // ---- Ears with inner pink and a subtle running wiggle ----
     const earWiggle = moving ? Math.sin(runPhase * 2) * 0.06 : Math.sin(t * 1.6) * 0.02;
     for (const [ex, baseW, tilt] of [[26, 5, -1], [33, 5.5, 0]] as const) {
         ctx.save();
         ctx.translate(x + ex, y + 4);
         ctx.rotate(tilt * 0.18 + earWiggle);
-        ctx.fillStyle = '#8a99a5';
+        ctx.fillStyle = fur;
         ctx.beginPath();
         ctx.moveTo(-baseW, 1);
         ctx.lineTo(0, -11);

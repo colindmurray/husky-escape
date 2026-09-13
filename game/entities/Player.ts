@@ -1,4 +1,5 @@
 
+import { drawAccessories, type Accessory } from "../Shop";
 import { Entity, GRAVITY, FRICTION, JUMP_FORCE } from "./Entity";
 import { InputState, SoundType } from "../../types";
 import { CollapsingAwning, TownPlatform } from "./Town";
@@ -30,6 +31,8 @@ export class Player extends Entity {
     // Zone 11: neon dash pads grant a short friction-free sprint
     public dashFrames = 0;
 
+    public accessories = new Set<Accessory>();
+    public magnetTimer = 0;
     public hasBandana = false;
     public townBumpFrames = 0;
 
@@ -44,6 +47,7 @@ export class Player extends Entity {
         
         const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
+        if (this.magnetTimer > 0) this.magnetTimer--;
         if (this.townBumpFrames > 0) this.townBumpFrames--;
 
         // --- LEVEL 8: UNDERWATER PHYSICS ---
@@ -322,8 +326,8 @@ export class Player extends Entity {
             ctx.translate(-(x + this.w / 2), -y);
         }
 
-        // Enhanced mode: fully redrawn animated husky (purely visual)
-        if (gfxSettings.visualMode === 'enhanced') {
+        const skin = this.accessories.has('cat') ? 'cat' : this.accessories.has('fox') ? 'fox' : undefined;
+        if (gfxSettings.visualMode === 'enhanced' || skin) {
             if (this.hasUmbrella && this.facingRight) this.drawHeldUmbrella(ctx, x, y);
             drawHuskyEnhanced(ctx, x, y, {
                 velX: this.velX,
@@ -331,8 +335,11 @@ export class Player extends Entity {
                 grounded: this.grounded,
                 level: currentLevel,
                 t: Date.now() / 1000,
+                skin,
+                classic: gfxSettings.visualMode === 'classic',
             });
             if (this.hasUmbrella && !this.facingRight) this.drawHeldUmbrella(ctx, x, y);
+            drawAccessories(ctx, x, y, this.accessories);
             if (this.hasBandana) this.drawBandana(ctx, x, y);
             ctx.restore();
             return;
@@ -417,6 +424,7 @@ export class Player extends Entity {
              this.drawHeldUmbrella(ctx, x, y);
         }
 
+        drawAccessories(ctx, x, y, this.accessories);
         if (this.hasBandana) this.drawBandana(ctx, x, y);
         ctx.restore();
     }

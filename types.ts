@@ -70,6 +70,11 @@ export interface GameStats {
 }
 
 export interface InputState {
+    KeyE?: boolean;
+    Digit1?: boolean;
+    Digit2?: boolean;
+    Digit3?: boolean;
+    Escape?: boolean;
     ArrowUp: boolean;
     ArrowDown: boolean;
     ArrowLeft: boolean;

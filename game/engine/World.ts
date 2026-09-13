@@ -1,4 +1,5 @@
 
+import { addSecretShop, Belongings, SHOP_GOODS, isSupply, type ShopGood, type SecretDoghouse } from "../Shop";
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
 import { MarchingBand, TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
@@ -7,6 +8,7 @@ import { audioManager } from "../Audio";
 import { SoundType, Difficulty } from "../../types";
 
 export interface WorldEvents {
+    onShopUpdate?: () => void;
     onScoreUpdate: (bones: number) => void;
     onTimeUpdate: (time: number) => void;
     onLevelComplete: (level: number, bones: number) => void;
@@ -40,6 +42,12 @@ export class World {
     public exit: Exit | null = null;
     public difficulty: Difficulty = Difficulty.EASY;
 
+    public belongings = new Belongings();
+    public shopDoor: SecretDoghouse | null = null;
+    public shopOpen = false;
+    public shopMessage = '';
+    private shopKeyHeld: Record<string, boolean> = {};
+    private boneIds = new Map<Collectible, string>();
     private events: WorldEvents;
 
     constructor(width: number, height: number, events: WorldEvents) {
@@ -56,11 +64,21 @@ export class World {
     }
 
     public loadLevel(level: number, persistBones: boolean = true, difficulty: Difficulty = Difficulty.EASY) {
+        const newJourney = !persistBones || !this.player;
+        if (newJourney) this.belongings = new Belongings();
+        this.shopOpen = false; this.shopMessage = ''; this.shopKeyHeld = {}; inputManager.clear();
         this.ended = false;
         this.currentLevel = level;
         this.difficulty = difficulty;
         
         const data = initLevel(level, this.height, difficulty);
+        this.shopDoor = addSecretShop(data, level, this.height, difficulty);
+        if (this.shopDoor && this.belongings.unlockedShops.has(level)) {
+            this.shopDoor.unlocked = true; this.shopDoor.seals.fill(true);
+        }
+        this.boneIds.clear();
+        data.collectibles.forEach((bone, i) => this.boneIds.set(bone, `${level}:${i}`));
+        data.collectibles = data.collectibles.filter(bone => !this.belongings.collectedBones.has(this.boneIds.get(bone)!));
         this.platforms = data.platforms;
         this.enemies = data.enemies;
         this.collectibles = data.collectibles;
@@ -78,6 +96,7 @@ export class World {
         const currentBones = this.player && persistBones ? this.player.bonesCollected : 0;
         this.player = new Player(data.playerStart.x, data.playerStart.y);
         this.player.bonesCollected = currentBones;
+        this.player.accessories = this.belongings.equipped;
         this.events.onScoreUpdate(currentBones);
 
         this.cameraX = 0;
@@ -100,10 +119,21 @@ export class World {
             case 13: track = SoundType.THEME_TOWN; break;
         }
         audioManager.playMusic(track);
+        this.events.onShopUpdate?.();
     }
 
     public update() {
         if (this.ended || !this.player || !this.exit) return;
+
+        for (const key of ['KeyE', 'Escape', 'Digit1', 'Digit2', 'Digit3'] as const) {
+            const pressed = !!inputManager.keys[key], justPressed = inputManager.consumePress(key) || (pressed && !this.shopKeyHeld[key]);
+            this.shopKeyHeld[key] = pressed;
+            if (!justPressed) continue;
+            if (key === 'KeyE') this.shopOpen ? this.closeShop() : this.openShop();
+            else if (key === 'Escape' && this.shopOpen) this.closeShop();
+            else if (key.startsWith('Digit') && !this.shopOpen) this.useInventorySlot(Number(key.at(-1)) - 1);
+        }
+        if (this.shopOpen) return;
 
         // Timer
         this.frameCounter++;
@@ -124,9 +154,13 @@ export class World {
                 p.update();
             }
         });
-        this.props.forEach(pr => pr.update(this.player));
+        this.props.forEach(pr => { if (pr !== this.shopDoor) pr.update(this.player); });
         this.waters.forEach(w => w.update());
         this.player.update(this.platforms, inputManager.keys, this.height, this.currentLevel);
+        const wasNear = this.shopDoor?.nearby, wasUnlocked = this.shopDoor?.unlocked;
+        this.shopDoor?.update(this.player);
+        if (this.shopDoor?.unlocked) this.belongings.unlockedShops.add(this.currentLevel);
+        if (wasNear !== this.shopDoor?.nearby || wasUnlocked !== this.shopDoor?.unlocked) this.events.onShopUpdate?.();
 
         if (this.currentLevel === 8 && this.player.ridingShark && this.player.ridingShark.isGolden) {
             audioManager.playMusic(SoundType.THEME_GOLDEN_SHARK);
@@ -296,6 +330,10 @@ export class World {
         // Collectibles
         this.collectibles.forEach(bone => {
             bone.update();
+            if (this.player && this.player.magnetTimer > 0 && Math.hypot(bone.x - this.player.x, bone.y - this.player.y) < 165) {
+                bone.x += (this.player.x + 10 - bone.x) * 0.15;
+                bone.y += (this.player.y + 15 - bone.y) * 0.15;
+            }
             if (this.player && !bone.markedForDeletion && 
                 this.player.x < bone.x + bone.w &&
                 this.player.x + this.player.w > bone.x &&
@@ -303,6 +341,8 @@ export class World {
                 this.player.y + this.player.h > bone.y
             ) {
                 bone.markedForDeletion = true;
+                const id = this.boneIds.get(bone);
+                if (id) this.belongings.collectedBones.add(id);
                 this.player.bonesCollected++;
                 this.events.onScoreUpdate(this.player.bonesCollected);
                 audioManager.playSFX(SoundType.COLLECT);
@@ -328,6 +368,51 @@ export class World {
         this.props = this.props.filter(pr => !pr.markedForDeletion);
         this.enemies = this.enemies.filter(e => !e.markedForDeletion);
         this.collectibles = this.collectibles.filter(c => !c.markedForDeletion);
+    }
+
+    public openShop() {
+        if (this.ended || !this.player || !this.shopDoor?.unlocked || !this.shopDoor.nearby) return false;
+        this.shopOpen = true; this.shopMessage = ''; this.player.velX = 0; inputManager.clear();
+        audioManager.playSFX(SoundType.COLLECT); this.events.onShopUpdate?.(); return true;
+    }
+
+    public closeShop() {
+        this.shopOpen = false; inputManager.clear(); this.events.onShopUpdate?.();
+    }
+
+    public buyGood(id: ShopGood) {
+        if (!this.shopOpen || this.ended || !this.player || !Object.hasOwn(SHOP_GOODS, id)) return false;
+        const good = SHOP_GOODS[id];
+        if (!isSupply(id) && this.belongings.owned.has(id)) {
+            this.belongings.toggleAccessory(id);
+            this.shopMessage = this.belongings.equipped.has(id) ? `${good.name} equipped.` : `${good.name} put away.`;
+        } else {
+            const slot = this.belongings.slots.indexOf(null);
+            if (this.player.bonesCollected < good.price || (isSupply(id) && slot === -1)) {
+                this.shopMessage = this.player.bonesCollected < good.price ? 'A few more bones first!' : 'Your three pockets are full. Save these treats for the trail.';
+                this.events.onShopUpdate?.(); return false;
+            }
+            this.player.bonesCollected -= good.price;
+            if (isSupply(id)) this.belongings.slots[slot] = id;
+            else { this.belongings.owned.add(id); this.belongings.toggleAccessory(id); }
+            this.shopMessage = isSupply(id) ? `${good.name} tucked into pocket ${slot + 1}.` : `${good.name} is yours!`;
+            audioManager.playSFX(SoundType.COLLECT); this.events.onScoreUpdate(this.player.bonesCollected);
+        }
+        this.events.onShopUpdate?.(); return true;
+    }
+
+    public useInventorySlot(index: number) {
+        if (this.ended || this.shopOpen || !this.player || !Number.isInteger(index) || index < 0 || index > 2) return false;
+        const item = this.belongings.slots[index]; if (!item) return false;
+        if (item === 'shield') {
+            if (this.player.invincibleTimer > 0) return false;
+            this.player.invincibleTimer = 300;
+        } else if (item === 'magnet') {
+            if (this.player.magnetTimer > 0) return false;
+            this.player.magnetTimer = 600;
+        } else { this.timeLeft += 30; this.events.onTimeUpdate(this.timeLeft); }
+        this.belongings.slots[index] = null;
+        audioManager.playSFX(SoundType.BOOST); this.events.onShopUpdate?.(); return true;
     }
 
     /**
