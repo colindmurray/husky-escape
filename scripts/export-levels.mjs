@@ -7,8 +7,9 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const NAMES = ['The Pound', 'Pound Escape', 'Dark Forest', 'The Beach', 'The Mountains', 'Ski Slopes', 'The Chase', 'Underwater Reef', 'Stormy Pier', 'Construction Site', 'Neon Metropolis', 'The Warm Bakery', 'Market Day', 'The Backyard', 'Home', 'Custom Course'];
-const HELP = `Local level export - nothing is added to the published game.
+import { NAMES, slicesFor, printBooklet } from '../game/printing/booklet.mjs';
+export { slicesFor, printBooklet };
+const HELP = `Local batch level exporter - generated files stay on this computer.
 
 npm run export:levels -- --level 14 --difficulty both
 
@@ -51,25 +52,6 @@ export function optionsFrom(argv) {
     if (result.overlap >= Math.min(result.sliceWidth, result.sliceHeight)) throw Error('--overlap must be smaller than each slice dimension.');
     if (v.region) { const [x, y, width, height, ...extra] = v.region.split(',').map(Number); if (extra.length || ![x, y, width, height].every(Number.isInteger) || width <= 0 || height <= 0) throw Error('--region must be x,y,width,height with positive dimensions.'); result.region = { x, y, width, height }; }
     return result;
-}
-
-export function slicesFor(rect, width, height, overlap) {
-    const positions = (length, span) => {
-        if (length <= span) return [0];
-        const count = Math.ceil((length - span) / (span - overlap)) + 1;
-        return Array.from({ length: count }, (_, i) => Math.round(i * (length - span) / (count - 1)));
-    };
-    return positions(rect.height, height).flatMap((y, row) => positions(rect.width, width).map((x, column) => ({ id: `R${row + 1}-C${column + 1}`, row: row + 1, column: column + 1, x: rect.x + x, y: rect.y + y, width: Math.min(width, rect.width), height: Math.min(height, rect.height) })));
-}
-const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-export function printBooklet(meta, images, paper) {
-    const label = `${meta.name} - ${meta.difficulty} - ${meta.graphics}`;
-    const pageWidth = paper === 'a4' ? '297mm' : '11in', pageHeight = paper === 'a4' ? '210mm' : '8.5in';
-    const pages = [{ id: 'Overview', rect: meta.region, image: images.overview }, ...meta.slices.map((s, i) => ({ id: s.id, rect: s, image: images.sheets[i] }))];
-    return `<!doctype html><html><head><meta charset="utf-8"><title>${escape(label)} - drawing pack</title><style>
-    @page{size:${pageWidth} ${pageHeight};margin:0}*{box-sizing:border-box}body{margin:0;background:#dce2e5;font:12px Arial,sans-serif;color:#253943}.page{width:${pageWidth};height:${pageHeight};padding:.35in .45in;background:white;break-after:page;display:flex;flex-direction:column;gap:8px;overflow:hidden}.page:last-child{break-after:auto}header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #668579;padding-bottom:8px}h1{font-size:20px;margin:0 0 5px}p{margin:4px 0}.code{font-size:21px;font-weight:bold;text-align:right}.sub{font-size:11px;color:#53666c}.map{height:4.8in;flex-shrink:0;border:1px solid #a6b3b5;display:flex;align-items:center;justify-content:center;background:white}.map img{max-width:100%;max-height:100%;object-fit:contain}.notes{flex:1;min-height:.7in;background:repeating-linear-gradient(white 0,white 23px,#dde2e3 23px,#dde2e3 24px);padding-top:4px}footer{display:flex;justify-content:space-between;font-size:10px;color:#57676e}.guide{font-size:12px}.toolbar{padding:18px;text-align:center}.toolbar button{padding:10px 20px}@media print{body{background:white}.toolbar{display:none}}@media screen{.page{margin:16px auto;box-shadow:0 2px 12px #4563}}
-    </style></head><body><div class="toolbar"><button onclick="window.print()">Print drawing pack</button><p>Print landscape at 100% / actual size. Pages include their own margins.</p></div>${pages.map((page, i) => `<section class="page"><header><div><h1>${escape(label)}</h1><div class="sub">Level ${meta.level}${meta.level === 15 ? ` / ${escape(meta.floor)}` : ''} | ${meta.packId} | revision ${escape(meta.revision.short)}${meta.revision.dirty ? ' + local edits' : ''}</div></div><div class="code">${page.id}<p class="sub">Page ${i + 1} of ${pages.length}</p></div></header><p class="sub">World X ${page.rect.x} to ${page.rect.x + page.rect.width} | Y ${page.rect.y} to ${page.rect.y + page.rect.height} | grid = 100 game pixels</p><div class="map"><img src="data:image/png;base64,${page.image}" alt="${escape(label)} ${page.id}"></div><p class="guide">${i === 0 ? 'Start with this map, then use the numbered close-ups. Draw new platforms, circle changes, or cross things out. Neighboring sheets overlap.' : 'Draw on the picture. Add arrows and notes here: what should happen, and what should Onyx do?'}</p><div class="notes">Name: ____________________ &nbsp; My idea: __________________________________________________________</div><footer><span>Keep the page code visible when you photograph or scan your drawing.</span><span>Static layout; moving hazards shown in one pose.</span></footer></section>`).join('')}</body></html>`;
 }
 
 export async function exportLevels(options) {

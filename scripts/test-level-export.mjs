@@ -71,8 +71,8 @@ try {
     const buildDir = path.join(folder, 'build');
     execFileSync(process.execPath, [path.join(ROOT, 'node_modules/vite/bin/vite.js'), 'build', '--outDir', buildDir], { cwd: ROOT, stdio: 'pipe' });
     for (const name of await readdir(path.join(buildDir, 'assets'))) if (name.endsWith('.js')) {
-        assert(!/levelExport|__local-level-export|slicesFor/.test(await readFile(path.join(buildDir, 'assets', name), 'utf8')), 'Local export code must not appear in the production JavaScript');
+        assert(!/__local-level-export|node:child_process|exportLevels/.test(await readFile(path.join(buildDir, 'assets', name), 'utf8')), 'Node-only batch tooling must not appear in the production JavaScript');
     }
     assert(!(await readdir(buildDir)).some(name => ['scripts', 'output', 'docs'].includes(name)), 'Tooling and print packs must stay outside deployable output');
-    console.log('PASS: option validation, complete overlapping coverage, all 56 level/difficulty/graphics variants, vertical levels, cropped-region pixel equality, letter/A4 print layout, house/custom levels, production exclusion, and failure cleanup.');
+    console.log('PASS: option validation, complete overlapping coverage, all 56 level/difficulty/graphics variants, vertical levels, cropped-region pixel equality, letter/A4 print layout, house/custom levels, batch-tool production exclusion, and failure cleanup.');
 } finally { await browser?.close(); await rm(folder, { recursive: true, force: true }); }

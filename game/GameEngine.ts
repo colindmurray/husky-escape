@@ -28,6 +28,12 @@ export class GameEngine {
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
     private isLoopRunning = false;
+    private printPaused = false;
+
+    public setPrintPaused(paused: boolean) {
+        this.printPaused = paused;
+        this.cutsceneManager.setPaused(paused);
+    }
     private practiceSession: { belongings: Belongings; bones: number; difficulty: Difficulty; level: number } | null = null;
 
     constructor(canvas: HTMLCanvasElement, options: GameEngineOptions) {
@@ -244,6 +250,7 @@ export class GameEngine {
         if (this.frameId) cancelAnimationFrame(this.frameId);
         const loop = () => {
             if (!this.isLoopRunning) return;
+            if (this.printPaused) { this.frameId = requestAnimationFrame(loop); return; }
             if (this.gameState === GameState.PLAYING) {
                 this.world.update();
                 this.renderer.drawGame(this.world);
