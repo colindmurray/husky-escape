@@ -49,6 +49,7 @@ const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
     public homeUnlocked = false;
+    public houseIntroSeen = false;
     public companions = new Set<string>();
     public quests: Record<string, QuestStatus> = {};
     public slots: (Supply | null)[] = [null, null, null];

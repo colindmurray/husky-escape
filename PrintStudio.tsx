@@ -9,7 +9,7 @@ import { Difficulty } from './types';
 import type { HomeFloor } from './game/Home';
 
 declare const __BUILD_REVISION__: string;
-const STORIES: [CutsceneType, string][] = [['intro', 'Onyx’s story'], ['pound_escape', 'Escape from the pound'], ['chase', 'The chase'], ['underwater_intro', 'Into the ocean'], ['pier_intro', 'The stormy pier'], ['neon_intro', 'City lights'], ['bakery_intro', 'The warm bakery'], ['town_intro', 'Market day'], ['raccoon_intro', 'Baron von Bins reveal'], ['homecoming', 'Home with your owner']];
+const STORIES: [CutsceneType, string][] = [['intro', 'Onyx’s story'], ['pound_escape', 'Escape from the pound'], ['chase', 'The chase'], ['underwater_intro', 'Into the ocean'], ['pier_intro', 'The stormy pier'], ['neon_intro', 'City lights'], ['bakery_intro', 'The warm bakery'], ['town_intro', 'Market day'], ['raccoon_intro', 'Baron von Bins reveal'], ['homecoming', 'Home with your owner'], ['house_chase', 'Samwise’s great escape']];
 const params = new URLSearchParams(location.search);
 const levelParam = Number(params.get('level') || 1);
 
@@ -17,7 +17,7 @@ export default function PrintStudio() {
     const [level, setLevel] = useState(Number.isInteger(levelParam) && levelParam >= 1 && levelParam <= 16 ? levelParam : 1);
     const [difficulty, setDifficulty] = useState<Difficulty>(Object.values(Difficulty).includes(params.get('difficulty') as Difficulty) ? params.get('difficulty') as Difficulty : Difficulty.EASY);
     const [graphics, setGraphics] = useState<PresentationMode>(params.get('graphics') === 'classic' ? 'classic' : 'enhanced');
-    const [floor, setFloor] = useState<HomeFloor>(['ground', 'basement', 'upstairs', 'kitchen', 'bedroom'].includes(params.get('floor') || '') ? params.get('floor') as HomeFloor : 'ground');
+    const [floor, setFloor] = useState<HomeFloor>(['ground', 'basement', 'upstairs', 'kitchen', 'bedroom', 'sunroom', 'attic'].includes(params.get('floor') || '') ? params.get('floor') as HomeFloor : 'ground');
     const [subject, setSubject] = useState('level');
     const [story, setStory] = useState<CutsceneType>('intro');
     const [layout, setLayout] = useState('both');
@@ -49,7 +49,7 @@ export default function PrintStudio() {
                 if (layout !== 'slices') pages.push({ id: 'Overview', rect: data.bounds, image: capture(data.bounds, kind, layout === 'both' ? slices : []) });
                 if (layout !== 'map') for (const slice of slices) pages.push({ id: slice.id, rect: slice, image: capture(slice, kind) });
             } else {
-                meta.level = ({ intro: 1, pound_escape: 3, chase: 7, underwater_intro: 8, pier_intro: 9, neon_intro: 11, bakery_intro: 12, town_intro: 13, raccoon_intro: 14, homecoming: 14 })[story];
+                meta.level = ({ intro: 1, pound_escape: 3, chase: 7, underwater_intro: 8, pier_intro: 9, neon_intro: 11, bakery_intro: 12, town_intro: 13, raccoon_intro: 14, homecoming: 14, house_chase: 15 })[story];
                 meta.name = STORIES.find(([id]) => id === story)![1];
                 meta.packId += ` / ${story}`;
                 gfxSettings.visualMode = graphics;
@@ -89,7 +89,7 @@ export default function PrintStudio() {
             <label>What to print<select aria-label="What to print" value={subject} onChange={e => change(() => setSubject(e.target.value))}><option value="level">Level maps</option><option value="story">Cutscene storyboard</option></select></label>
             {subject === 'level' ? <>
                 <label>Level<select aria-label="Level" value={level} onChange={e => change(() => setLevel(Number(e.target.value)))}>{NAMES.map((name, i) => <option key={name} value={i + 1}>{i + 1} · {name}</option>)}</select></label>
-                {level === 15 && <label>House floor<select aria-label="House floor" value={floor} onChange={e => change(() => setFloor(e.target.value as HomeFloor))}><option value="ground">Ground floor</option><option value="basement">Basement</option><option value="upstairs">Second floor</option><option value="kitchen">Kitchen</option><option value="bedroom">Bedroom</option></select></label>}
+                {level === 15 && <label>House floor<select aria-label="House floor" value={floor} onChange={e => change(() => setFloor(e.target.value as HomeFloor))}><option value="ground">Ground floor</option><option value="basement">Basement</option><option value="upstairs">Second floor</option><option value="kitchen">Kitchen</option><option value="bedroom">Bedroom</option><option value="sunroom">Sunroom</option><option value="attic">Attic hideout</option></select></label>}
                 <label>Difficulty<select aria-label="Difficulty" value={difficulty} onChange={e => change(() => setDifficulty(e.target.value as Difficulty))}>{Object.values(Difficulty).map(d => <option key={d} value={d}>{d === 'EASY' ? 'Easy' : d === 'HARD' ? 'Hard' : 'Hardcore'}</option>)}</select></label>
                 <label>Pages<select aria-label="Pages" value={layout} onChange={e => change(() => setLayout(e.target.value))}><option value="both">Whole map + close-ups</option><option value="map">Whole map only</option><option value="slices">Close-ups only</option></select></label>
                 {layout !== 'map' && <label>Close-up size<select aria-label="Close-up size" value={closeup} onChange={e => change(() => setCloseup(Number(e.target.value)))}><option value="1280">Standard · fewer pages</option><option value="900">Larger details · more pages</option></select></label>}

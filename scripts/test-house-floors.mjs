@@ -17,20 +17,21 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(base, { waitUntil: 'domcontentloaded' }); await page.waitForFunction(() => window.__husky);
     const checks = await page.evaluate(async () => {
-        const { HOME_LEVEL, COMPANIONS, HomeDog } = await import('/game/Home.ts');
+        const { HOME_LEVEL, COMPANIONS, HomeDog, dogRoom } = await import('/game/Home.ts');
         const { CUSTOM_LEVEL, GRID_COLS, GRID_ROWS, TILE_SIZE, starterLevel, isLevelDraft, validateLevel, saveDraft, loadDraft, buildCustomLevel } = await import('/game/LevelBuilder.ts');
         const { audioManager } = await import('/game/Audio.ts');
         const { engine, inputManager, gfxSettings } = window.__husky;
         audioManager.setMusic(false); audioManager.setSFX(false); engine.startGame('EASY'); engine.stop();
         const w = engine.world, passed = [], check = (ok, text) => { if (!ok) throw Error(text); passed.push(text); };
         check(!w.changeHomeFloor('basement') && !engine.startPractice(1), 'Floors and practice stay locked until the story is complete');
-        engine.startLevel(14); engine.stop(); w.triggerLevelComplete(); engine.goHome(); engine.stop();
-        w.player.bonesCollected = 35; w.belongings.owned.add('crown'); w.belongings.equipped.add('crown'); w.belongings.slots = ['shield', 'magnet', 'time']; w.belongings.quests.ball = 'accepted';
+        engine.startLevel(14); engine.stop(); w.triggerLevelComplete(); engine.goHome(); engine.skipCutscene(); engine.stop(); w.belongings.quests.peace = 'complete';
+        w.player.bonesCollected = 35; w.belongings.owned.add('crown'); w.belongings.equipped.add('crown'); w.belongings.slots = ['shield', 'magnet', 'time']; w.belongings.quests.lammy = 'accepted';
         check(w.changeHomeFloor('upstairs'), 'Stairs reach the second floor');
-        check(w.props.filter(p => p instanceof HomeDog).map(p => p.quest.dog).join(',') === 'Opal,Ruby,Samwise', 'All three named companions live upstairs');
+        check(w.props.filter(p => p instanceof HomeDog).map(p => p.quest.dog).join(',') === 'Opal', 'Opal lives in the snuggle loft after the chase');
         check(!w.shopDoor && !w.openHomePanel('builder') && !w.toggleCompanion(), 'Upstairs keeps recruitment separate from the workshop and shop');
         for (const dog of COMPANIONS) {
-            w.player.x = dog.homeX - 30; w.player.y = w.height - 140; w.update(); w.openHomePanel(dog.id);
+            w.changeHomeFloor(dogRoom(dog.id, w.belongings.quests));
+            w.player.x = w.props.find(p => p instanceof HomeDog && p.quest.id === dog.id).x; w.player.y = w.height - 140; w.update(); w.openHomePanel(dog.id);
             check(w.toggleCompanion() && w.belongings.companions.has(dog.id), `${dog.dog} joins the party`); w.closeHomePanel();
         }
         check(w.belongings.companions.size === 3 && w.player.bonesCollected === 35, 'All three can join together for free');
@@ -47,18 +48,18 @@ try {
         }
         engine.startLevel(8); engine.stop(); for (let i = 0; i < 80; i++) w.update();
         check(w.followingDogs.length === 3, 'Companions also follow swimming movement');
-        engine.goHome(); engine.stop(); w.changeHomeFloor('upstairs'); w.player.x = 380; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal');
+        engine.goHome(); engine.stop(); w.changeHomeFloor('upstairs'); w.player.x = 650; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal');
         check(w.toggleCompanion() && !w.belongings.companions.has('opal') && w.belongings.companions.size === 2, 'A companion can be asked to stay home'); w.closeHomePanel();
         w.changeHomeFloor('basement');
-        check(!w.shopDoor && w.props.length === 0 && w.player.bonesCollected === 35 && w.belongings.quests.ball === 'accepted', 'Basement preserves the wallet, party, outfits, pockets, and quests');
+        check(!w.shopDoor && w.props.length === 0 && w.player.bonesCollected === 35 && w.belongings.quests.lammy === 'accepted', 'Basement preserves the wallet, party, outfits, pockets, and quests');
         const original = w.belongings, wallet = w.player.bonesCollected;
         const snapshot = JSON.stringify({ ...original, owned: [...original.owned], equipped: [...original.equipped], companions: [...original.companions], collectedBones: [...original.collectedBones], unlockedShops: [...original.unlockedShops] });
         check(engine.startPractice(5), 'Basement launches a real level for practice'); engine.stop();
         check(w.practice && w.difficulty === 'HARDCORE' && w.currentLevel === 5, 'Practice always loads the Hardcore layout');
         check(w.belongings !== original && w.belongings.slots !== original.slots && w.player.accessories !== original.equipped, 'Training uses a separate copy of all mutable belongings');
-        check(!w.props.some(p => p.quest?.id === 'ball'), 'Training cannot advance real fetch quests');
+        check(!w.props.some(p => p.quest?.id === 'lammy'), 'Training cannot advance real fetch quests');
         check(w.useInventorySlot(0), 'Practice allows trying purchased supplies');
-        w.player.bonesCollected += 50; w.belongings.quests.ball = 'complete'; w.belongings.equipped.delete('crown'); w.belongings.companions.clear(); w.belongings.collectedBones.add('5:test');
+        w.player.bonesCollected += 50; w.belongings.quests.lammy = 'complete'; w.belongings.equipped.delete('crown'); w.belongings.companions.clear(); w.belongings.collectedBones.add('5:test');
         engine.retryPractice(); engine.stop();
         check(w.player.bonesCollected === wallet && w.belongings.slots[0] === 'shield' && w.player.accessories.has('crown'), 'Retry restores starting bones, supplies, and outfit');
         engine.setDifficulty('HARD'); engine.goHome(); engine.stop();
@@ -126,11 +127,13 @@ try {
     });
     console.log(checks.join('\n'));
     // Actual stairs, companion conversation, painter, storage, focus, play, and return buttons.
-    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(14); e.stop(); e.world.triggerLevelComplete(); });
+    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(14); e.stop(); e.world.triggerLevelComplete(); e.skipCutscene(); });
     await page.getByRole('button', { name: 'Go inside · Home' }).click();
+    await page.getByRole('button', { name: 'Skip >>' }).click();
+    await page.evaluate(() => { window.__husky.engine.world.belongings.quests.peace = 'complete'; });
     await page.getByRole('button', { name: 'Change floor', exact: true }).click();
-    await page.getByRole('button', { name: 'Second floor · Companions' }).click();
-    await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.world.player.x = 350; e.world.player.y = e.world.height - 140; e.world.update(); e.renderer.drawGame(e.world); });
+    await page.getByRole('button', { name: 'Second floor · Snuggle loft' }).click();
+    await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.world.player.x = 650; e.world.player.y = e.world.height - 140; e.world.update(); e.renderer.drawGame(e.world); });
     await page.getByRole('button', { name: 'E · Talk to Opal' }).click();
     await page.getByRole('button', { name: 'Invite Opal along' }).click();
     await page.getByRole('button', { name: 'Ask Opal to stay home' }).waitFor();
@@ -162,7 +165,7 @@ try {
     await page.screenshot({ path: '.playwright-mcp/house-builder-mobile.png' });
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Change floor', exact: true }).click();
-    await page.getByRole('button', { name: 'Second floor · Companions' }).click();
+    await page.getByRole('button', { name: 'Second floor · Snuggle loft' }).click();
     await page.setViewportSize({ width: 1100, height: 720 });
     await page.waitForFunction(() => window.__husky.engine.world.width === 1100 && window.__husky.engine.world.height === 720);
     await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.renderer.drawGame(e.world); });

@@ -23,7 +23,7 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming' = 'intro';
+    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming' | 'house_chase' = 'intro';
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
@@ -93,6 +93,11 @@ export class GameEngine {
         this.world.loadLevel(level, this.world.player !== null, difficulty);
         this.gameState = GameState.PLAYING;
         this.options.onStateChange(GameState.PLAYING);
+        if (level === HOME_LEVEL && !this.world.belongings.houseIntroSeen) {
+            this.currentCutscene = 'house_chase'; this.gameState = GameState.CUTSCENE;
+            this.options.onStateChange(GameState.CUTSCENE, { text: '' });
+            this.cutsceneManager.start('house_chase');
+        }
         this.startLoop();
     }
 
@@ -217,7 +222,12 @@ export class GameEngine {
     }
 
     private endCutscene() {
-        if (this.currentCutscene === 'homecoming') {
+        if (this.currentCutscene === 'house_chase') {
+            this.world.belongings.houseIntroSeen = true;
+            this.world.belongings.quests.peace ??= 'accepted';
+            this.world.homeNotice = 'Samwise needs distraction biscuits! Find the blue tin in the kitchen, then bring it to him in the entry hall.';
+            this.startLevel(HOME_LEVEL, this.difficulty);
+        } else if (this.currentCutscene === 'homecoming') {
             this.gameState = GameState.GAME_WON;
             this.options.onStateChange(GameState.GAME_WON, { bones: this.world.player?.bonesCollected ?? 0, level: 14 });
         } else if (this.currentCutscene === 'raccoon_intro') {

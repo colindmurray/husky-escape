@@ -52,25 +52,31 @@ Classic and Enhanced share gameplay, with flat versus shaded art, parallax house
 
 `npm run test:backyard` covers collisions, boss phases and victory, real cutscene pause/resume, sounds, rendering, and full movement-only runs through live hazards and the boss at two screen heights and two jump timings in each difficulty.
 
-## Home and fetch quests (after level 14)
+## Home and the family adventures (after level 14)
 
-Finish the backyard, then choose **Go inside · Home**. Walk through Onyx’s house with arrows/WASD and press **E** near a dog to talk. Pippin wants his red ball from level 5 (12 bones), Pearl wants her pink shell from level 4 (10 bones), and Biscuit wants his squeaky duck from level 1 (8 bones). Accept a request before searching; touch the glowing item, return home, and talk to its owner for the one-time reward. The travel list includes hints and quest progress.
+Finish the backyard and owner reunion, then choose **Go inside · Home**. The first visit opens a four-part chase: Opal follows Samwise with hearts overhead, Ruby is furious, and Samwise asks Onyx for emergency biscuits. Watching or skipping the scene starts the same first quest. The scene plays once per journey.
 
-**Explore old levels** unlocks all 14 levels without Dev Mode. **Return home** is available during a replay and after a failed attempt; completing a replay also leads home. Free travel preserves the chosen difficulty, but Hardcore deaths after finishing the story allow retries. Juniper’s doghouse on the right is always open, with its own stock and the shared wallet, outfits, and three pockets. Home has no countdown or hazards, conversations pause movement, and consumables cannot be wasted there. Quest items use a separate bag.
+Walk with arrows/WASD. Press **E** near a dog, stairway, or doorway; touch users have matching buttons. **Change floor** offers all seven spaces, and **Quests & travel** lists available requests, the dogs’ current rooms, and all 14 replay levels. Home has no countdown or hazards. Conversations pause movement and room animations. Quest items have a separate bag and never use treat pockets.
 
-Home access, quests, bones, and purchases persist within the current journey, including retries and return trips. Starting a new journey or reloading the page resets them. Both Classic and Enhanced graphics and audio are supported. Run `npm run test:home` for quest, reward, travel, non-dev UI, keyboard, and mobile checks.
+| Chapter | Requests and dog locations | Unlock |
+| --- | --- | --- |
+| A very undignified chase | Fetch the kitchen’s distraction biscuits for Samwise in the entry hall (12 bones). | Return the biscuits to send the dogs to their rooms. |
+| Make yourself at home | Opal in the snuggle loft wants Lammy from level 5 (18). Ruby in the bedroom wants her cushion from level 4 (16). Samwise in the kitchen wants the boy’s lunchbox from level 1 (20). | Finish all three to open the next chapter. |
+| A little more mischief | Opal in the sunroom wants the goose’s stolen ribbon, also in the sunroom (16). Ruby in the attic wants its rainbow sun-catcher (16). Samwise in the kitchen wants a recipe from the first raised conveyor in level 12 (22). | Finish all three for a kitchen biscuit party. |
 
-## House floors, companions, and building
+Accept each later request by talking to its owner, touch the glowing item, then return it to the owner’s current room. The journal keeps track of where everybody is. Rewards are paid once. Locked requests cannot spawn items or be accepted early; accepting an item in the same room makes it appear immediately. The generic entryway dogs and their standalone quests have been replaced by this seven-quest family story.
 
-Use **Change floor**, or press **E** beside the stairs, to move between the three floors. Walk to marked doorways and press **E** (or tap **Enter**) to visit the kitchen off the living room and the bedroom off the companion loft. The room chooser also offers direct access to all five spaces:
+**Rooms:** the entry hall has the sofa and Juniper’s shop; the kitchen has the little boy and his toast; the snuggle loft has Opal’s chair and Lammy’s basket; Ruby’s bedroom has a window casting a real sunbeam, drifting dust, and a later rainbow; the glass sunroom has plants and an uninvited goose; the attic has a lit blanket fort; and the basement contains practice and level building. Doors connect the kitchen to the sunroom and the bedroom to the attic, as well as the original room links. Furniture is behind the walking lane.
 
-- **Ground floor:** the fetch-quest dogs, Juniper’s shop, and free travel.
-- **Basement:** choose **Hardcore practice** for any of the 14 real Hardcore layouts. Retries restore the supplies you entered with. Training uses a separate copy of bones, outfits, party, and quest progress; leaving restores the real journey and selected difficulty. Practice does not advance fetch quests or earn spending bones. **Retry practice** and **Back to basement** are available during a run; completed and failed attempts also offer another try.
-- **Second floor:** talk to **Opal**, **Ruby**, and **Samwise** with E and invite them along. All three can join. They follow Onyx’s recorded path, including jumps and swimming, without blocking her, taking damage, or collecting items. Talk to them upstairs to ask them to stay home. Party choices last for the current journey.
+Opal is a larger cream-white golden retriever with a turquoise collar and a grumpy expression. Ruby is a white husky with a red collar, a blep, and a sleepy sploot. Curly, light-brown Samwise snacks and helps stir biscuit batter. Their portraits and traveling sprites share the same artwork. Completing quests changes their activities: Lammy returns to Opal, Ruby gains her cushion and rainbow, the lunchbox returns to the kitchen, and the family gathers for biscuits. Cat, fox, and goose skins retain the normal player hitbox and level equipment.
 
-Opal is a larger cream-white golden retriever with a turquoise collar, a grumpy expression, and a soft spot for Sammy and Lammy. Ruby is a white husky with a red collar, a blep, and an idle sploot. Samwise is a curly light-brown Italian waterdog, worried about geese and suspiciously fond of the little boy’s lunch. Their dialogue, home portraits, and traveling sprites reflect these personalities. Wearing the goose skin gives Samwise a special reaction.
+Free travel keeps the chosen difficulty and permits retries even in postgame Hardcore. Return home from any replay. Bones, outfits, party choices, quest progress, and the chase flag last for the current journey; starting over or reloading the page resets them. Juniper has the shared wallet and wardrobe, plus the home shop’s exclusive stock. Supplies cannot be wasted at home.
 
-Each companion also has a fetch request: Opal’s Lammy in level 5 (18 bones), Ruby’s cushion in level 4 (16 bones), and Samwise’s lunchbox in level 1 (20 bones). These use the same accept/find/return flow as the three ground-floor requests.
+## House companions, practice, and building
+
+After the biscuit errand, talk to each dog in their current room to invite them along or ask them to stay home. All three can join. They follow Onyx’s recorded path, including jumps and swimming, without blocking her, taking damage, or collecting items.
+
+The basement offers **Hardcore practice** for all 14 real layouts. Retries restore the supplies you entered with. Practice uses a separate copy of bones, outfits, party, and quest progress; leaving restores the real journey and difficulty. Practice does not advance fetch quests or earn spending bones.
 
 The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platforms, water, raccoons, bones, a start, and an exit. Click/tap a square to place the selected tile; arrow keys move the focused square and Enter/Space places it. Scroll horizontally to reach the entire course. Start, exit, and raccoons need supporting platforms. Moving the start or exit replaces its old position. **Undo** retains 30 edits; **Starter layout** asks before replacing the draft.
 
@@ -113,6 +119,8 @@ Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket
 Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access also survives retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
 
 `npm run test:shop` checks purchases, the run economy, item use, pause behavior, cosmetics, and movement-only access from each side-route approach with hazards active on Easy, Hard, and Hardcore. It uses the same local Chrome setup as `test:town`.
+
+`npm run test:home` checks the complete seven-quest chain, prerequisite gates, room changes, once-only rewards, first-visit cutscene completion/skip, keyboard/touch UI, and both visual modes.
 
 `npm run test:revamp` checks exclusive stock, new effects, room doorways, dog and goose rendering, companion requests, owner reunion completion/skip, and mobile layout.
 

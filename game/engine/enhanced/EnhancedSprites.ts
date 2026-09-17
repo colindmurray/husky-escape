@@ -635,6 +635,14 @@ export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: n
     ctx.ellipse(x + 17, y + 26, 15.5, 12.5, 0, 0, TAU);
     ctx.fill();
 
+    if ((cat || fox) && !o.classic) {
+        ctx.strokeStyle = fox ? '#f3ba785e' : '#b1bac34a'; ctx.lineWidth = .8;
+        for (const [dx, dy] of [[6, 22], [11, 17], [17, 18], [22, 21], [9, 28], [15, 30]]) {
+            ctx.beginPath(); ctx.moveTo(x + dx, y + dy); ctx.quadraticCurveTo(x + dx + 3, y + dy - 2, x + dx + 5, y + dy + 1); ctx.stroke();
+        }
+        ctx.fillStyle = fox ? '#ffe1a329' : '#d4e5ef20'; ctx.beginPath(); ctx.ellipse(x + 14, y + 20, 10, 4, -.2, 0, TAU); ctx.fill();
+    }
+
     // ---- Belly patch ----
     ctx.fillStyle = cream;
     ctx.beginPath();

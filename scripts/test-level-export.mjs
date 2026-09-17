@@ -63,7 +63,14 @@ try {
     }
     await assert.rejects(exportLevels(optionsFrom(['--level', '14', '--region', '99999,0,100,100', '--scale', '1', '--out', folder])), /outside level/);
     const home = await exportLevels(optionsFrom(['--level', '15', '--floor', 'upstairs', '--scale', '1', '--out', folder]));
-    assert.equal(home.results[0].entities.filter(e => e.type === 'HomeDog').length, 3); assert.equal(home.results[0].exit, null);
+    assert.equal(home.results[0].entities.filter(e => e.type === 'HomeDog').length, 1); assert.equal(home.results[0].exit, null);
+    for (const floor of ['sunroom', 'attic']) {
+        const room = await exportLevels(optionsFrom(['--level', '15', '--floor', floor, '--quests', '--scale', '1', '--out', folder]));
+        assert.equal(room.results[0].entities.filter(e => e.type === 'HomeDog').length, 1);
+        assert.equal(room.results[0].entities.filter(e => e.type === 'QuestPickup').length, 1);
+    }
+    const questMaps = await exportLevels(optionsFrom(['--level', '1,4,5,12', '--quests', '--scale', '1', '--out', folder]));
+    for (const result of questMaps.results) assert.equal(result.entities.filter(e => e.type === 'QuestPickup').length, 1);
     const cells = Array(320).fill('.'); for (let i = 288; i < 320; i++) cells[i] = '#'; cells[257] = 'S'; cells[286] = 'E';
     const draftPath = path.join(folder, 'custom.json'); await writeFile(draftPath, JSON.stringify({ version: 1, name: 'A custom print course', cells }));
     const custom = await exportLevels(optionsFrom(['--level', '16', '--draft', draftPath, '--scale', '1', '--out', folder]));

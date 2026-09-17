@@ -4,7 +4,7 @@ import { Renderer } from '../engine/Renderer';
 import { audioManager } from '../Audio';
 import { gfxSettings } from '../GfxSettings';
 import { BossRaccoon } from '../entities/Backyard';
-import { HOME_WIDTH, QUESTS } from '../Home';
+import { HOME_LEVEL, HOME_WIDTH, QUESTS, QuestPickup } from '../Home';
 import { isLevelDraft, validateLevel } from '../LevelBuilder';
 import type { Difficulty } from '../../types';
 import type { HomeFloor } from '../Home';
@@ -26,12 +26,19 @@ function renderLevel(options: CaptureOptions) {
     const world = new World(1280, options.height, { onScoreUpdate() {}, onTimeUpdate() {}, onLevelComplete() {}, onGameOver() {}, onGameWon() {} });
     world.loadLevel(1, false, options.difficulty);
     world.belongings.homeUnlocked = true; world.homeFloor = options.floor;
-    if (options.quests) for (const quest of QUESTS) world.belongings.quests[quest.id] = 'accepted';
+    if (options.level === HOME_LEVEL && options.floor !== 'ground') {
+        world.belongings.quests.peace = 'complete';
+        if (options.floor === 'sunroom' || options.floor === 'attic') for (const id of ['lammy', 'cushion', 'lunch']) world.belongings.quests[id] = 'complete';
+    }
     if (options.level === 16) {
         if (!isLevelDraft(options.draft) || validateLevel(options.draft)) throw Error('Supply a valid saved custom layout with --draft file.json for level 16.');
         world.editorDraft = options.draft;
     }
     world.loadLevel(options.level, true, options.difficulty);
+    // Prints can show every item in this scene without playing through its prerequisites.
+    if (options.quests) for (const quest of QUESTS) {
+        if (quest.level === options.level && (!quest.room || quest.room === options.floor)) world.props.push(new QuestPickup(quest, options.height));
+    }
     // Show the actual raccoon artwork without requiring a playthrough of the reveal.
     world.enemies.forEach(e => { if (e instanceof BossRaccoon) e.activate(); });
     const entities = [...world.platforms, ...world.props, ...world.enemies, ...world.waters, ...world.collectibles, ...(world.isHome ? [] : [world.exit!]), world.player!];
@@ -93,4 +100,3 @@ export function prepare(options: CaptureOptions) {
     try { Date.now = () => 1700000000000; return renderLevel(options); }
     finally { Math.random = originalRandom; Date.now = originalNow; }
 }
-

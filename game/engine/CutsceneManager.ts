@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-export type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming';
+export type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming' | 'house_chase';
 
 export class CutsceneManager {
     public step = 0;
@@ -15,6 +15,12 @@ export class CutsceneManager {
     private onComplete: () => void;
 
     private storyLines = {
+        'house_chase': [
+            { text: 'Home, sweet—SAMWISE, LOOK OUT!', sound: SoundType.DOG_BARK },
+            { text: 'Opal: “Sammy! My darling!”  Ruby: “Why does she always chase HIM?!”', sound: null },
+            { text: 'Samwise: “Onyx! Kitchen! Biscuits! Please! I do not know if this is love or lunch!”', sound: SoundType.DOG_BARK },
+            { text: 'First quest: fetch the blue biscuit tin from the kitchen and bring it to Samwise. Peace first. Adventures next!', sound: SoundType.COLLECT },
+        ],
         'homecoming': [
             { text: 'The backyard falls quiet. Then a familiar voice: “Onyx? ONYX!”', sound: SoundType.WIN_SHORT },
             { text: 'Your owner kneels down. “There you are, my brave girl. I missed you so much.”', sound: null },

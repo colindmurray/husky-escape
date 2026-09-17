@@ -91,9 +91,11 @@ try {
         return passed;
     });
     await page.getByRole('button', { name: 'Go inside · Home' }).click();
+    await page.getByRole('button', { name: 'Skip >>' }).click();
+    await page.evaluate(() => { window.__husky.engine.world.belongings.quests.peace = 'complete'; });
     await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.world.changeHomeFloor('upstairs'); e.world.cameraX = 200; e.renderer.drawGame(e.world); });
     await page.screenshot({ path: '.playwright-mcp/revamp-companions.png' });
-    await page.evaluate(() => { const w = window.__husky.engine.world; w.player.x = 380; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal'); });
+    await page.evaluate(() => { const w = window.__husky.engine.world; w.player.x = 650; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal'); });
     await page.getByRole('button', { name: 'I’ll find it!' }).click();
     assert.equal(await page.evaluate(() => window.__husky.engine.world.belongings.quests.lammy), 'accepted');
     await page.screenshot({ path: '.playwright-mcp/revamp-opal.png' });
