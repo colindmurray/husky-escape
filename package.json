@@ -20,7 +20,8 @@
     "test:shop-challenges": "node scripts/test-shop-challenges.mjs",
     "dsh:headless": "dsh-ox --profile headless",
     "dsh:web": "dsh-ox web",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:saves": "node scripts/test-saves.mjs"
   },
   "dependencies": {
     "react": "^19.2.3",

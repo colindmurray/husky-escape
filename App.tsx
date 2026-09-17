@@ -1,4 +1,5 @@
 
+import { TitleScreen } from './TitleScreen';
 import { HomeUI } from './HomeUI';
 import { ShopUI } from './ShopUI';
 import React, { useEffect, useRef, useState } from 'react';
@@ -34,7 +35,7 @@ export default function App() {
     const [sfxOn, setSfxOn] = useState(true);
     const [volume, setVolume] = useState(0.3); // Default volume
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
-    const [devMode, setDevMode] = useState(false);
+    const [saveError, setSaveError] = useState('');
     // Presentation toggles: flip between the preserved Classic presentation and
     // the Enhanced one. Both apply live — even mid-level — without touching
     // world state, so gameplay is identical in either mode.
@@ -51,11 +52,12 @@ export default function App() {
     useEffect(() => {
         if (!canvasRef.current || engineRef.current) return;
         const engine = new GameEngine(canvasRef.current, {
+            onSaveError: setSaveError,
             onShopUpdate: () => refreshShop(n => n + 1),
             onStateChange: async (state, data) => {
                 setGameState(state);
                 if (data) {
-                    if (data.text) setCutsceneText(data.text);
+                    if (data.text !== undefined) setCutsceneText(data.text);
                     setModalData((prev: any) => ({...prev, ...data}));
                     
                     if (state === GameState.LEVEL_COMPLETE || state === GameState.GAME_OVER || state === GameState.GAME_WON) {
@@ -97,7 +99,11 @@ export default function App() {
         // Dev/testing hook: lets the visual harness inspect world state and flip
         // presentation settings live. Not used by gameplay code.
         (window as any).__husky = { engine, gfxSettings, inputManager };
-        return () => engine.stop();
+        const save = () => engine.saveProgress();
+        const hide = () => { if (document.visibilityState === 'hidden') save(); };
+        window.addEventListener('pagehide', save);
+        document.addEventListener('visibilitychange', hide);
+        return () => { save(); engine.stop(); window.removeEventListener('pagehide', save); document.removeEventListener('visibilitychange', hide); };
     }, []);
 
     const toggleMusic = () => { setMusicOn(!musicOn); audioManager.setMusic(!musicOn); };
@@ -110,9 +116,9 @@ export default function App() {
     };
 
     const changeDifficulty = (diff: Difficulty) => {
+        if (engineRef.current?.sessionMode === 'saved') return;
         setDifficulty(diff);
         engineRef.current?.setDifficulty(diff);
-        // If changing mid-game, it will apply on next level load/restart
     };
 
     const changeVisualMode = (mode: PresentationMode) => {
@@ -125,17 +131,24 @@ export default function App() {
         gfxSettings.setAudioMode(mode);
     };
 
-    const startStory = () => { 
-        levelFailuresRef.current = 0;
-        levelHistoryRef.current = [];
-        audioManager.init(); 
-        engineRef.current?.startCutscene(); 
+    const resetSessionUI = () => {
+        levelFailuresRef.current = 0; levelHistoryRef.current = [];
+        setHuskyWisdom(''); setModalData({}); setCutsceneText(''); setShowSettings(false);
+        inputManager.clear(); audioManager.init();
     };
-    
-    const startGame = () => { 
-        levelFailuresRef.current = 0;
-        levelHistoryRef.current = [];
-        engineRef.current?.startGame(difficulty); 
+    const openSave = (slot: number, name?: string, selectedDifficulty?: Difficulty) => {
+        resetSessionUI();
+        const engine = engineRef.current;
+        if (!engine?.openSave(slot, name, selectedDifficulty)) return false;
+        setDifficulty(engine.activeSave!.difficulty); canvasRef.current?.focus(); return true;
+    };
+    const freeRoam = () => {
+        resetSessionUI(); engineRef.current?.startFreeRoam(difficulty); setShowSettings(true);
+    };
+    const mainMenu = () => { if (engineRef.current?.returnToTitle()) { setShowSettings(false); setModalData({}); } };
+    const openPrint = () => {
+        const params = new URLSearchParams({ print: '1', level: '1', difficulty, graphics: visualMode, floor: 'ground' });
+        engineRef.current?.setPrintPaused(true); inputManager.clear(); setPrintUrl(`?${params}`);
     };
     
     const skipCutscene = () => { engineRef.current?.skipCutscene(); };
@@ -177,27 +190,8 @@ export default function App() {
         }
     };
     
-    const startSpecificLevel = (lvl: number) => {
-         const engine = engineRef.current;
-         if (!devMode || !engine) return;
-         setHuskyWisdom("");
-         levelFailuresRef.current = 0;
-         levelHistoryRef.current = [];
-         // Pass difficulty to cutscenes or levels
-         if (lvl === HOME_LEVEL) {
-             if (!engine.world.player) engine.startGame(difficulty);
-             engine.world.belongings.homeUnlocked = true;
-             engine.setDifficulty(difficulty);
-             engine.goHome();
-         }
-         else if (lvl === 3) engineRef.current?.startPoundEscapeCutscene();
-         else if (lvl === 7) engineRef.current?.startChaseCutscene();
-         else if (lvl === 8) engineRef.current?.startUnderwaterCutscene();
-         else if (lvl === 9) engineRef.current?.startPierCutscene();
-          else if (lvl === 11) engineRef.current?.startNeonCutscene();
-          else if (lvl === 12) engineRef.current?.startBakeryCutscene();
-          else if (lvl === 13) engineRef.current?.startTownCutscene(difficulty);
-          else engineRef.current?.startLevel(lvl, difficulty);
+    const startSpecificLevel = (level: number) => {
+        if (engineRef.current?.warpToLevel(level)) { setShowSettings(false); setHuskyWisdom(''); canvasRef.current?.focus(); }
     };
 
     const getModalContent = () => {
@@ -276,12 +270,14 @@ export default function App() {
     const modalContent = (gameState === GameState.LEVEL_COMPLETE || gameState === GameState.GAME_OVER || gameState === GameState.GAME_WON) 
         ? getModalContent() : { title: "", desc: "" };
 
+    const freeMode = engineRef.current?.sessionMode === 'free';
+    const savedMode = engineRef.current?.sessionMode === 'saved';
     const homeUnlocked = !!engineRef.current?.world.belongings.homeUnlocked;
     const goHome = () => { engineRef.current?.goHome(); canvasRef.current?.focus(); };
 
     const LevelSelector = () => (
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
-            <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
+            <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Choose a level</p>
             <div className="flex gap-2 justify-center flex-wrap">
                 {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,HOME_LEVEL].map(lvl => (
                     <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="min-w-8 px-2 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl === HOME_LEVEL ? 'Home' : lvl}</button>
@@ -292,10 +288,11 @@ export default function App() {
 
     return (<>
         {printUrl && <dialog ref={printDialog} onCancel={closePrint} onClose={closePrint} aria-label="Print and draw levels" style={{ width: 'min(1200px, 96vw)', height: '94dvh', maxWidth: '96vw', padding: 0, border: '2px solid #638c80', borderRadius: 14, background: '#f4f6f2' }}>
-            <div style={{ padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Onyx’s drawing studio</strong><button autoFocus onClick={closePrint} style={{ padding: '8px 16px', background: '#1c5148', color: 'white', borderRadius: 8 }}>Back to game</button></div>
+            <div style={{ padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong>Onyx’s drawing studio</strong><button autoFocus onClick={closePrint} style={{ padding: '8px 16px', background: '#1c5148', color: 'white', borderRadius: 8 }}>Back to main menu</button></div>
             <iframe title="Drawing studio" src={printUrl} style={{ width: '100%', height: 'calc(100% - 62px)', border: 0 }} />
         </dialog>}
         <div className="relative w-screen h-screen bg-gray-900 overflow-hidden font-sans">
+            {saveError && <div role="alert" className="absolute z-[60] top-3 left-1/2 -translate-x-1/2 w-[min(80vw,600px)] bg-red-950 text-white border border-red-300 rounded-lg p-3 text-sm">{saveError}{savedMode && <button className="underline ml-2" onClick={() => engineRef.current?.saveProgress()}>Retry saving</button>}</div>}
             <canvas ref={canvasRef} tabIndex={0} className="block w-full h-full" />
             {gameState === GameState.PLAYING && engineRef.current && <><ShopUI world={engineRef.current.world} visualMode={visualMode} /><HomeUI engine={engineRef.current} /></>}
             <div className="absolute inset-0 pointer-events-none flex flex-col justify-between">
@@ -315,7 +312,7 @@ export default function App() {
                     <div className="relative pointer-events-auto">
                         <button aria-label="Settings" onClick={() => setShowSettings(!showSettings)} className="text-2xl hover:scale-110 transition bg-slate-800 p-2 rounded-full border border-slate-600 shadow-xl">⚙️</button>
                         {showSettings && (
-                            <div style={{ maxHeight: 'calc(100dvh - 110px)', overflowY: 'auto' }} className="absolute right-0 top-14 bg-slate-800 border border-slate-600 rounded-lg p-4 w-56 shadow-2xl text-sm">
+                            <div style={{ maxHeight: 'calc(100dvh - 110px)', overflowY: 'auto' }} className="absolute right-0 top-14 bg-slate-800 border border-slate-600 rounded-lg p-4 w-72 max-w-[90vw] shadow-2xl text-sm">
                                 <div className="mb-4 pb-3 border-b border-slate-600">
                                     <div className="flex justify-between items-center mb-1">
                                         <span>Volume</span>
@@ -363,52 +360,34 @@ export default function App() {
                                     </div>
                                 </div>
 
-                                <div className="border-t border-slate-600 pt-3 mb-3">
-                                    <p className="text-xs text-gray-400 mb-2 uppercase">Difficulty</p>
+                                {freeMode && <div className="border-t border-slate-600 pt-3 mb-3">
+                                    <p className="text-xs text-gray-400 mb-2 uppercase">Difficulty{freeMode && ' · Restarts area'}</p>
                                     <div className="flex flex-col gap-2">
                                         <button onClick={() => changeDifficulty(Difficulty.EASY)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.EASY ? 'bg-green-900 border-green-500 text-green-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Easy</button>
                                         <button onClick={() => changeDifficulty(Difficulty.HARD)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.HARD ? 'bg-orange-900 border-orange-500 text-orange-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Hard (Extra Challenges)</button>
                                         <button onClick={() => changeDifficulty(Difficulty.HARDCORE)} className={`text-xs py-1 px-2 rounded border ${difficulty === Difficulty.HARDCORE ? 'bg-red-900 border-red-500 text-red-100' : 'bg-slate-700 border-slate-600 text-gray-400'}`}>Hardcore (Permadeath)</button>
                                     </div>
-                                </div>
+                                </div>}
 
-                                <div className="border-t border-slate-600 pt-3 flex justify-between items-center">
-                                    <span className="text-xs text-gray-400">Dev Mode</span>
-                                     <button aria-label="Dev Mode" aria-pressed={devMode} onClick={() => setDevMode(!devMode)} className={`w-4 h-4 border rounded ${devMode ? 'bg-blue-500 border-blue-500' : 'bg-transparent border-gray-500'}`}>
-                                        {devMode && "✓"}
-                                     </button>
-                                </div>
-                                {devMode && <button className="mt-3 w-full bg-blue-600 rounded p-2 text-white" onClick={() => {
-                                    const world = engineRef.current?.world;
-                                    const params = new URLSearchParams({ print: '1', level: String(world?.currentLevel || 1), difficulty, graphics: visualMode, floor: world?.homeFloor || 'ground' });
-                                    engineRef.current?.setPrintPaused(true); inputManager.clear();
-                                    setPrintUrl(`?${params}`);
-                                }}>Print & draw levels</button>}
+                                {savedMode && <p className="border-t border-slate-600 pt-3 text-xs text-slate-300">{engineRef.current?.activeSave?.name} · {difficulty.toLowerCase()} 🔒<br />Autosaves in this browser</p>}
+                                {freeMode && <>
+                                    <p className="text-xs text-amber-200 mb-3">Free Roam · Progress is not saved</p>
+                                    <label className="flex justify-between items-center border-t border-slate-600 pt-3">Cheats<input type="checkbox" checked={engineRef.current?.cheatsEnabled ?? false} onChange={e => engineRef.current?.enableCheats(e.target.checked)} /></label>
+                                    {engineRef.current?.cheatsEnabled && <div className="grid gap-2 mt-3">
+                                        <button onClick={() => engineRef.current?.cheat('bones')} className="rounded bg-amber-800 p-2">Give 100 bones</button>
+                                        <button onClick={() => engineRef.current?.cheat('treats')} className="rounded bg-amber-800 p-2">Fill treat pouch</button>
+                                        <button onClick={() => engineRef.current?.cheat('time')} className="rounded bg-amber-800 p-2">Add 60 seconds</button>
+                                    </div>}
+                                    <LevelSelector />
+                                </>}
+                                {gameState !== GameState.INTRO && <button onClick={mainMenu} className="w-full rounded border border-slate-500 p-2 mt-4">{savedMode ? 'Save & main menu' : 'Main Menu'}</button>}
+
                             </div>
                         )}
                     </div>
                 </div>
 
-                {gameState === GameState.INTRO && (
-                    <div className={`absolute inset-0 text-white flex flex-col justify-center items-center z-30 pointer-events-auto ${visualMode === 'enhanced' ? 'bg-slate-950/55 backdrop-blur-[1.5px]' : 'bg-slate-800'}`}>
-                        {homeUnlocked && <button onClick={goHome} className="bg-emerald-700 text-white rounded-lg py-3 px-8 mb-5">Return home</button>}
-                        <h1 className="text-7xl text-blue-400 mb-6 font-bold drop-shadow-2xl">Husky Escape</h1>
-                        {!modalData.showMenu ? ( <button onClick={startStory} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Start Journey</button> ) : (
-                            <div className="bg-black/80 p-10 rounded-2xl border-4 border-blue-500 text-center scale-up max-w-lg">
-                                <h2 className="text-3xl mb-4">Ready for Adventure?</h2>
-                                <p className="mb-4 text-gray-300">Arrows / WASD to move • Double jump for height</p>
-                                <div className="text-sm bg-slate-800 p-3 rounded mb-6 text-gray-400">
-                                    Current Mode: <span className={`font-bold ${difficulty === Difficulty.HARDCORE ? 'text-red-400' : (difficulty === Difficulty.HARD ? 'text-orange-400' : 'text-green-400')}`}>{difficulty}</span>
-                                    <br/>
-                                    <span className="text-xs italic">(Change in settings top right)</span>
-                                </div>
-                                <button onClick={startGame} className="bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform transition duration-150">Start Game</button>
-                                
-                                {devMode && <LevelSelector />}
-                            </div>
-                        )}
-                    </div>
-                )}
+                {gameState === GameState.INTRO && <TitleScreen onOpen={openSave} onFreeRoam={freeRoam} onPrint={openPrint} />}
 
                 {gameState === GameState.CUTSCENE && (
                     <div className="absolute inset-0 z-20 flex flex-col justify-end items-center pb-20 pointer-events-auto">
@@ -440,10 +419,10 @@ export default function App() {
                                 {homeUnlocked && gameState !== GameState.LEVEL_COMPLETE && <button onClick={goHome} className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg text-xl">{gameState === GameState.GAME_WON ? 'Go inside · Home' : engineRef.current?.world.practice ? 'Back to basement' : 'Return home'}</button>}
                                 {engineRef.current?.world.practice && <button onClick={() => engineRef.current?.retryPractice()} className="bg-teal-700 text-white py-3 rounded-lg">Practice again</button>}
                                 {engineRef.current?.world.practice && engineRef.current.world.isCustom && <button onClick={() => engineRef.current?.returnToEditor()} className="bg-teal-700 text-white py-3 rounded-lg">Back to editor</button>}
-                                <button onClick={() => setGameState(GameState.INTRO)} className="text-sm text-gray-500 hover:text-white transition">Main Menu</button>
+                                <button onClick={mainMenu} className="text-sm text-gray-500 hover:text-white transition">Main Menu</button>
                             </div>
                             
-                            {devMode && <LevelSelector />}
+                            {freeMode && <LevelSelector />}
                         </div>
                     </div>
                 )}

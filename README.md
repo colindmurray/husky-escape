@@ -2,9 +2,21 @@
 
 A React/Vite platformer where you help Onyx the Husky escape the pound and find her way home. The game includes short, optional AI reactions after important gameplay events.
 
+## Saved adventures and Free Roam
+
+The main screen has four named save slots stored in this browser. Choose a name (up to 20 characters) and difficulty when creating a game. Difficulty is locked for that save, including after reloads. Progress autosaves after gameplay changes and when leaving the page; **Settings → Save & main menu** returns to the slot picker.
+
+Continue restarts the current area, preserving bones, outfits, equipped items, unused treats, companions, quests, shop stock and unlocked entrances. Cleared levels remain cleared; transitional cutscenes replay. Carried outdoor quest items must be collected again after restarting an area, unless the level was already completed. Practice saves the original journey at the basement, never its borrowed supplies or currency. Hardcore deaths stay recorded across reloads and restart the story from level 1 until home is unlocked.
+
+**Free Roam** starts a separate, unsaved run. Settings has a level selector (1–14 and Home), changeable difficulty, and optional **Cheats** for 100 bones, a fresh treat pouch, or 60 extra seconds. A difficulty change restarts the current area. Saved games have neither cheats nor the warp selector. Returning to the main menu discards the Free Roam run.
+
+Save keys are `husky-escape:save-v1:0` through `:3`. Clearing site data removes them. Unreadable saves remain untouched, failed writes are reported, deletion asks for confirmation, and a stale tab cannot overwrite a newer save. Graphics/audio preferences and the explicitly saved custom course remain separate browser settings.
+
+Run `npm run test:saves` for reload, slot isolation, progression, difficulty locking, storage failure, Free Roam, practice, quest and mobile checks.
+
 ## Print and draw levels
 
-Open **Settings → Dev Mode → Print & draw levels** on the website. Choose any level or cutscene, Classic/Enhanced artwork, pale drawing worksheets or full color, and Letter/A4 paper. Make a preview, select the sheets to include, then print or save as PDF. Gameplay and cutscenes pause until **Back to game**.
+Open **Print & draw levels** on the main screen. Choose any level or cutscene, Classic/Enhanced artwork, pale drawing worksheets or full color, and Letter/A4 paper. Make a preview, select the sheets to include, then print or save as PDF. **Back to main menu** returns to the slot picker without changing saves.
 
 For local PNGs and batch PDF exports, run `npm run export:levels -- --level 14 --difficulty both`. See [the export guide](docs/level-exports.md) for printing, crops, and using annotated pages to make changes.
 
@@ -26,7 +38,7 @@ Controls: Arrows **or** WASD to move; Space/W to jump; double jump for height.
 
 ## Market Day (level 13)
 
-The bakery exit leads to town; level 13 is also available through the Dev Mode warp selector. Classic and Enhanced visuals and audio switch live in settings. Both modes use the same collision shapes and timing.
+The bakery exit leads to town; level 13 is also available through the Free Roam level selector. Classic and Enhanced visuals and audio switch live in settings. Both modes use the same collision shapes and timing.
 
 - **Easy:** a solid street provides recovery beneath optional market awnings and three required parade floats. Fountain jets and leaking garden hydrants interrupt low jumps, and a rising roadwork post challenges the middle float crossing; a shallow fountain, wider decks, generous warning windows, and two Good Dog Bandanas leave room for mistakes.
 - **Hard / Hardcore:** road barriers force a market climb across frayed awnings that collapse after landing and reform after three seconds. Opposing delivery bikes, a deep fountain with moving stones, a second yard dog, and a street packed with marching musicians beneath narrow floats, raised benches, and two rising roadwork posts change the route. One bandana waits on the upper market path. Hardcore also retains its restart-from-level-1 rule.
@@ -41,7 +53,7 @@ Run `npm run test:town` after installing dependencies. It uses the existing Play
 
 ## The Backyard (level 14)
 
-The town exit advances to the backyard; Dev Mode also offers a direct warp to 14. Follow the fence tops past leaking hydrants and raccoon patrols. Small raccoons hurt on side contact and can be defeated by landing on their heads.
+The town exit advances to the backyard; Free Roam also offers a direct warp to 14. Follow the fence tops past leaking hydrants and raccoon patrols. Small raccoons hurt on side contact and can be defeated by landing on their heads.
 
 - **Easy:** fixed fences with raised, narrower tops above a continuous lawn, five hydrants with longer bursts, six ground patrols plus a raccoon on a fence, and a four-hit boss who throws a lid before each charge.
 - **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, three faster moving sections, and eight raccoons that telegraph a pounce. The boss needs five hits and throws three arcing trash lids before charging. Both difficulties have faster charges, shorter warnings, and shorter dizzy openings. A successful boss hit gives half a second of protection for the bounce.
@@ -56,7 +68,7 @@ Classic and Enhanced share gameplay, with flat versus shaded art, parallax house
 
 Finish the backyard and owner reunion, then choose **Go inside · Home**. The first visit opens a four-part chase: Opal follows Samwise with hearts overhead, Ruby is furious, and Samwise asks Onyx for emergency biscuits. Watching or skipping the scene starts the same first quest. The scene plays once per journey.
 
-With **Dev Mode** enabled, the warp selector includes **Home** after level 14. This unlocks the house immediately, including from a fresh game, and uses the same first-visit chase and quest progression.
+In **Free Roam**, the level selector includes **Home** after level 14. This unlocks the house immediately, including from a fresh game, and uses the same first-visit chase and quest progression.
 
 Walk with arrows/WASD. Press **E** near a dog, stairway, or doorway; touch users have matching buttons. A hovering **E** appears only beside the nearest interaction and can also be tapped. The small book icon at the top-right opens the quest journal; **Rooms** and **Travel** inside it offer all seven spaces and all 14 replay levels. The journal starts closed in every room and on adventure levels. It groups in-progress, available, and completed requests; completed entries, friend locations, and control help can be expanded. Opening it pauses play, including the trail timer and hazards. The home and retry shortcuts are compact top-right icons. Home has no countdown or hazards. Conversations pause movement and room animations. Quest items have a separate bag and never use treat pockets.
 
@@ -72,7 +84,7 @@ Accept each later request by talking to its owner, then touch the glowing item. 
 
 Opal is a larger cream-white golden retriever with a turquoise collar and a grumpy expression. Ruby is a white husky with a red collar, a blep, and a sleepy sploot. Curly, light-brown Samwise snacks and helps stir biscuit batter. Their portraits and traveling sprites share the same artwork. Completing quests changes their activities: Lammy returns to Opal, Ruby gains her cushion and rainbow, the lunchbox returns to the kitchen, and the family gathers for biscuits. Cat, fox, and goose skins retain the normal player hitbox and level equipment.
 
-Free travel keeps the chosen difficulty and permits retries even in postgame Hardcore. Return home from any replay. Bones, outfits, party choices, quest progress, and the chase flag last for the current journey; starting over or reloading the page resets them. Juniper has the shared wallet and wardrobe, plus the home shop’s exclusive stock. Supplies cannot be wasted at home.
+Free travel keeps the chosen difficulty and permits retries even in postgame Hardcore. Return home from any replay. Bones, outfits, party choices, quest progress, and the chase flag persist in the selected browser save. Free Roam keeps these only until you leave the run. Juniper has the shared wallet and wardrobe, plus the home shop’s exclusive stock. Supplies cannot be wasted at home.
 
 ## House companions, practice, and building
 

@@ -4,11 +4,11 @@ The drawing studio and local batch tool render the game's real platforms, enemie
 
 ## Print from the website
 
-Open **Settings → Dev Mode → Print & draw levels**. The studio starts with the game's difficulty, graphics choice, current level, and house floor. Choose **Level maps** or **Cutscene storyboard**, then select the content, page style, and Letter/A4 paper. **Make print preview** prepares the pages; use its checkboxes to omit individual sheets, then **Print drawing pack**. The browser offers printing or Save as PDF. Print landscape at 100% and turn off browser headers and footers.
+Open **Print & draw levels** on the main screen. The studio starts at level 1 with the current difficulty and graphics choice. Choose **Level maps** or **Cutscene storyboard**, then select the content, page style, and Letter/A4 paper. **Make print preview** prepares the pages; use its checkboxes to omit individual sheets, then **Print drawing pack**. The browser offers printing or Save as PDF. Print landscape at 100% and turn off browser headers and footers.
 
 Maps can include the whole level, close-ups, or both. Smaller close-up areas give larger printed details. All 14 story levels, all house floors, and the custom course are available without completing them. Custom Course reads the layout saved in this browser, or uses the starter course; save editor changes before printing. Storyboards include one actual rendered still and its dialogue per spoken line, including Baron von Bins’s reveal.
 
-The game and cutscene timers pause while the studio is open. **Back to game** resumes from the same position. Printing runs in a separate document and does not change the journey, saved course, or graphics/audio preferences. Print controls are visible only with Dev Mode; this is a convenience toggle, not an authentication boundary.
+The studio opens from the main screen, with no active game running behind it. **Back to main menu** returns to the four save slots and Free Roam. Printing runs in a separate document and does not change saved adventures, the saved course, or graphics/audio preferences. No mode or cheat toggle is needed.
 
 Keep the printed revision, level/story, page code, and coordinates visible in returned photos. Screenshots represent a frozen pose, so use arrows to describe motion. Browser printing works without a server-side export service; the browser controls printer/PDF availability.
 
@@ -88,4 +88,4 @@ No output is placed in `public/` or `dist/`; the command rejects those output pa
 
 `npm run test:level-export` checks argument validation, complete overlapping coverage, all 14 story levels in both difficulty layouts and both graphics modes, tall maps, exact crop-to-full-image pixel correspondence, printable Letter/A4 layout, house/custom courses, exclusion of Node batch tooling and local output from a production build, and cleanup on an invalid crop. It uses a temporary output directory and removes its own generated fixtures.
 
-`npm run test:print-studio` checks Dev Mode access, game/cutscene pause and resume, preference isolation, page selection, all cutscenes in both graphics modes, mobile layout, and the built website.
+`npm run test:print-studio` checks main-screen access and return, preference isolation, page selection, all cutscenes in both graphics modes, mobile layout, and the built website.

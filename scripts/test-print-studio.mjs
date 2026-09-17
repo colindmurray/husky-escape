@@ -9,15 +9,13 @@ try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 850 } });
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(base); await page.waitForFunction(() => window.__husky);
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    assert.equal(await page.getByRole('button', { name: 'Print & draw levels' }).count(), 0);
-    await page.getByRole('button', { name: 'Dev Mode', exact: true }).click();
-    await page.evaluate(() => window.__husky.engine.startLevel(14, 'HARD'));
+    assert.equal(await page.getByRole('button', { name: 'Dev Mode', exact: true }).count(), 0);
     await page.getByRole('button', { name: 'Print & draw levels' }).click();
-    const before = await page.evaluate(() => ({ x: window.__husky.engine.world.player.x, time: window.__husky.engine.world.timeLeft, storage: JSON.stringify(localStorage) }));
+    const before = await page.evaluate(() => ({ state: window.__husky.engine.gameState, storage: JSON.stringify(localStorage) }));
     const studio = page.frameLocator('iframe[title="Drawing studio"]');
     await studio.getByRole('heading', { name: 'Print, draw, imagine' }).waitFor();
-    assert.equal(await studio.getByLabel('Level', { exact: true }).inputValue(), '14');
+    assert.equal(await studio.getByLabel('Level', { exact: true }).inputValue(), '1');
+    await studio.getByLabel('Level', { exact: true }).selectOption('14');
     await studio.getByLabel('Difficulty', { exact: true }).selectOption('HARD');
     await studio.getByLabel('Artwork').selectOption('classic');
     await studio.getByRole('button', { name: 'Make print preview' }).click();
@@ -30,19 +28,11 @@ try {
     await printFrame.evaluate(() => { window.print = () => { window.printRequested = true; }; });
     await print.getByRole('button', { name: 'Print drawing pack' }).click();
     assert(await printFrame.evaluate(() => window.printRequested));
-    assert.deepEqual(await page.evaluate(() => ({ x: window.__husky.engine.world.player.x, time: window.__husky.engine.world.timeLeft, storage: JSON.stringify(localStorage) })), before);
+    assert.deepEqual(await page.evaluate(() => ({ state: window.__husky.engine.gameState, storage: JSON.stringify(localStorage) })), before);
     await page.screenshot({ path: '/tmp/husky-print-studio.png' });
-    await page.getByRole('button', { name: 'Back to game' }).click();
-    await page.keyboard.down('ArrowRight'); await page.waitForTimeout(150); await page.keyboard.up('ArrowRight');
-    assert(await page.evaluate(x => window.__husky.engine.world.player.x > x, before.x));
-    // Pausing the studio also preserves a cutscene's pending spoken line.
-    await page.evaluate(() => window.__husky.engine.startCutscene());
-    await page.getByRole('button', { name: 'Print & draw levels' }).click();
-    const step = await page.evaluate(() => window.__husky.engine.cutsceneManager.step);
-    await page.waitForTimeout(3200);
-    assert.equal(await page.evaluate(() => window.__husky.engine.cutsceneManager.step), step);
-    await page.getByRole('button', { name: 'Back to game' }).click();
-    await page.waitForFunction(step => window.__husky.engine.cutsceneManager.step > step, step, { timeout: 4000 });
+    await page.getByRole('button', { name: 'Back to main menu' }).click();
+    assert.equal(await page.getByRole('button', { name: 'Free Roam', exact: true }).count(), 1);
+    assert.equal(await page.evaluate(() => window.__husky.engine.gameState), 'INTRO');
     // Direct print entry mounts no live game and handles every existing story.
     await page.goto(`${base}/?print=1&level=11&difficulty=HARD&graphics=enhanced`);
     assert.equal(await page.evaluate(() => !!window.__husky), false);
@@ -67,5 +57,5 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: '/tmp/husky-print-mobile.png' });
     assert.deepEqual(errors, []);
-    console.log('PASS: production print entry, Dev Mode gating, isolated preferences, level pages and selection, print action, game/cutscene pause/resume, 18 storyboard variants, paper fit, tall maps, and mobile layout.');
+    console.log('PASS: production print entry, title-screen access, isolated preferences, level pages and selection, print action, main-menu return, 18 storyboard variants, paper fit, tall maps, and mobile layout.');
 } finally { await browser.close(); await new Promise(resolve => server.httpServer.close(resolve)); }

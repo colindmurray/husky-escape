@@ -6,10 +6,13 @@ import { GameState, SoundType, Difficulty } from "../types";
 import { audioManager } from "./Audio";
 import { Renderer } from "./engine/Renderer";
 import { World } from "./engine/World";
-import { CutsceneManager } from "./engine/CutsceneManager";
+import { CutsceneManager, type CutsceneType } from "./engine/CutsceneManager";
 import { gfxSettings } from "./GfxSettings";
+import { inputManager } from './Input';
+import { SAVE_SLOTS, saveKey, saveName, parseSave, packBelongings, unpackBelongings, type SaveGame } from './SaveGame';
 
 interface GameEngineOptions {
+    onSaveError?: (message: string) => void;
     onShopUpdate?: () => void;
     onStateChange: (state: GameState, data?: any) => void;
     onScoreUpdate: (bones: number) => void;
@@ -23,7 +26,14 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming' | 'house_chase' = 'intro';
+    private currentCutscene: CutsceneType = 'intro';
+    public sessionMode: 'saved' | 'free' | null = null;
+    public cheatsEnabled = false;
+    public activeSave: { slot: number; name: string; difficulty: Difficulty } | null = null;
+    private lastSaveText: string | null = null;
+    private lastSnapshot = '';
+    private saveQueued = false;
+    private failureReason: string | undefined;
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
@@ -37,7 +47,15 @@ export class GameEngine {
     private practiceSession: { belongings: Belongings; bones: number; difficulty: Difficulty; level: number } | null = null;
 
     constructor(canvas: HTMLCanvasElement, options: GameEngineOptions) {
-        this.options = options;
+        this.options = { ...options,
+            onStateChange: (state, data) => {
+                if (state === GameState.GAME_OVER) this.failureReason = data?.reason;
+                else if (state === GameState.PLAYING) this.failureReason = undefined;
+                options.onStateChange(state, data); this.queueSave();
+            },
+            onScoreUpdate: bones => { options.onScoreUpdate(bones); this.queueSave(); },
+            onShopUpdate: () => { options.onShopUpdate?.(); this.queueSave(); },
+        };
         this.renderer = new Renderer(canvas);
         
         // Initialize World
@@ -47,8 +65,8 @@ export class GameEngine {
                 this.options.onStateChange(GameState.CUTSCENE, { text: '' }); audioManager.stopMusic();
                 this.cutsceneManager.start('raccoon_intro');
             },
-            onShopUpdate: options.onShopUpdate,
-            onScoreUpdate: options.onScoreUpdate,
+            onShopUpdate: this.options.onShopUpdate,
+            onScoreUpdate: this.options.onScoreUpdate,
             onTimeUpdate: options.onTimeUpdate,
             onLevelComplete: (level, bones) => {
                  this.gameState = GameState.LEVEL_COMPLETE;
@@ -78,6 +96,120 @@ export class GameEngine {
         this.startLoop();
     }
 
+    private queueSave() {
+        if (!this.activeSave || this.saveQueued) return;
+        this.saveQueued = true;
+        // World callbacks can fire halfway through a purchase or level load.
+        queueMicrotask(() => { this.saveQueued = false; this.saveProgress(); });
+    }
+
+    public saveProgress(): boolean {
+        if (this.sessionMode !== 'saved' || !this.activeSave || !this.world.player) return true;
+        const practice = this.practiceSession;
+        const snapshot = {
+            version: 1 as const, name: this.activeSave.name, difficulty: this.activeSave.difficulty,
+            level: practice ? HOME_LEVEL : this.world.currentLevel,
+            homeFloor: practice ? 'basement' as const : this.world.homeFloor,
+            bones: practice?.bones ?? this.world.player.bonesCollected,
+            belongings: packBelongings(practice?.belongings ?? this.world.belongings),
+            // The boss introduction belongs to its arena; replay it when the restarted run reaches it.
+            state: practice || (this.gameState === GameState.CUTSCENE && this.currentCutscene === 'raccoon_intro') ? GameState.PLAYING : this.gameState,
+            cutscene: practice ? 'house_chase' as const : this.currentCutscene,
+            reason: practice ? undefined : this.failureReason,
+        };
+        try {
+            const key = saveKey(this.activeSave.slot);
+            if (localStorage.getItem(key) !== this.lastSaveText) {
+                this.options.onSaveError?.('This save changed in another tab. Reload to continue the newer save. Changes made here have not been saved.');
+                return false;
+            }
+            const packed = JSON.stringify(snapshot);
+            if (packed === this.lastSnapshot) return true;
+            const raw = JSON.stringify({ ...snapshot, updatedAt: Date.now() });
+            parseSave(raw);
+            localStorage.setItem(key, raw);
+            this.lastSaveText = raw; this.lastSnapshot = packed;
+            this.options.onSaveError?.('');
+            return true;
+        } catch (error) {
+            this.options.onSaveError?.(`Couldn’t save. ${error instanceof Error ? error.message : 'Browser storage is unavailable.'} Keep this tab open and retry.`);
+            return false;
+        }
+    }
+
+    public openSave(slot: number, name?: string, difficulty = Difficulty.EASY): boolean {
+        if (this.sessionMode || !Number.isInteger(slot) || slot < 0 || slot >= SAVE_SLOTS) return false;
+        try {
+            const raw = localStorage.getItem(saveKey(slot));
+            if (name !== undefined && raw !== null) throw Error('This slot is already occupied. Choose another slot.');
+            const saved: SaveGame | null = raw === null ? null : parseSave(raw);
+            if (!saved && !saveName(name ?? '')) throw Error('Give your adventure a name first.');
+            this.options.onSaveError?.('');
+            this.lastSaveText = raw; this.lastSnapshot = '';
+            this.cheatsEnabled = false;
+            this.cutsceneManager.setPaused(true);
+            this.startGame(saved?.difficulty ?? difficulty);
+            if (saved) {
+                this.world.belongings = unpackBelongings(saved.belongings);
+                this.world.homeFloor = saved.homeFloor;
+                this.world.player!.bonesCollected = saved.bones;
+                this.startLevel(saved.level, saved.difficulty);
+                this.currentCutscene = saved.cutscene;
+                this.gameState = saved.state;
+                this.options.onStateChange(saved.state, { level: saved.level, bones: saved.bones, reason: saved.reason, text: '' });
+                if (saved.state === GameState.CUTSCENE) this.cutsceneManager.start(saved.cutscene);
+                else this.cutsceneManager.setPaused(true);
+            } else this.startCutscene();
+            this.activeSave = { slot, name: saved?.name ?? saveName(name!), difficulty: saved?.difficulty ?? difficulty };
+            this.sessionMode = 'saved';
+            if (saved) { const { updatedAt, ...snapshot } = saved; this.lastSnapshot = JSON.stringify(snapshot); }
+            if (!this.saveProgress()) {
+                this.returnToTitle(false); return false;
+            }
+            this.options.onShopUpdate?.();
+            return true;
+        } catch (error) {
+            this.options.onSaveError?.(error instanceof Error ? error.message : 'Browser storage is unavailable.');
+            return false;
+        }
+    }
+
+    public startFreeRoam(difficulty = Difficulty.EASY) {
+        if (this.sessionMode) return false;
+        this.sessionMode = 'free'; this.activeSave = null; this.cheatsEnabled = false;
+        this.options.onSaveError?.(''); this.startGame(difficulty); return true;
+    }
+
+    public returnToTitle(save = true) {
+        if (save && !this.saveProgress()) return false;
+        this.cutsceneManager.setPaused(true); audioManager.stopMusic(); inputManager.clear();
+        this.activeSave = null; this.sessionMode = null; this.cheatsEnabled = false;
+        this.gameState = GameState.INTRO;
+        this.options.onStateChange(GameState.INTRO);
+        return true;
+    }
+
+    public warpToLevel(level: number) {
+        if (this.sessionMode !== 'free' || !Number.isInteger(level) || level < 1 || level > HOME_LEVEL) return false;
+        if (this.practiceSession) this.goHome();
+        if (level === HOME_LEVEL) { this.world.belongings.homeUnlocked = true; this.world.homeFloor = 'ground'; }
+        this.startLevel(level, this.difficulty); return true;
+    }
+
+    public enableCheats(enabled: boolean) {
+        this.cheatsEnabled = this.sessionMode === 'free' && enabled;
+        this.options.onShopUpdate?.();
+    }
+
+    public cheat(kind: 'bones' | 'treats' | 'time') {
+        if (this.sessionMode !== 'free' || !this.cheatsEnabled || this.gameState !== GameState.PLAYING || !this.world.player) return false;
+        if (kind === 'bones') { this.world.player.bonesCollected += 100; this.options.onScoreUpdate(this.world.player.bonesCollected); }
+        else if (kind === 'treats') this.world.belongings.slots = ['shield', 'magnet', 'time'];
+        else if (kind === 'time') { this.world.timeLeft += 60; this.options.onTimeUpdate(this.world.timeLeft); }
+        else return false;
+        this.options.onShopUpdate?.(); return true;
+    }
+
     private resize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -85,10 +217,17 @@ export class GameEngine {
         this.world.resize(w, h);
     }
 
-    public setDifficulty(difficulty: Difficulty) { this.difficulty = difficulty; if (this.practiceSession) this.practiceSession.difficulty = difficulty; }
+    public setDifficulty(difficulty: Difficulty) {
+        if (this.sessionMode === 'saved') return;
+        this.difficulty = difficulty;
+        if (this.practiceSession) this.practiceSession.difficulty = difficulty;
+        else if (this.sessionMode === 'free' && this.gameState === GameState.PLAYING) this.startLevel(this.world.currentLevel, difficulty);
+    }
 
     public startLevel(level: number, difficulty: Difficulty = Difficulty.EASY) {
         if (level === HOME_LEVEL && !this.world.belongings.homeUnlocked) return;
+        if (this.activeSave && !this.practiceSession) difficulty = this.activeSave.difficulty;
+        this.cutsceneManager.setPaused(true);
         this.difficulty = difficulty;
         this.world.loadLevel(level, this.world.player !== null, difficulty);
         this.gameState = GameState.PLAYING;
@@ -208,7 +347,7 @@ export class GameEngine {
     }
 
     public startTownCutscene(difficulty: Difficulty = this.difficulty) {
-        this.difficulty = difficulty;
+        this.difficulty = this.activeSave?.difficulty ?? difficulty;
         this.currentCutscene = 'town_intro';
         this.gameState = GameState.CUTSCENE;
         this.options.onStateChange(GameState.CUTSCENE, { text: "" });
@@ -218,7 +357,7 @@ export class GameEngine {
     }
 
     public skipCutscene() {
-        this.cutsceneManager.skip();
+        if (this.gameState === GameState.CUTSCENE) this.cutsceneManager.skip();
     }
 
     private endCutscene() {
@@ -233,9 +372,7 @@ export class GameEngine {
         } else if (this.currentCutscene === 'raccoon_intro') {
             this.world.finishRaccoonIntro(); this.gameState = GameState.PLAYING; this.options.onStateChange(GameState.PLAYING);
         } else if (this.currentCutscene === 'intro') {
-            this.gameState = GameState.INTRO; 
-            audioManager.stopMusic();
-            this.options.onStateChange(GameState.INTRO, { showMenu: true });
+            this.startLevel(1, this.difficulty);
         } else if (this.currentCutscene === 'pound_escape') {
             this.startLevel(3, this.difficulty);
         } else if (this.currentCutscene === 'chase') {
@@ -284,6 +421,7 @@ export class GameEngine {
     }
 
     public stop() {
+        this.cutsceneManager.setPaused(true);
         this.isLoopRunning = false;
         if (this.frameId) cancelAnimationFrame(this.frameId);
         audioManager.stopMusic();
