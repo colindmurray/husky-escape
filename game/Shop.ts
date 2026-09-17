@@ -1,6 +1,11 @@
 import type { QuestStatus } from './Home';
 import { Entity } from './entities/Entity';
 import { TownPlatform } from './entities/Town';
+import { MovingPlatform } from './entities/MovingPlatform';
+import { SkiJump } from './entities/SkiJump';
+import { UmbrellaPickup } from './entities/UmbrellaPickup';
+import { ConveyorBelt } from './entities/ConveyorBelt';
+import { PackagingPress } from './entities/PackagingPress';
 import type { Player } from './entities/Player';
 import type { LevelData } from './levels/types';
 import { gfxSettings } from './GfxSettings';
@@ -16,6 +21,8 @@ export const SHOP_GOODS = {
     feather: { name: 'Feather wafer', icon: '🪶', price: 8, description: 'On land, hold jump to float gently down for 12 seconds.' },
     feast: { name: 'Bakery bonus', icon: '🥨', price: 10, description: 'Each bone you collect is worth two for 15 seconds.' },
     hush: { name: 'Quiet-time cookie', icon: '💤', price: 10, description: 'Enemies and their projectiles pause for 5 seconds. They still hurt on contact.' },
+    leap: { name: 'Sky biscuit', icon: '☁', price: 8, description: 'An instant upward bounce on land, even in midair, with two fresh jumps.' },
+    trailmix: { name: 'Trail mix', icon: '🥜', price: 12, description: 'Higher jumps and faster running together for 15 seconds on land.' },
     goose: { name: 'Mischievous goose', icon: '🪿', price: 16, description: 'White feathers, a long neck, orange feet, and absolutely no manners.' },
     scarf: { name: 'Snowday scarf', icon: '🧣', price: 10, description: 'A golden scarf with a fluttering tail. Only at Snowdrift.' },
     sailor: { name: 'Sailor cap', icon: '⚓', price: 10, description: 'A crisp white cap with a blue ribbon. Only at the Lighthouse.' },
@@ -29,26 +36,31 @@ export const SHOP_GOODS = {
     collar: { name: 'Moonstone collar', icon: '💎', price: 8, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
-export type Supply = 'shield' | 'magnet' | 'time' | 'spring' | 'sprint' | 'feather' | 'feast' | 'hush';
+export const SUPPLIES = ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush', 'leap', 'trailmix'] as const;
+export type Supply = typeof SUPPLIES[number];
 export type Skin = 'cat' | 'fox' | 'goose';
 export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | 'scarf' | 'sailor' | 'chef' | 'bow' | Skin;
 export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox' || id === 'goose';
-export const isSupply = (id: ShopGood): id is Supply => ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush'].includes(id);
+export const isSupply = (id: ShopGood): id is Supply => (SUPPLIES as readonly string[]).includes(id);
 
-const LOCAL_STOCK: Record<number, ShopGood[]> = {
-    3: ['goose', 'spring', 'hush'],
-    6: ['scarf', 'sprint', 'spring'],
-    9: ['sailor', 'feather', 'sprint'],
-    12: ['chef', 'feast', 'feather'],
-    15: ['bow', 'hush', 'feast'],
-};
-export const shopStock = (level: number): ShopGood[] => [
-    ...(LOCAL_STOCK[level] ?? []), 'hat', 'crown', 'cat', 'fox', 'coat', 'collar',
-];
+export const SHOP_COSMETICS: Record<number, Accessory> = { 3: 'goose', 6: 'scarf', 9: 'sailor', 12: 'chef', 15: 'bow' };
+export function shopStock(level: number, belongings: Belongings): ShopGood[] {
+    if (!Object.hasOwn(SHOP_COSMETICS, level)) return [];
+    if (!belongings.shopSupplies[level]) {
+        const supplies = [...SUPPLIES];
+        for (let i = supplies.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [supplies[i], supplies[j]] = [supplies[j], supplies[i]];
+        }
+        belongings.shopSupplies[level] = supplies.slice(0, 3);
+    }
+    return [SHOP_COSMETICS[level], ...belongings.shopSupplies[level], 'hat', 'crown', 'cat', 'fox', 'coat', 'collar'];
+}
 const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
     public homeUnlocked = false;
+    public houseIntroSeen = false;
     public companions = new Set<string>();
     public quests: Record<string, QuestStatus> = {};
     public slots: (Supply | null)[] = [null, null, null];
@@ -56,6 +68,7 @@ export class Belongings {
     public equipped = new Set<Accessory>();
     public collectedBones = new Set<string>();
     public unlockedShops = new Set<number>();
+    public shopSupplies: Record<number, Supply[]> = {};
 
     public toggleAccessory(id: Accessory) {
         if (this.equipped.delete(id)) return;
@@ -65,34 +78,87 @@ export class Belongings {
     }
 }
 
+type EntranceChallenge =
+    | { kind: 'canopy'; logs: MovingPlatform[] }
+    | { kind: 'ski'; ramp: SkiJump }
+    | { kind: 'glide'; launch: TownPlatform; rings: { x: number; y: number }[] }
+    | { kind: 'bakery'; belt: ConveyorBelt; presses: PackagingPress[] }
+    | { kind: 'home' };
+
 export class SecretDoghouse extends Entity {
-    public seals = [false, false, false];
     public unlocked = false;
     public nearby = false;
-    constructor(x: number, y: number, public trail: { x: number; y: number }[], public title: string) {
+    public progress = 0;
+    private rideDistance = 0;
+    private airborneRoute = false;
+    constructor(x: number, y: number, public title: string, public challenge: EntranceChallenge) {
         super(x, y, 88, 66, '#ae7950');
+    }
+    public get hint() {
+        switch (this.challenge.kind) {
+            case 'canopy': return 'Ride both marked logs, then land here';
+            case 'ski': return 'Take the flagged ski jump and land here';
+            case 'glide': return 'Glide through both wind rings, then land here';
+            case 'bakery': return 'Follow the belt beneath both presses';
+            case 'home': return 'Help Samwise with the kitchen biscuits';
+        }
     }
     update(player?: Player) {
         if (!player) return;
-        this.trail.forEach((seal, i) => {
-            if (!this.seals[i] && player.x < seal.x + 22 && player.x + player.w > seal.x - 4 && player.y < seal.y + 22 && player.y + player.h > seal.y - 4) {
-                this.seals[i] = true; audioManager.playSFX(SoundType.COLLECT);
-            }
-        });
-        this.unlocked ||= this.seals.every(Boolean);
         this.nearby = Math.abs(player.x + player.w / 2 - this.x - this.w / 2) < 70 && Math.abs(player.y + player.h - this.y - this.h) < 28 && player.grounded;
+        if (this.unlocked) return;
+        const route = this.challenge, previous = this.progress;
+        if (route.kind === 'canopy') {
+            const log = route.logs[this.progress];
+            this.rideDistance = log && player.standingOn === log ? this.rideDistance + Math.abs(log.dx) : 0;
+            if (this.rideDistance >= 48) { this.progress++; this.rideDistance = 0; }
+            this.unlocked = this.nearby && this.progress === route.logs.length;
+        } else if (route.kind === 'ski') {
+            if (player.launchedFrom === route.ramp) this.airborneRoute = true;
+            if (player.grounded) {
+                this.unlocked = this.nearby && this.airborneRoute;
+                this.airborneRoute = false;
+            }
+        } else if (route.kind === 'glide') {
+            if (player.standingOn === route.launch) { this.airborneRoute = true; this.progress = 0; }
+            else if (player.grounded) {
+                this.unlocked = this.nearby && this.airborneRoute && this.progress === route.rings.length;
+                this.airborneRoute = false;
+                if (!this.unlocked) this.progress = 0;
+            }
+            const ring = route.rings[this.progress];
+            if (this.airborneRoute && player.isGliding && ring && Math.abs(player.x + 20 - ring.x) < 44 && Math.abs(player.y + 20 - ring.y) < 65) this.progress++;
+        } else if (route.kind === 'bakery') {
+            const press = route.presses[this.progress];
+            if (press && player.standingOn === route.belt && Math.abs(player.x + 20 - press.x - press.w / 2) < 26 && !press.isLethal()) this.progress++;
+            this.unlocked = this.nearby && this.progress === route.presses.length;
+        }
+        if (this.unlocked || this.progress > previous) audioManager.playSFX(this.unlocked ? SoundType.WIN_SHORT : SoundType.COLLECT);
     }
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         const rich = gfxSettings.visualMode === 'enhanced', x = this.x - camX, y = this.y;
         ctx.save();
-        this.trail.forEach((seal, i) => {
-            if (this.seals[i] || this.unlocked) return;
-            const px = seal.x - camX + 10, py = seal.y + 10;
-            ctx.fillStyle = '#f1c973'; ctx.strokeStyle = '#fff0b7'; ctx.lineWidth = 2;
-            if (rich) { ctx.shadowColor = '#f1ce84'; ctx.shadowBlur = 12; }
-            ctx.beginPath(); ctx.arc(px, py, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
-            drawPaw(ctx, px, py, '#805442');
-        });
+        const route = this.challenge;
+        const marker = (px: number, py: number, done: boolean, symbol = 'paw', stem = 20) => {
+            ctx.fillStyle = '#8a6745'; ctx.fillRect(px - 2, py + 9, 4, stem);
+            ctx.fillStyle = done || this.unlocked ? '#f6d484' : '#b5c7bd';
+            ctx.strokeStyle = '#344d4b'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(px, py, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            if (symbol === 'paw') drawPaw(ctx, px, py, '#53624d');
+            else { ctx.fillStyle = '#3e5753'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(symbol, px, py + 6); }
+        };
+        if (route.kind === 'canopy') route.logs.forEach((log, i) => marker(log.x + log.w / 2 - camX, log.y - 28, this.progress > i));
+        if (route.kind === 'ski') marker(route.ramp.x - 40 - camX, route.ramp.y - 40, this.airborneRoute, '↗', 71);
+        if (route.kind === 'glide') {
+            marker(route.launch.x + 30 - camX, route.launch.y - 28, this.airborneRoute, '☂');
+            route.rings.forEach((ring, i) => {
+                ctx.strokeStyle = this.progress > i || this.unlocked ? '#f6d484' : '#b5e3eb'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.ellipse(ring.x - camX, ring.y, 29, 49, 0, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillStyle = '#d4eff222'; ctx.fill();
+                ctx.fillStyle = '#e9faff'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('→', ring.x - camX, ring.y + 8);
+            });
+        }
+        if (route.kind === 'bakery') route.presses.forEach((press, i) => marker(press.x + press.w / 2 - camX, route.belt.y - 222, this.progress > i));
         if (x > -150 && x < ctx.canvas.width + 150) {
             ctx.fillStyle = '#9d6a48'; ctx.fillRect(x, y + 20, 88, 46);
             if (rich) { const wood = ctx.createLinearGradient(x, 0, x + 88, 0); wood.addColorStop(0, '#e5b57860'); wood.addColorStop(1, '#4b383560'); ctx.fillStyle = wood; ctx.fillRect(x, y + 20, 88, 46); }
@@ -101,9 +167,9 @@ export class SecretDoghouse extends Entity {
             ctx.fillStyle = '#3d7e72'; ctx.beginPath(); ctx.moveTo(x - 8, y + 23); ctx.lineTo(x + 44, y - 7); ctx.lineTo(x + 96, y + 23); ctx.closePath(); ctx.fill();
             ctx.strokeStyle = '#cbd4a1'; ctx.lineWidth = 4; ctx.stroke();
             ctx.fillStyle = this.unlocked ? '#efce89' : '#322e32'; ctx.beginPath(); ctx.roundRect(x + 28, y + 31, 34, 35, [16, 16, 0, 0]); ctx.fill();
-            for (let i = 0; i < 3; i++) { ctx.fillStyle = this.seals[i] || this.unlocked ? '#f6d484' : '#5e5745'; ctx.beginPath(); ctx.arc(x + 29 + i * 15, y + 20, 4, 0, Math.PI * 2); ctx.fill(); }
+            drawPaw(ctx, x + 44, y + 12, this.unlocked ? '#f6d484' : '#a6b6a1');
             if (!this.unlocked) { ctx.strokeStyle = '#bea779'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 30, y + 42); ctx.lineTo(x + 60, y + 57); ctx.stroke(); }
-            if (this.nearby) { ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c8'; ctx.strokeStyle = '#283f41'; ctx.lineWidth = 3; const text = this.unlocked ? 'E · Enter doghouse' : 'Find the 3 paw seals'; ctx.strokeText(text, x + 44, y - 20); ctx.fillText(text, x + 44, y - 20); }
+            if (this.nearby && route.kind !== 'home') { ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c8'; ctx.strokeStyle = '#283f41'; ctx.lineWidth = 3; const text = this.unlocked ? 'E · Enter doghouse' : this.hint; ctx.strokeText(text, x + 44, y - 20); ctx.fillText(text, x + 44, y - 20); }
         }
         ctx.restore();
     }
@@ -115,23 +181,39 @@ function drawPaw(ctx: CanvasRenderingContext2D, x: number, y: number, color: str
 }
 
 export function addSecretShop(data: LevelData, level: number, height: number, difficulty: Difficulty): SecretDoghouse | null {
-    // Each trail branches above existing terrain; the exit and main route stay independent.
-    const routes: Record<number, { title: string; shelves: [number, number][] }> = {
-        3: { title: 'Canopy hideaway', shelves: [[1990, 350], [2160, 430], [2330, 510]] },
-        6: { title: 'Snowdrift hideaway', shelves: [[3170, 280], [3340, 370], [3510, 460]] },
-        9: { title: 'Lighthouse hideaway', shelves: [[3020, 480], [3200, 560], [3380, 640]] },
-        12: { title: 'Rafter hideaway', shelves: [[1030, 575], [1200, 655], [1370, 735]] },
+    const easy = difficulty === Difficulty.EASY;
+    const landing = (x: number, rise: number, width: number) => {
+        const shelf = new TownPlatform(x, height - rise, width, 18, 'stone');
+        shelf.floorY = shelf.y + 32; data.platforms.push(shelf); return shelf;
     };
-    const route = routes[level]; if (!route) return null;
-    const width = difficulty === Difficulty.EASY ? 120 : 85;
-    for (const [i, [x, rise]] of route.shelves.entries()) {
-        const shelf = new TownPlatform(x, height - rise, i === 2 ? 140 : width, 18, 'stone');
-        shelf.floorY = shelf.y + 32; data.platforms.push(shelf);
-    }
-    const [x, rise] = route.shelves[2];
-    const door = new SecretDoghouse(x + 30, height - rise - 66, route.shelves.map(([sx, sy]) => ({ x: sx + 25, y: height - sy - 34 })), route.title);
+    let shelf: TownPlatform, title: string, challenge: EntranceChallenge;
+    if (level === 3) {
+        const logs = [
+            new MovingPlatform(2150, height - 470, easy ? 140 : 110, 22, 2150, 2330, easy ? 1 : 1.2),
+            new MovingPlatform(2420, height - 580, easy ? 140 : 110, 22, 2380, 2570, easy ? 1 : 1.2),
+        ];
+        data.platforms.push(...logs); shelf = landing(2700, 690, easy ? 190 : 150);
+        title = 'Canopy hideaway'; challenge = { kind: 'canopy', logs };
+    } else if (level === 6) {
+        landing(3000, 300, 290);
+        const ramp = new SkiJump(3200, height - 340, 20); data.platforms.push(ramp);
+        shelf = landing(3880, 850, easy ? 230 : 180);
+        title = 'Snowdrift hideaway'; challenge = { kind: 'ski', ramp };
+    } else if (level === 9) {
+        const launch = landing(3220, 650, easy ? 190 : 160);
+        data.platforms.push(new UmbrellaPickup(launch.x + 110, launch.y - 35));
+        shelf = landing(4000, 390, easy ? 210 : 170);
+        title = 'Lighthouse hideaway'; challenge = { kind: 'glide', launch, rings: [{ x: 3570, y: height - 790 }, { x: 3830, y: height - 620 }] };
+    } else if (level === 12) {
+        landing(20, 230, 120);
+        const belt = new ConveyorBelt(190, height - 360, 500, 22, easy ? -0.8 : -1.2);
+        const presses = [new PackagingPress(290, belt.y, !easy), new PackagingPress(510, belt.y, !easy)];
+        data.platforms.push(belt); data.enemies.push(...presses); shelf = landing(690, 360, 130);
+        title = 'Rafter hideaway'; challenge = { kind: 'bakery', belt, presses };
+    } else return null;
+    const door = new SecretDoghouse(shelf.x + (shelf.w - 88) / 2, shelf.y - 66, title, challenge);
     data.props ??= []; data.props.push(door);
-    data.worldHeight = Math.max(data.worldHeight ?? height, height, rise + 200);
+    data.worldHeight = Math.max(data.worldHeight ?? height, height, level === 9 ? 1320 : level === 6 ? 1210 : level === 12 ? 1120 : 1020);
     return door;
 }
 

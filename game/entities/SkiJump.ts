@@ -3,7 +3,7 @@ import { gfxSettings } from "../GfxSettings";
 import { drawSkiJumpEnhanced } from "../engine/enhanced/EnhancedSprites";
 
 export class SkiJump extends Platform {
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, public launchPower = 14) {
         super(x, y, 80, 40);
     }
 

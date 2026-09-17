@@ -1,5 +1,5 @@
 import { drawFamilyDog } from './FamilyArt';
-import { drawHome } from '../Home';
+import { drawHome, drawHouseChase } from './HomeArt';
 import { drawBackyardBackground, drawRaccoonIntro } from './BackyardArt';
 import { BossRaccoon } from '../entities/Backyard';
 
@@ -33,11 +33,12 @@ export class Renderer {
 
     public drawGame(world: World) {
         const { width, height, cameraX, cameraY, currentLevel } = world;
+        if (world.shopRoom) { world.shopRoom.draw(this.ctx, width, height); return; }
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 
         if (world.isHome) {
-            drawHome(this.ctx, width, height, cameraX, world.homeFloor);
+            drawHome(this.ctx, width, height, cameraX, world.homeFloor, world.belongings.quests, world.homeFrame / 60);
         } else if (world.isCustom) {
             this.ctx.fillStyle = enhanced ? '#2d4652' : '#536c72'; this.ctx.fillRect(0, 0, width, height);
             this.ctx.strokeStyle = '#9fc7bb25'; for (let y = 0; y < height; y += 64) { this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(width, y); this.ctx.stroke(); }
@@ -566,6 +567,8 @@ export class Renderer {
     public drawCutscene(manager: CutsceneManager, width: number, height: number) {
         const { frame, step, currentType } = manager;
         const ctx = this.ctx;
+
+        if (currentType === 'house_chase') { drawHouseChase(ctx, width, height, step, frame); return; }
 
         if (currentType === 'homecoming') {
             drawBackyardBackground(ctx, width, height, 4200, 0, frame / 60);

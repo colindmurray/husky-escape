@@ -16,6 +16,7 @@ class AudioController {
 
     // Music State
     private currentTrack: SoundType | null = null;
+    public get musicTrack() { return this.currentTrack; }
     private nextNoteTime: number = 0;
     private currentNoteIndex: number = 0;
     private isPlaying: boolean = false;

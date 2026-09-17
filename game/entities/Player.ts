@@ -42,6 +42,8 @@ export class Player extends Entity {
     public townBumpFrames = 0;
 
     public standingOnShakingPlatform = false;
+    public standingOn: Entity | null = null;
+    public launchedFrom: SkiJump | null = null;
 
     constructor(x: number, y: number) {
         super(x, y, 40, 40, '#ecf0f1');
@@ -50,6 +52,7 @@ export class Player extends Entity {
     update(platforms?: Entity[], input?: InputState, height?: number, currentLevel?: number) {
         if (!platforms || !input || height === undefined || currentLevel === undefined) return;
         
+        this.standingOn = null; this.launchedFrom = null;
         const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
         if (this.magnetTimer > 0) this.magnetTimer--;
@@ -278,7 +281,8 @@ export class Player extends Entity {
             }
 
             if (platform instanceof SkiJump && dir) {
-                this.velY = -14; 
+                this.launchedFrom = platform;
+                this.velY = -platform.launchPower;
                 this.velX = 14;  
                 this.grounded = false;
                 this.jumpsLeft = 1;
@@ -302,6 +306,7 @@ export class Player extends Entity {
                         platform.boarded = true;
                         audioManager.playSFX(SoundType.COLLECT);
                     }
+                    this.standingOn = platform;
                     this.grounded = true;
                     this.velY = 0;
                     this.jumpsLeft = 2;

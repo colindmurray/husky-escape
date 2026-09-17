@@ -31,13 +31,13 @@ try {
         w.loadLevel(1, false); w.belongings.homeUnlocked = true;
         const exclusive = ['goose', 'scarf', 'sailor', 'chef', 'bow'];
         for (const [i, level] of [3, 6, 9, 12, 15].entries()) {
-            w.loadLevel(level); w.shopDoor.unlocked = w.shopDoor.nearby = true; w.openShop(); w.player.bonesCollected = 500;
-            check(exclusive.filter(id => shopStock(level).includes(id)).join() === exclusive[i], `Shop ${level} has its own exclusive cosmetic`);
-            check(shopStock(level).filter(isSupply).length === 2 && !shopStock(level).includes('shield'), `Shop ${level} has two new power-ups`);
+            w.loadLevel(level); w.shopDoor.unlocked = w.shopDoor.nearby = true; w.openShop(); w.shopRoom.player.x = 770; w.interactShop(); w.player.bonesCollected = 500;
+            check(exclusive.filter(id => shopStock(level, w.belongings).includes(id)).join() === exclusive[i], `Shop ${level} has its own exclusive cosmetic`);
+            check(shopStock(level, w.belongings).filter(isSupply).length === 3, `Shop ${level} has three random power-ups`);
             const other = exclusive[(i + 1) % 5]; w.belongings.owned.delete(other);
             check(!w.buyGood(other) && w.player.bonesCollected === 500, `Shop ${level} refuses out-of-stock purchases`);
             check(w.buyGood(exclusive[i]), `Buy ${exclusive[i]}`);
-            for (const id of shopStock(level).filter(isSupply)) {
+            for (const id of shopStock(level, w.belongings).filter(isSupply)) {
                 w.belongings.slots.fill(null); const before = w.player.bonesCollected;
                 check(w.buyGood(id) && w.player.bonesCollected === before - SHOP_GOODS[id].price, `Buy ${id} at its exact price`);
             }
@@ -91,9 +91,11 @@ try {
         return passed;
     });
     await page.getByRole('button', { name: 'Go inside · Home' }).click();
+    await page.getByRole('button', { name: 'Skip >>' }).click();
+    await page.evaluate(() => { window.__husky.engine.world.belongings.quests.peace = 'complete'; });
     await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.world.changeHomeFloor('upstairs'); e.world.cameraX = 200; e.renderer.drawGame(e.world); });
     await page.screenshot({ path: '.playwright-mcp/revamp-companions.png' });
-    await page.evaluate(() => { const w = window.__husky.engine.world; w.player.x = 380; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal'); });
+    await page.evaluate(() => { const w = window.__husky.engine.world; w.player.x = 650; w.player.y = w.height - 140; w.update(); w.openHomePanel('opal'); });
     await page.getByRole('button', { name: 'I’ll find it!' }).click();
     assert.equal(await page.evaluate(() => window.__husky.engine.world.belongings.quests.lammy), 'accepted');
     await page.screenshot({ path: '.playwright-mcp/revamp-opal.png' });
@@ -101,12 +103,13 @@ try {
     await page.evaluate(() => { const e = window.__husky.engine; e.world.changeHomeFloor('kitchen'); e.world.cameraX = 150; e.renderer.drawGame(e.world); });
     await page.screenshot({ path: '.playwright-mcp/revamp-kitchen.png' });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Change floor' }).click();
+    await page.getByRole('button', {name:'Quest journal', exact:true}).click();
+    await page.getByRole('button', {name:'Rooms', exact:true}).click();
     assert.equal(await page.locator('.home-dialog').evaluate(e => e.scrollWidth <= e.clientWidth), true);
     await page.screenshot({ path: '.playwright-mcp/revamp-mobile.png' });
     await page.keyboard.press('Escape'); await page.setViewportSize({ width: 1100, height: 720 });
     await page.waitForFunction(() => window.__husky.engine.world.width === 1100);
-    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(3); e.stop(); const w = e.world; w.player.bonesCollected = 100; w.shopDoor.unlocked = w.shopDoor.nearby = true; w.openShop(); });
+    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(3); e.stop(); const w = e.world; w.player.bonesCollected = 100; w.shopDoor.unlocked = w.shopDoor.nearby = true; w.openShop(); w.shopRoom.player.x = 770; w.interactShop(); });
     assert.equal(await page.getByRole('heading', { name: 'Mischievous goose' }).count(), 1);
     assert.equal(await page.getByRole('heading', { name: 'Snowday scarf' }).count(), 0);
     await page.screenshot({ path: '.playwright-mcp/revamp-shop.png' });

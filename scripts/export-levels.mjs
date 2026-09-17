@@ -24,7 +24,7 @@ Options:
   --overlap 80            Minimum shared pixels between neighboring sheets
   --region x,y,w,h        Export a rectangle within the level bounds
   --paper letter         letter or a4, landscape
-  --floor ground         ground, basement, upstairs, kitchen, or bedroom (level 15)
+  --floor ground         ground, basement, upstairs, kitchen, bedroom, sunroom, or attic (level 15)
   --quests               Show optional fetch-quest items
   --draft file.json      Saved custom layout, required for level 16
   --seed 13              Reproducible visual seed
@@ -47,7 +47,7 @@ export function optionsFrom(argv) {
     if (levels.some(n => !Number.isInteger(n) || n < 1 || n > 16)) throw Error('--level must contain numbers 1-16, or all.');
     if (levels.includes(16) && !v.draft) throw Error('Level 16 needs --draft file.json.');
     const difficulty = choice('difficulty', 'easy', ['easy', 'hard', 'hardcore', 'both']), graphics = choice('graphics', 'enhanced', ['classic', 'enhanced', 'both']);
-    const result = { levels, difficulties: difficulty === 'both' ? ['EASY', 'HARD'] : [difficulty.toUpperCase()], graphics: graphics === 'both' ? ['classic', 'enhanced'] : [graphics], height: number('height', 800, 480, 1200), scale: number('scale', 2, 1, 2), sliceWidth: number('slice-width', 1280, 320, 2400), sliceHeight: number('slice-height', v.height ?? 800, 240, 1600), overlap: number('overlap', 80, 0, 400), paper: choice('paper', 'letter', ['letter', 'a4']), floor: choice('floor', 'ground', ['ground', 'basement', 'upstairs', 'kitchen', 'bedroom']), seed: number('seed', 13, 0, 2147483647), quests: !!v.quests, draftPath: v.draft, out: path.resolve(v.out ?? path.join(ROOT, 'output/level-exports')) };
+    const result = { levels, difficulties: difficulty === 'both' ? ['EASY', 'HARD'] : [difficulty.toUpperCase()], graphics: graphics === 'both' ? ['classic', 'enhanced'] : [graphics], height: number('height', 800, 480, 1200), scale: number('scale', 2, 1, 2), sliceWidth: number('slice-width', 1280, 320, 2400), sliceHeight: number('slice-height', v.height ?? 800, 240, 1600), overlap: number('overlap', 80, 0, 400), paper: choice('paper', 'letter', ['letter', 'a4']), floor: choice('floor', 'ground', ['ground', 'basement', 'upstairs', 'kitchen', 'bedroom', 'sunroom', 'attic']), seed: number('seed', 13, 0, 2147483647), quests: !!v.quests, draftPath: v.draft, out: path.resolve(v.out ?? path.join(ROOT, 'output/level-exports')) };
     for (const name of ['public', 'dist']) { const relative = path.relative(path.join(ROOT, name), result.out); if (!relative || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative))) throw Error('Exports must stay outside public/ and dist/ so they cannot be published with the game.'); }
     if (result.overlap >= Math.min(result.sliceWidth, result.sliceHeight)) throw Error('--overlap must be smaller than each slice dimension.');
     if (v.region) { const [x, y, width, height, ...extra] = v.region.split(',').map(Number); if (extra.length || ![x, y, width, height].every(Number.isInteger) || width <= 0 || height <= 0) throw Error('--region must be x,y,width,height with positive dimensions.'); result.region = { x, y, width, height }; }
