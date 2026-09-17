@@ -1,7 +1,7 @@
 import { SoundType } from "../../types";
 import { audioManager } from "../Audio";
 
-export type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro';
+export type CutsceneType = 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming';
 
 export class CutsceneManager {
     public step = 0;
@@ -15,6 +15,13 @@ export class CutsceneManager {
     private onComplete: () => void;
 
     private storyLines = {
+        'homecoming': [
+            { text: 'The backyard falls quiet. Then a familiar voice: “Onyx? ONYX!”', sound: SoundType.WIN_SHORT },
+            { text: 'Your owner kneels down. “There you are, my brave girl. I missed you so much.”', sound: null },
+            { text: 'You tumble into the biggest hug. No more cages. No more running. You are home.', sound: SoundType.DOG_BARK },
+            { text: '“Come inside. Everyone’s waiting—and someone seems to have eaten the little boy’s sandwich.”', sound: null },
+            { text: 'Opal grumbles. Ruby bleps. Samwise looks innocent. Your next adventure starts at home.', sound: SoundType.WIN_SHORT },
+        ],
         'raccoon_intro': [
             { text: "Home at last… why is that trash can rattling?", sound: SoundType.RACCOON_CHATTER },
             { text: "A top hat?! Meet Baron von Bins, king of the backyard!", sound: SoundType.CRASH },

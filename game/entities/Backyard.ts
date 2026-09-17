@@ -102,7 +102,7 @@ export class BossRaccoon extends Enemy {
     public readonly maxX = 4400;
     constructor(floor: number, private exit: Exit, private walls: BossWall[], difficulty: Difficulty) {
         super(4210, floor - 104, 0, 0); this.w = 112; this.h = 104;
-        this.hard = difficulty !== Difficulty.EASY; this.maxHealth = this.hard ? 4 : 3; this.health = this.maxHealth;
+        this.hard = difficulty !== Difficulty.EASY; this.maxHealth = this.hard ? 5 : 4; this.health = this.maxHealth;
     }
     get isActive() { return this.state !== 'dormant' && this.health > 0; }
     get isStunned() { return this.state === 'stunned'; }
@@ -118,16 +118,16 @@ export class BossRaccoon extends Enemy {
                 // Face into the arena at either end; camping beyond a wall cannot bait instant crashes.
                 this.dir = this.x <= this.minX ? 1 : this.x >= this.maxX ? -1 : player.x + player.w / 2 < this.x + this.w / 2 ? -1 : 1;
                 audioManager.playSFX(SoundType.RACCOON_CHATTER);
-                if (this.hard && enemies) for (const speed of [3, 4.8]) enemies.push(new TrashLid(this.x + this.w / 2, this.y + 12, this.dir * speed, this.y + this.h));
+                if (enemies) for (const speed of (this.hard ? [3, 4.8, 6] : [3])) enemies.push(new TrashLid(this.x + this.w / 2, this.y + 12, this.dir * speed, this.y + this.h));
             }
-            if (this.timer >= (this.hard ? 65 : 85)) { this.state = 'charge'; this.timer = 0; }
+            if (this.timer >= (this.hard ? 55 : 75)) { this.state = 'charge'; this.timer = 0; }
         } else if (this.state === 'charge') {
-            this.x += this.dir * (this.hard ? 7 : 5);
+            this.x += this.dir * (this.hard ? 7.5 : 5.5);
             if (this.x <= this.minX || this.x >= this.maxX) {
                 this.x = Math.max(this.minX, Math.min(this.maxX, this.x)); this.state = 'stunned'; this.timer = 0;
                 audioManager.playSFX(SoundType.CRASH);
             }
-        } else if (this.state === 'stunned' && this.timer >= (this.hard ? 225 : 250)) {
+        } else if (this.state === 'stunned' && this.timer >= (this.hard ? 210 : 230)) {
             this.state = 'recover'; this.timer = 0;
         } else if (this.state === 'recover' && this.timer >= (this.hard ? 50 : 65)) { this.state = 'windup'; this.timer = 0; }
     }

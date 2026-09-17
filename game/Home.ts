@@ -1,3 +1,4 @@
+import { drawFamilyDog } from './engine/FamilyArt';
 import { Entity } from './entities/Entity';
 import { Player } from './entities/Player';
 import { Platform } from './entities/Platform';
@@ -8,17 +9,20 @@ import type { Accessory } from './Shop';
 
 export const HOME_LEVEL = 15;
 export const HOME_WIDTH = 1500;
-export type HomeFloor = 'ground' | 'basement' | 'upstairs';
-export const FLOORS: Record<HomeFloor, string> = { ground: 'Ground floor · Quests & shop', basement: 'Basement · Training & building', upstairs: 'Second floor · Companions' };
+export type HomeFloor = 'ground' | 'basement' | 'upstairs' | 'kitchen' | 'bedroom';
+export const FLOORS: Record<HomeFloor, string> = { ground: 'Ground floor · Quests & shop', basement: 'Basement · Training & building', upstairs: 'Second floor · Companions', kitchen: 'Ground floor · Kitchen', bedroom: 'Second floor · Bedroom' };
 export const COMPANIONS = [
-    { id: 'opal', dog: 'Opal', homeX: 380, accessory: 'collar' as Accessory, greeting: 'A little sparkle makes every journey brighter. Shall we look for your friends’ lost treasures together?' },
-    { id: 'ruby', dog: 'Ruby', homeX: 690, accessory: 'coat' as Accessory, greeting: 'Adventure? Count me in! I’ll follow your jumps and stay close, even when the trail gets tricky.' },
-    { id: 'samwise', dog: 'Samwise', homeX: 990, accessory: 'hat' as Accessory, greeting: 'There’s always room for one more friend on a long walk. I’ll come with you, Onyx. All the way home.' },
+    { id: 'opal', dog: 'Opal', homeX: 380, accessory: 'collar' as Accessory, greeting: 'Hmph. You tracked mud in. Sammy! I mean Lammy. Where is my lamb? And where is that handsome Samwise? Not that I care. I am coming along to supervise.' },
+    { id: 'ruby', dog: 'Ruby', homeX: 690, accessory: 'coat' as Accessory, greeting: 'Blep! I saved you a sploot spot. Opal keeps looking at Samwise instead of ME. I could just eat that little noodle… Only joking. Mostly. Let’s play!' },
+    { id: 'samwise', dog: 'Samwise', homeX: 990, accessory: 'hat' as Accessory, greeting: 'Did someone say snacks? The little boy looked away and his toast just… vanished. Why is Opal calling me Lammy? Why is Ruby staring? Wait. Was that a HONK? Please tell me it wasn’t a goose.' },
 ] as const;
 export const QUESTS = [
     { id: 'ball', dog: 'Pippin', item: 'red ball', level: 5, x: 3540, rise: 282, homeX: 380, accessory: 'hat' as Accessory, reward: 12, icon: '🔴', hint: 'On the long ledge after the second icy crossing.', request: 'Good dog, Onyx! I lost my red ball in the mountains. Will you find it in level 5?', thanks: 'My ball! Fetch is back on! These bones are for you.' },
     { id: 'shell', dog: 'Pearl', item: 'pink shell', level: 4, x: 1165, rise: 332, homeX: 690, accessory: 'collar' as Accessory, reward: 10, icon: '🐚', hint: 'On the first high sandy ledge, past the umbrella.', request: 'Welcome home, good dog! I left my favorite pink shell at the beach in level 4. Could you bring it back?', thanks: 'Listen… you can hear the sea! Thank you, Onyx. Take these bones.' },
     { id: 'toy', dog: 'Biscuit', item: 'squeaky duck', level: 1, x: 1168, rise: 282, homeX: 990, accessory: 'coat' as Accessory, reward: 8, icon: '🦆', hint: 'On the small raised platform beyond the first gap.', request: 'Good dog! You made it home! My squeaky duck is still in the pound, in level 1. One last rescue?', thanks: 'Squeak! You rescued my best little friend. Here are your bones!' },
+    { id: 'lammy', dog: 'Opal', item: 'Lammy the lamb', level: 5, x: 1520, rise: 482, homeX: 380, accessory: 'collar' as Accessory, reward: 18, icon: '🐑', hint: 'On the broad high ledge before the first moving mountain platform.', request: 'Sammy is missing! No, Lammy. My lamb toy. I left him in the mountains, level 5. Fetch him, please. I am not worried. Much.', thanks: 'Lammy! My darling Sammy—LAMMY. Stop looking at me like that. Take your bones.' },
+    { id: 'cushion', dog: 'Ruby', item: 'sploot cushion', level: 4, x: 1200, rise: 332, homeX: 690, accessory: 'collar' as Accessory, reward: 16, icon: '🛏️', hint: 'At the right end of the first high sandy beach ledge.', request: 'My sploot cushion is at the beach in level 4! Bring it back and Opal might sit with ME. Blep.', thanks: 'Perfect sploot! Opal, look! OPAL! Ugh. Samwise gets all the attention.' },
+    { id: 'lunch', dog: 'Samwise', item: 'little boy’s lunchbox', level: 1, x: 1330, rise: 382, homeX: 990, accessory: 'hat' as Accessory, reward: 20, icon: '🥪', hint: 'On the high platform above the last pound gap.', request: 'The little boy’s lunchbox is in level 1. I only borrowed the sandwich. Can we bring the box home before he notices? Please avoid geese.', thanks: 'The lunchbox! We should return it to the kitchen. What sandwich? I haven’t seen a sandwich. HONK?! Hide me!' },
 ] as const;
 export type QuestStatus = 'accepted' | 'found' | 'complete';
 export type Quest = typeof QUESTS[number];
@@ -27,6 +31,7 @@ export class HomeDog extends Entity {
     public nearby = false;
     private sprite: Player;
     public following = false;
+    public gooseNearby = false;
     constructor(public quest: { id: string; dog: string; homeX: number; accessory: Accessory }, floor: number) {
         super(quest.homeX, floor - 40, 40, 40, '#fff');
         this.sprite = new Player(this.x, this.y);
@@ -34,11 +39,13 @@ export class HomeDog extends Entity {
     }
     update(player: Player) {
         this.nearby = Math.abs(player.x - this.x) < 85 && Math.abs(player.y - this.y) < 55;
-        this.sprite.facingRight = player.x > this.x;
+        this.sprite.facingRight = this.following && Math.abs(this.velX) > .1 ? this.velX > 0 : player.x > this.x;
+        this.gooseNearby = player.accessories.has('goose');
     }
     draw(ctx: CanvasRenderingContext2D, camX: number) {
         this.sprite.x = this.x; this.sprite.y = this.y; this.sprite.velX = this.velX; this.sprite.grounded = this.following ? this.grounded : true;
-        this.sprite.draw(ctx, camX, HOME_LEVEL);
+        if (COMPANIONS.some(c => c.id === this.quest.id)) drawFamilyDog(ctx, this.quest.id, this.x - camX, this.y, this.sprite.facingRight, Math.abs(this.velX) > .5, performance.now() / 1000, this.following, this.quest.id === 'samwise' && this.gooseNearby);
+        else this.sprite.draw(ctx, camX, HOME_LEVEL);
         ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 14px sans-serif';
         if (this.following) { ctx.fillStyle = '#263b48df'; ctx.fillRect(this.x - 15 - camX, this.y - 42, 70, 23); }
         ctx.fillStyle = this.following ? '#fff3cc' : '#332e38'; ctx.fillText(this.quest.dog, this.x + 20 - camX, this.y - 25);
@@ -62,6 +69,13 @@ export class QuestPickup extends Entity {
         } else if (this.quest.id === 'shell') {
             ctx.fillStyle = '#f2a4c2'; ctx.beginPath(); ctx.arc(14, 13, 14, Math.PI, 0); ctx.lineTo(19, 27); ctx.lineTo(9, 27); ctx.closePath(); ctx.fill();
             ctx.strokeStyle = '#bd617f'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(14, 26); ctx.lineTo(3 + i * 5.5, 7 - Math.sin(i / 4 * Math.PI) * 5); ctx.stroke(); }
+        } else if (this.quest.id === 'lammy') {
+            ctx.fillStyle = '#fff6dc'; for (const [cx, cy, r] of [[10, 18, 10], [21, 10, 7], [3, 25, 4], [17, 26, 4]]) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); }
+            ctx.fillStyle = '#e57880'; ctx.fillRect(15, 15, 9, 3); ctx.fillStyle = '#333'; ctx.fillRect(23, 8, 2, 2);
+        } else if (this.quest.id === 'cushion') {
+            ctx.fillStyle = '#d85d79'; ctx.beginPath(); ctx.roundRect(0, 7, 29, 21, 7); ctx.fill(); ctx.strokeStyle = '#ffe8d0'; ctx.strokeRect(5, 12, 19, 11);
+        } else if (this.quest.id === 'lunch') {
+            ctx.strokeStyle = '#427580'; ctx.lineWidth = 3; ctx.strokeRect(10, 2, 10, 9); ctx.fillStyle = '#63b6bc'; ctx.fillRect(0, 8, 29, 20); ctx.fillStyle = '#ffdc81'; ctx.fillRect(12, 14, 6, 5);
         } else {
             ctx.fillStyle = '#ffdb63'; ctx.beginPath(); ctx.ellipse(13, 20, 13, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(20, 8, 8, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#e88642'; ctx.fillRect(24, 9, 8, 4); ctx.fillStyle = '#353349'; ctx.fillRect(20, 5, 3, 3);
@@ -73,11 +87,11 @@ export class QuestPickup extends Entity {
 export function getHome(height: number, room: HomeFloor = 'ground'): LevelData {
     const floor = height - 100;
     return { platforms: [new Platform(0, floor, HOME_WIDTH, 100)], enemies: [], collectibles: [], waters: [],
-        props: (room === 'ground' ? QUESTS : room === 'upstairs' ? COMPANIONS : []).map(q => new HomeDog(q, floor)), exit: new Exit(HOME_WIDTH + 1000, floor - 80), playerStart: { x: 150, y: floor - 40 } };
+        props: (room === 'ground' ? QUESTS.slice(0, 3) : room === 'upstairs' ? COMPANIONS : []).map(q => new HomeDog(q, floor)), exit: new Exit(HOME_WIDTH + 1000, floor - 80), playerStart: { x: 150, y: floor - 40 } };
 }
 
 export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: number, camX: number, room: HomeFloor = 'ground') {
-    if (room !== 'ground') { drawOtherFloor(ctx, width, height, camX, room); return; }
+    if (room !== 'ground') { drawOtherFloor(ctx, width, height, camX, room); drawRoomDoors(ctx, height - 100, camX, room); return; }
     const rich = gfxSettings.visualMode === 'enhanced', floor = height - 100;
     ctx.save();
     ctx.fillStyle = '#e4ceb1'; ctx.fillRect(0, 0, width, height);
@@ -102,7 +116,7 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
     ctx.fillStyle = '#487d75'; ctx.beginPath(); ctx.roundRect(520, floor - 92, 300, 87, 19); ctx.fill();
     ctx.fillStyle = '#65968a'; ctx.beginPath(); ctx.roundRect(540, floor - 73, 120, 63, 13); ctx.roundRect(667, floor - 73, 130, 63, 13); ctx.fill();
     ctx.fillStyle = '#edc486'; ctx.beginPath(); ctx.roundRect(558, floor - 71, 46, 38, 8); ctx.fill();
-    for (const q of QUESTS) {
+    for (const q of QUESTS.slice(0, 3)) {
         ctx.fillStyle = q.id === 'ball' ? '#6f9fa0' : q.id === 'shell' ? '#c2869b' : '#c79d60';
         ctx.beginPath(); ctx.ellipse(q.homeX + 20, floor - 1, 73, 17, 0, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#fff0c7'; ctx.stroke();
@@ -114,6 +128,7 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
     ctx.font = 'bold 15px sans-serif'; ctx.fillText('JUNIPER’S SHOP →', 1300, floor - 100);
     drawStairs(ctx, floor);
     ctx.restore();
+    drawRoomDoors(ctx, floor, camX, room);
 }
 
 function drawStairs(ctx: CanvasRenderingContext2D, floor: number) {
@@ -131,8 +146,8 @@ function drawOtherFloor(ctx: CanvasRenderingContext2D, width: number, height: nu
     ctx.strokeStyle = basement ? '#91b1a755' : '#e1bbcb'; ctx.lineWidth = 2;
     for (let x = 0; x < HOME_WIDTH; x += 80) ctx.strokeRect(x, floor + 5, 80, 90);
     ctx.textAlign = 'center'; ctx.font = 'bold 27px Georgia'; ctx.fillStyle = basement ? '#ffedb9' : '#514764';
-    ctx.fillText(basement ? 'THE TRAINING DEN' : 'THE COMPANION LOFT', 720, Math.max(170, floor - 310));
-    if (basement) {
+    ctx.fillText(basement ? 'THE TRAINING DEN' : room === 'kitchen' ? 'THE KITCHEN' : room === 'bedroom' ? 'THE BEDROOM' : 'THE COMPANION LOFT', 720, Math.max(170, floor - 310));
+    if (room === 'kitchen' || room === 'bedroom') { drawHouseRoom(ctx, floor, room); } else if (basement) {
         ctx.strokeStyle = '#b0b5a04d'; for (let y = floor - 280; y < floor; y += 40) for (let x = (y % 80) * 2; x < HOME_WIDTH; x += 100) ctx.strokeRect(x, y, 100, 40);
         ctx.fillStyle = '#253c35'; ctx.fillRect(330, floor - 230, 245, 150); ctx.strokeStyle = '#c79b5b'; ctx.lineWidth = 8; ctx.strokeRect(330, floor - 230, 245, 150);
         ctx.fillStyle = '#cce3ba'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('HARDCORE PRACTICE', 452, floor - 190); ctx.font = '15px sans-serif'; ctx.fillText('Jump · Dodge · Try again', 452, floor - 151); ctx.fillText('E · Choose a level', 452, floor - 112);
@@ -151,4 +166,43 @@ function drawOtherFloor(ctx: CanvasRenderingContext2D, width: number, height: nu
         }
     }
     drawStairs(ctx, floor); ctx.restore();
+}
+
+export const ROOM_DOORS: Record<HomeFloor, { x: number; to: HomeFloor; label: string }[]> = {
+    ground: [{ x: 220, to: 'kitchen', label: 'Kitchen' }],
+    kitchen: [{ x: 220, to: 'ground', label: 'Living room' }],
+    upstairs: [{ x: 1250, to: 'bedroom', label: 'Bedroom' }],
+    bedroom: [{ x: 220, to: 'upstairs', label: 'Companion loft' }],
+    basement: [],
+};
+function drawRoomDoors(ctx: CanvasRenderingContext2D, floor: number, camX: number, room: HomeFloor) {
+    ctx.save(); ctx.translate(-camX, 0);
+    for (const door of ROOM_DOORS[room]) {
+        ctx.fillStyle = '#675044'; ctx.fillRect(door.x, floor - 140, 85, 140);
+        ctx.fillStyle = '#ba9773'; ctx.fillRect(door.x + 7, floor - 132, 71, 132);
+        ctx.fillStyle = '#f4d18d'; ctx.beginPath(); ctx.arc(door.x + 66, floor - 62, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff0d0'; ctx.textAlign = 'center'; ctx.font = 'bold 13px sans-serif'; ctx.fillText(`E · ${door.label}`, door.x + 42, floor - 155);
+    }
+    ctx.restore();
+}
+function drawHouseRoom(ctx: CanvasRenderingContext2D, floor: number, room: HomeFloor) {
+    if (room === 'kitchen') {
+        ctx.fillStyle = '#e4d3af'; ctx.fillRect(450, floor - 110, 530, 110);
+        ctx.fillStyle = '#5e9190'; ctx.fillRect(440, floor - 125, 550, 18);
+        ctx.strokeStyle = '#ad9270'; for (let x = 460; x < 980; x += 100) ctx.strokeRect(x, floor - 102, 84, 95);
+        ctx.fillStyle = '#eaf4dc'; ctx.fillRect(880, floor - 300, 90, 170); ctx.strokeStyle = '#8ba798'; ctx.strokeRect(880, floor - 300, 90, 170);
+        ctx.fillStyle = '#9a7154'; ctx.fillRect(540, floor - 80, 240, 16); ctx.fillRect(554, floor - 64, 15, 64); ctx.fillRect(750, floor - 64, 15, 64);
+        ctx.fillStyle = '#ffdf9a'; ctx.fillRect(620, floor - 94, 33, 12);
+        // The little boy looks away from his toast; Sam's favorite opportunity.
+        ctx.fillStyle = '#e6b18a'; ctx.beginPath(); ctx.arc(710, floor - 135, 18, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#65503f'; ctx.fillRect(692, floor - 153, 36, 12); ctx.fillStyle = '#df785b'; ctx.fillRect(695, floor - 115, 32, 35);
+        ctx.fillStyle = '#3e3531'; ctx.fillRect(720, floor - 139, 3, 3);
+        ctx.fillStyle = '#4b514b'; ctx.font = '16px Georgia'; ctx.textAlign = 'center'; ctx.fillText('“Mum… has anyone seen my sandwich?”', 710, floor - 195);
+    } else {
+        ctx.fillStyle = '#90664f'; ctx.fillRect(490, floor - 125, 420, 110); ctx.fillRect(475, floor - 185, 28, 185); ctx.fillRect(895, floor - 85, 22, 85);
+        ctx.fillStyle = '#b5a5cd'; ctx.fillRect(505, floor - 112, 385, 92); ctx.fillStyle = '#fff0d8'; ctx.beginPath(); ctx.roundRect(510, floor - 145, 95, 35, 12); ctx.fill();
+        ctx.fillStyle = '#8c6e56'; ctx.fillRect(960, floor - 75, 90, 75); ctx.fillStyle = '#f4d293'; ctx.beginPath(); ctx.moveTo(968, floor - 115); ctx.lineTo(1038, floor - 115); ctx.lineTo(1025, floor - 165); ctx.lineTo(982, floor - 165); ctx.fill(); ctx.fillRect(999, floor - 115, 7, 40);
+        drawFamilyDog(ctx, 'ruby', 670, floor - 44, true, false, 8);
+        ctx.fillStyle = '#514764'; ctx.font = '16px Georgia'; ctx.textAlign = 'center'; ctx.fillText('Ruby’s favorite sunbeam. Blep. Zzz…', 710, floor - 225);
+    }
 }

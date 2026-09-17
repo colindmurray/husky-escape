@@ -63,10 +63,10 @@ try {
             world.player.bonesCollected = good.price - 1;
             check(!world.buyGood(id) && world.player.bonesCollected === good.price - 1 && world.belongings.owned.size === 0 && world.belongings.slots.every(x => x === null), `${good.name} requires its full bone price without charging or granting the item`);
         }
-        world.player.bonesCollected = 55;
-        for (const id of ['shield', 'magnet', 'time']) check(world.buyGood(id), `Buy ${id} into a free pocket`);
-        check(world.player.bonesCollected === 35 && world.belongings.slots.join(',') === 'shield,magnet,time', 'Purchases debit exact prices and occupy three distinct pockets');
-        check(!world.buyGood('time') && world.player.bonesCollected === 35, 'Full pockets reject purchases without charging');
+        world.player.bonesCollected = 61;
+        for (const id of ['spring', 'hush', 'spring']) check(world.buyGood(id), `Buy ${id} into a free pocket`);
+        check(world.player.bonesCollected === 35 && world.belongings.slots.join(',') === 'spring,hush,spring', 'Purchases debit exact prices and occupy three distinct pockets');
+        check(!world.buyGood('spring') && world.player.bonesCollected === 35, 'Full pockets reject purchases without charging');
         check(!world.useInventorySlot(0), 'Consumables cannot be used while shopping');
         for (const id of ['hat', 'coat', 'collar']) check(world.buyGood(id), `Buy and equip ${id}`);
         check(world.player.bonesCollected === 5 && world.player.accessories.size === 3, 'All accessory categories can be worn together');
@@ -75,6 +75,7 @@ try {
         world.closeShop();
         check(!world.buyGood('time'), 'Purchases are unavailable outside a shop');
         check(!world.useInventorySlot(-1) && !world.useInventorySlot(3), 'Invalid pocket indexes do nothing');
+        world.belongings.slots = ['shield', 'magnet', 'time']; // Legacy pockets remain usable.
         check(world.useInventorySlot(0) && world.player.invincibleTimer === 300, 'Star treat starts five seconds of enemy protection');
         check(world.useInventorySlot(1) && world.player.magnetTimer === 600, 'Bone magnet lasts ten seconds');
         const time = world.timeLeft;

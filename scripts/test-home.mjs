@@ -20,7 +20,7 @@ try {
     await page.waitForFunction(() => window.__husky);
     const checks = await page.evaluate(async () => {
         const { World } = await import('/game/engine/World.ts');
-        const { HOME_LEVEL, QUESTS, HomeDog, QuestPickup } = await import('/game/Home.ts');
+        const { HOME_LEVEL, QUESTS, COMPANIONS, HomeDog, QuestPickup } = await import('/game/Home.ts');
         const { inputManager } = await import('/game/Input.ts');
         const { audioManager } = await import('/game/Audio.ts');
         const { MUSIC_TRACKS } = await import('/game/audio/tracks.ts');
@@ -46,14 +46,20 @@ try {
         check(world.timeLeft === time && world.player.grounded, 'Home has solid ground and no countdown');
         check(!world.useInventorySlot(0) && world.belongings.slots[0] === 'shield', 'Treats are not wasted at home');
         check(!world.openHomePanel('ball') && !world.respondToDog(), 'Walk to a dog before talking; no remote rewards');
+        const talk = q => {
+            const companion = COMPANIONS.find(c => c.dog === q.dog);
+            world.changeHomeFloor(companion ? 'upstairs' : 'ground');
+            world.player.x = q.homeX; world.player.y = world.height - 140; world.update();
+            return world.openHomePanel(companion?.id ?? q.id);
+        };
         for (const q of QUESTS) {
             world.player.x = q.homeX; world.player.y = world.height - 140; world.update();
-            check(world.openHomePanel(q.id), `Talk to ${q.dog}`);
+            check(talk(q), `Talk to ${q.dog}`);
             const before = JSON.stringify({ x: world.player.x, y: world.player.y, time: world.timeLeft });
             for (let f = 0; f < 100; f++) world.update();
             check(JSON.stringify({ x: world.player.x, y: world.player.y, time: world.timeLeft }) === before, `${q.dog}'s conversation pauses movement`);
-            check(world.respondToDog() && world.belongings.quests[q.id] === 'accepted', `Accept ${q.item} quest`);
-            check(!world.respondToDog() && world.player.bonesCollected === 20, 'Accepting twice cannot grant a reward');
+            check(world.respondToDog(q.id) && world.belongings.quests[q.id] === 'accepted', `Accept ${q.item} quest`);
+            check(!world.respondToDog(q.id) && world.player.bonesCollected === 20, 'Accepting twice cannot grant a reward');
             check(!world.openShop(), 'Conversation and shop cannot overlap'); world.closeHomePanel();
         }
         let total = 20;
@@ -73,12 +79,13 @@ try {
             }
             world.loadLevel(q.level);
             check(!world.props.some(p => p instanceof QuestPickup && p.quest.id === q.id), `Retry keeps ${q.item} and prevents duplicate pickups`);
-            world.loadLevel(HOME_LEVEL); world.player.x = q.homeX; world.player.y = world.height - 140; world.update(); world.openHomePanel(q.id);
+            world.loadLevel(HOME_LEVEL); world.player.x = q.homeX; world.player.y = world.height - 140; world.update(); talk(q);
             total = world.player.bonesCollected;
-            check(world.respondToDog(), `Return ${q.item} to its owner`); total += q.reward;
+            check(world.respondToDog(q.id), `Return ${q.item} to its owner`); total += q.reward;
             check(world.player.bonesCollected === total && world.belongings.quests[q.id] === 'complete', `${q.dog} grants exactly ${q.reward} bones`);
-            check(!world.respondToDog() && world.player.bonesCollected === total, `${q.dog} cannot pay twice`); world.closeHomePanel();
+            check(!world.respondToDog(q.id) && world.player.bonesCollected === total, `${q.dog} cannot pay twice`); world.closeHomePanel();
         }
+        world.changeHomeFloor('ground');
         world.player.x = world.shopDoor.x + 20; world.player.y = world.height - 140; world.update();
         check(world.openShop() && world.buyGood('cat'), 'Juniper sells cosmetics at home using quest rewards');
         check(world.player.accessories.has('cat') && world.player.bonesCollected === total - 16, 'Home purchase equips the skin and debits its full price'); world.closeShop();
@@ -92,10 +99,11 @@ try {
         return passed;
     });
     // Exercise the actual non-dev victory -> home -> conversation -> travel -> return UI.
-    await page.getByRole('button', { name: '⚙️', exact: true }).click();
+    await page.evaluate(() => window.__husky.engine.skipCutscene());
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Hardcore (Permadeath)' }).click();
-    await page.getByRole('button', { name: '⚙️', exact: true }).click();
-    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(14, 'HARDCORE'); e.stop(); e.world.triggerLevelComplete(); });
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.evaluate(() => { const e = window.__husky.engine; e.startLevel(14, 'HARDCORE'); e.stop(); e.world.triggerLevelComplete(); e.skipCutscene(); });
     await page.getByRole('button', { name: 'Go inside · Home' }).click();
     await page.getByRole('button', { name: 'Explore old levels' }).waitFor();
     assert.equal(await page.getByText('Dev Mode: Warp').count(), 0);

@@ -23,7 +23,7 @@ export class GameEngine {
     private frameId: number = 0;
     private options: GameEngineOptions;
     public gameState: GameState = GameState.INTRO;
-    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' = 'intro';
+    private currentCutscene: 'intro' | 'chase' | 'underwater_intro' | 'pound_escape' | 'pier_intro' | 'neon_intro' | 'bakery_intro' | 'town_intro' | 'raccoon_intro' | 'homecoming' = 'intro';
     
     // Default difficulty
     private difficulty: Difficulty = Difficulty.EASY;
@@ -59,8 +59,9 @@ export class GameEngine {
                 this.options.onStateChange(GameState.GAME_OVER, { reason, level, narrative });
             },
             onGameWon: (bones) => {
-                this.gameState = GameState.GAME_WON;
-                this.options.onStateChange(GameState.GAME_WON, { bones, level: this.world.currentLevel });
+                this.currentCutscene = 'homecoming'; this.gameState = GameState.CUTSCENE;
+                this.options.onStateChange(GameState.CUTSCENE, { text: '' });
+                this.cutsceneManager.start('homecoming');
             }
         });
 
@@ -216,7 +217,10 @@ export class GameEngine {
     }
 
     private endCutscene() {
-        if (this.currentCutscene === 'raccoon_intro') {
+        if (this.currentCutscene === 'homecoming') {
+            this.gameState = GameState.GAME_WON;
+            this.options.onStateChange(GameState.GAME_WON, { bones: this.world.player?.bonesCollected ?? 0, level: 14 });
+        } else if (this.currentCutscene === 'raccoon_intro') {
             this.world.finishRaccoonIntro(); this.gameState = GameState.PLAYING; this.options.onStateChange(GameState.PLAYING);
         } else if (this.currentCutscene === 'intro') {
             this.gameState = GameState.INTRO; 
