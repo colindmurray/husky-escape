@@ -102,8 +102,7 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         box(ctx, 340, floor - 302, 140, 85, '#886749', 3); box(ctx, 348, floor - 294, 124, 69, '#e7d7b6');
         label(ctx, 'A HOUSE FULL', 410, floor - 266, '#626e5b', 15); label(ctx, 'OF GOOD DOGS', 410, floor - 244, '#626e5b', 15);
         box(ctx, 525, floor - 291, 127, 68, '#9a7659', 3); box(ctx, 532, floor - 284, 113, 54, '#c7c4a5'); label(ctx, 'HOME ♥', 588, floor - 253, '#556d63', 20);
-        box(ctx, 67, floor - 183, 95, 183, '#775b46', [40, 40, 0, 0]); box(ctx, 77, floor - 150, 75, 65, '#a5c1b3', 25); label(ctx, 'ALL LEVELS', 114, floor - 195);
-        label(ctx, 'JUNIPER’S LITTLE SHOP', 1300, floor - 90, '#f7e5bb', 12);
+        box(ctx, 67, floor - 183, 95, 183, '#775b46', [40, 40, 0, 0]); box(ctx, 77, floor - 150, 75, 65, '#a5c1b3', 25);
     } else if (room === 'kitchen') {
         windowArt(ctx, 500, floor - 316, 210, 155, true);
         box(ctx, 358, floor - 129, 650, 126, '#8fa899', 5); box(ctx, 344, floor - 145, 676, 18, '#e6d6b6', 4);
@@ -112,13 +111,17 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         box(ctx, 743, floor - 216, 115, 12, '#8c795a');
         for (const [i, color] of ['#bf8e75', '#89a5a2', '#d2b779'].entries()) { box(ctx, 752 + i * 34, floor - 252, 25, 36, color, 5); box(ctx, 752 + i * 34, floor - 255, 25, 5, '#826d52'); }
         oval(ctx, 418, floor - 151, 35, 7, '#6d8b8c'); ctx.strokeStyle = '#8b9f94'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(440, floor - 150); ctx.lineTo(440, floor - 183); ctx.quadraticCurveTo(419, floor - 197, 415, floor - 176); ctx.stroke();
-        box(ctx, 530, floor - 72, 280, 14, '#b18054', 5); for (const x of [548, 780]) box(ctx, x, floor - 58, 13, 58, '#805b43');
+        box(ctx, 530, floor - 72, 330, 14, '#b18054', 5); for (const x of [548, 830]) box(ctx, x, floor - 58, 13, 58, '#805b43');
         oval(ctx, 627, floor - 80, 30, 9, '#f6e1b8'); box(ctx, 611, floor - 90, 31, 9, '#daae67', 4);
-        if (progress.lunch === 'complete') { box(ctx, 730, floor - 103, 42, 30, '#63a0a4', 4); box(ctx, 740, floor - 110, 22, 8, '#498b8f', 3); }
+        if (progress.lunch === 'complete') { box(ctx, 552, floor - 103, 42, 30, '#63a0a4', 4); box(ctx, 562, floor - 110, 22, 8, '#498b8f', 3); }
         const looksAway = Math.sin(t * .55) > -.2; oval(ctx, 722, floor - 126, 17, 20, '#e4b48c'); box(ctx, 704, floor - 144, 36, 13, '#725641', [10, 10, 0, 0]); box(ctx, 707, floor - 107, 31, 33, '#c37a60', 8); oval(ctx, looksAway ? 732 : 712, floor - 126, 2, 2, '#493a30');
-        label(ctx, chapter >= 2 ? 'Baking together. Sampling frequently.' : 'Someone has their eye on that toast…', 680, floor - 350, '#526b5c', 15);
+        ctx.strokeStyle = '#3d5265'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(722, floor - 131, 20, Math.PI, 0); ctx.stroke(); box(ctx, 701, floor - 135, 7, 16, '#597385', 3); box(ctx, 736, floor - 135, 7, 16, '#597385', 3);
+        oval(ctx, 716, floor - 89, 8, 5, '#e4b48c'); oval(ctx, 738, floor - 89, 8, 5, '#e4b48c'); box(ctx, 716, floor - 97, 22, 12, '#465b6b', 5); box(ctx, 720, floor - 94, 6, 2, '#adc3c8'); box(ctx, 722, floor - 96, 2, 6, '#adc3c8'); oval(ctx, 733, floor - 92, 1.5, 1.5, '#e6bb79');
+        box(ctx, 761, floor - 148, 87, 58, '#3a4d58', 5); box(ctx, 766, floor - 143, 77, 47, '#6c9b75', 2); box(ctx, 800, floor - 90, 7, 13, '#4d6266'); box(ctx, 786, floor - 78, 36, 5, '#4d6266', 2);
+        ctx.strokeStyle = '#dfedd29c'; ctx.lineWidth = 1; ctx.strokeRect(770, floor - 138, 69, 37); ctx.beginPath(); ctx.arc(804, floor - 120, 9, 0, TAU); ctx.moveTo(804, floor - 138); ctx.lineTo(804, floor - 101); ctx.stroke();
+        const car = Math.sin(t * 1.8) * 17; box(ctx, 789 + car, floor - 116, 11, 6, '#e7a362', 2); box(ctx, 811 - car, floor - 130, 11, 6, '#74c2df', 2); oval(ctx, 805 + Math.sin(t) * 8, floor - 121, 3, 3, '#f7ead2');
         rug(ctx, 690, floor, 570, '#9eaa80'); plant(ctx, 95, floor, .8);
-        if (chapter === 3) { for (let i = 0; i < 9; i++) oval(ctx, 558 + i * 26, floor - 81, 8, 5, '#d4a469'); label(ctx, 'WELCOME HOME, ONYX!', 687, floor - 385, '#8d6453', 23); }
+        if (chapter === 3) { for (let i = 0; i < 9; i++) oval(ctx, 558 + i * 26, floor - 81, 8, 5, '#d4a469'); }
     } else if (room === 'bedroom') {
         windowArt(ctx, 610, floor - 338, 182, 182, true);
         box(ctx, 344, floor - 165, 195, 165, '#80684f', 8); box(ctx, 355, floor - 125, 174, 107, '#ac9abb', 12); cushion(ctx, 369, floor - 147, 133, '#efe4d2');
@@ -128,16 +131,26 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         if (progress.cushion === 'complete') cushion(ctx, 748, floor - 20, 105, '#d29aa4');
         sunbeam(ctx, 610, floor - 155, 182, floor, t, progress.sun === 'complete');
         if (progress.sun === 'complete') { ctx.strokeStyle = '#e5cb85'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(755, floor - 338); ctx.lineTo(755, floor - 244); ctx.stroke(); oval(ctx, 755, floor - 231, 11, 16, '#e1d5edbb'); }
-        label(ctx, progress.sun === 'complete' ? 'Ruby’s rainbow nap nook' : 'Ruby’s afternoon sunbeam', 714, floor - 372, '#715d70', 20);
         plant(ctx, 1020, floor, .8);
     } else if (room === 'upstairs') {
-        bookshelf(ctx, 370, floor - 247, 180); windowArt(ctx, 756, floor - 320, 164, 168, false);
-        box(ctx, 570, floor - 130, 150, 110, '#77a097', 26); box(ctx, 558, floor - 70, 174, 56, '#60877c', 17); cushion(ctx, 594, floor - 103, 100, '#d9bd83');
-        oval(ctx, 679, floor - 6, 61, 19, '#8e7659'); oval(ctx, 679, floor - 12, 54, 15, '#ead9b6');
-        if (progress.lammy === 'complete') { oval(ctx, 700, floor - 18, 16, 10, '#fff4d7'); oval(ctx, 713, floor - 29, 8, 8, '#fff4d7'); }
-        for (let i = 0; i < 6; i++) { ctx.strokeStyle = '#c2a279'; ctx.beginPath(); ctx.moveTo(628 + i * 19, floor - 12); ctx.lineTo(634 + i * 16, floor + 5); ctx.stroke(); }
-        rug(ctx, 666, floor, 500, '#7d9990'); lamp(ctx, 970, floor); plant(ctx, 100, floor, .95);
-        label(ctx, 'Opal’s snuggle corner', 646, floor - 342, '#586d62', 22); label(ctx, 'Absolutely no fussing. Unless you are Sammy.', 635, floor - 312, '#6b7161', 14);
+        const carpet = ctx.createLinearGradient(0, floor, 0, height); carpet.addColorStop(0, '#f6f1e7'); carpet.addColorStop(1, '#e0dace'); ctx.fillStyle = carpet; ctx.fillRect(0, floor, HOME_WIDTH, 100);
+        ctx.lineWidth = 1.4;
+        for (const [i, color] of ['#fffdf5', '#cec9be70'].entries()) {
+            ctx.strokeStyle = color; ctx.beginPath();
+            for (let y = floor + i * 4; y < height; y += 9) for (let x = i * 5; x < HOME_WIDTH; x += 13) { const bend = Math.sin(x * .17 + y) * 5, lift = 4 + (x * 7 + y * 3) % 8; ctx.moveTo(x + bend, y + 7); ctx.quadraticCurveTo(x - bend, y - lift, x + 4 + bend, y - lift / 2); } ctx.stroke();
+        }
+        windowArt(ctx, 902, floor - 330, 125, 175, false);
+        box(ctx, 450, floor - 220, 365, 170, '#a88e78', 20); box(ctx, 463, floor - 207, 339, 89, '#c4ae99', 12);
+        for (const x of [492, 572, 652, 732]) oval(ctx, x, floor - 164, 3, 3, '#9e8671');
+        box(ctx, 438, floor - 139, 388, 118, '#8f7661', 9); box(ctx, 450, floor - 147, 365, 111, '#f7eedc', 12);
+        cushion(ctx, 475, floor - 160, 145, '#fff9ef'); cushion(ctx, 640, floor - 160, 145, '#fff9ef');
+        box(ctx, 448, floor - 115, 369, 88, '#88a29c', 7); box(ctx, 448, floor - 116, 369, 23, '#a7beb4', 5);
+        for (let x = 461; x < 810; x += 24) { ctx.strokeStyle = '#edf0dc50'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, floor - 85); ctx.lineTo(x + 6, floor - 32); ctx.stroke(); }
+        for (const x of [340, 837]) { box(ctx, x, floor - 79, 83, 73, '#af9578', 4); box(ctx, x + 7, floor - 68, 69, 27, '#c5ad8d', 3); oval(ctx, x + 41, floor - 55, 3, 3, '#f1d3a0'); lamp(ctx, x + 41, floor - 80); }
+        oval(ctx, 979, floor - 6, 61, 19, '#8e7659'); oval(ctx, 979, floor - 12, 54, 15, '#ead9b6');
+        if (progress.lammy === 'complete') { oval(ctx, 1000, floor - 18, 16, 10, '#fff4d7'); oval(ctx, 1013, floor - 29, 8, 8, '#fff4d7'); }
+        for (let i = 0; i < 6; i++) { ctx.strokeStyle = '#c2a279'; ctx.beginPath(); ctx.moveTo(928 + i * 19, floor - 12); ctx.lineTo(934 + i * 16, floor + 5); ctx.stroke(); }
+        plant(ctx, 100, floor, .95);
     } else if (room === 'sunroom') {
         for (const x of [365, 565, 765, 965]) windowArt(ctx, x, floor - 340, 175, 217, x === 765);
         for (const [x, scale] of [[352, 1], [498, 1.4], [912, .8], [1070, 1.2], [1390, 1]]) plant(ctx, x, floor, scale);
@@ -146,7 +159,6 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         const gx = 980 + Math.sin(t * .65) * 67;
         ctx.save(); ctx.translate(gx + 20, floor); ctx.scale(Math.cos(t * .65) >= 0 ? 1.3 : -1.3, 1.3); drawGoose(ctx, -20, -40, t, true); ctx.restore();
         sunbeam(ctx, 565, floor - 120, 175, floor, t, false);
-        label(ctx, 'The conservatory', 710, floor - 374, '#586d52', 23); label(ctx, 'One uninvited guest. Zero regrets.', 711, floor - 350, '#667956', 14);
     } else if (room === 'attic') {
         ctx.strokeStyle = '#655346'; ctx.lineWidth = 18; ctx.beginPath(); ctx.moveTo(80, floor - 70); ctx.lineTo(700, Math.max(105, floor - 440)); ctx.lineTo(1430, floor - 70); ctx.stroke();
         windowArt(ctx, 635, floor - 317, 124, 109, true);
@@ -156,25 +168,24 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         for (let i = 0; i < 10; i++) { const x = 800 + i * 22, y = floor - 20 - Math.sin(i / 9 * Math.PI) * 104; label(ctx, '✦', x, y, '#e6d59e', 12); }
         for (let i = 0; i < 13; i++) { const x = 420 + i * 51, y = floor - 230 + Math.sin(i / 12 * Math.PI) * 45; oval(ctx, x, y, 5, 7, i % 2 ? '#efd09a' : '#ddab9c'); }
         rug(ctx, 775, floor, 580, '#a38676'); cushion(ctx, 554, floor - 28, 115, '#b6a076'); plant(ctx, 1370, floor, .7);
-        label(ctx, 'The blanket-fort expedition', 698, Math.max(145, floor - 365), '#ede0bd', 21);
     } else {
         bookshelf(ctx, 70, floor - 205, 165);
         box(ctx, 330, floor - 233, 250, 155, '#967650', 5); box(ctx, 340, floor - 223, 230, 134, '#3c5a4d', 3);
-        label(ctx, 'HARDCORE PRACTICE', 455, floor - 187, '#ecdcaf', 19); label(ctx, 'Jump · Dodge · Try again', 455, floor - 147, '#d0dfbd', 16); label(ctx, 'E · Choose a level', 455, floor - 109, '#f4dfab', 15);
+        label(ctx, 'TRAINING DEN', 455, floor - 187, '#ecdcaf', 19);
+        ctx.strokeStyle = '#d0dfbd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(371, floor - 124); ctx.lineTo(399, floor - 124); ctx.quadraticCurveTo(430, floor - 183, 461, floor - 124); ctx.lineTo(538, floor - 124); ctx.stroke();
         box(ctx, 745, floor - 82, 226, 18, '#c49b69', 4); for (const x of [760, 940]) box(ctx, x, floor - 64, 15, 64, '#876746');
         box(ctx, 766, floor - 176, 179, 88, '#527f92', 2); ctx.strokeStyle = '#add0cf50'; ctx.lineWidth = 1;
         for (let x = 774; x < 940; x += 18) for (let y = floor - 170; y < floor - 94; y += 18) ctx.strokeRect(x, y, 18, 18);
         box(ctx, 790, floor - 125, 36, 18, '#dbc184'); box(ctx, 862, floor - 143, 36, 18, '#dbc184');
-        label(ctx, 'E · Build your own level', 850, floor - 198, '#f1ddba', 16); rug(ctx, 674, floor, 720, '#6d8c7c');
+        rug(ctx, 674, floor, 720, '#6d8c7c');
     }
     // Stairs and door frames stay in front of the furniture but behind the actors.
     for (let i = 0; i < 5; i++) { box(ctx, 1080 + i * 22, floor - (i + 1) * 20, 25, (i + 1) * 20, i % 2 ? '#8a755e' : '#9b8367'); box(ctx, 1077 + i * 22, floor - (i + 1) * 20, 30, 5, '#d1b58a'); }
     ctx.strokeStyle = '#b9986d'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(1077, floor - 51); ctx.lineTo(1190, floor - 151); ctx.stroke();
-    label(ctx, 'E · Change floor', 1135, floor - 166, '#fbefd6', 14);
     for (const door of ROOM_DOORS[room]) {
         box(ctx, door.x - 8, floor - 168, 100, 168, '#78654f', [44, 44, 0, 0]); box(ctx, door.x, floor - 160, 84, 160, '#b29b78', [38, 38, 0, 0]);
         box(ctx, door.x + 10, floor - 145, 64, 58, '#d1cbb0', [29, 29, 2, 2]); ctx.strokeStyle = '#8a775d'; ctx.lineWidth = 2; ctx.strokeRect(door.x + 12, floor - 76, 60, 62);
-        oval(ctx, door.x + 67, floor - 77, 5, 5, '#edcc7f'); label(ctx, `E · ${door.label}`, door.x + 42, floor - 180, '#514939', 14);
+        oval(ctx, door.x + 67, floor - 77, 5, 5, '#edcc7f');
     }
     if (rich) {
         const shade = ctx.createLinearGradient(0, floor - 25, 0, height); shade.addColorStop(0, '#302a3400'); shade.addColorStop(1, '#302a3430'); ctx.fillStyle = shade; ctx.fillRect(0, floor - 25, HOME_WIDTH, 125);

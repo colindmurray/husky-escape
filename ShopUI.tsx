@@ -58,7 +58,7 @@ export function ShopUI({ world, visualMode }: { world: World; visualMode: string
     ] as const : [];
     const visible = belongings.slots.some(Boolean) || belongings.owned.size > 0;
     return <>
-        {!world.shopOpen && !world.homePanel && <div className="pocket-hud" aria-label="Inventory">
+        {!world.isHome && !world.shopOpen && !world.homePanel && <div className="pocket-hud" aria-label="Inventory">
             {effects.some(([, frames]) => frames > 0) && <p className="active-treats">{effects.filter(([, frames]) => frames > 0).map(([id, frames]) => `${SHOP_GOODS[id].icon} ${SHOP_GOODS[id].name} ${Math.ceil(frames / 60)}s`).join(" · ")}</p>}
             {visible && belongings.slots.map((item, index) => <button key={index} disabled={!item || world.isHome} aria-label={item ? `Use ${SHOP_GOODS[item].name}, slot ${index + 1}` : `Empty slot ${index + 1}`} title={item ? SHOP_GOODS[item].description : 'Find a secret doghouse to buy treats'} onClick={() => { world.useInventorySlot(index); focusGame(); }}>
                 <kbd>{index + 1}</kbd><span>{item ? SHOP_GOODS[item].icon : '·'}</span><small>{item ? SHOP_GOODS[item].name : 'Empty'}</small>

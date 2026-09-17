@@ -103,7 +103,8 @@ try {
     await page.evaluate(() => { const e = window.__husky.engine; e.world.changeHomeFloor('kitchen'); e.world.cameraX = 150; e.renderer.drawGame(e.world); });
     await page.screenshot({ path: '.playwright-mcp/revamp-kitchen.png' });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Change floor' }).click();
+    await page.getByRole('button', {name:'Quest journal', exact:true}).click();
+    await page.getByRole('button', {name:'Rooms', exact:true}).click();
     assert.equal(await page.locator('.home-dialog').evaluate(e => e.scrollWidth <= e.clientWidth), true);
     await page.screenshot({ path: '.playwright-mcp/revamp-mobile.png' });
     await page.keyboard.press('Escape'); await page.setViewportSize({ width: 1100, height: 720 });

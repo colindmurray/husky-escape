@@ -10,13 +10,13 @@ import type { Accessory } from './Shop';
 export const HOME_LEVEL = 15;
 export const HOME_WIDTH = 1500;
 export type HomeFloor = 'ground' | 'basement' | 'upstairs' | 'kitchen' | 'bedroom' | 'sunroom' | 'attic';
-export const FLOORS: Record<HomeFloor, string> = { ground: 'Ground floor · Entry & shop', basement: 'Basement · Training & building', upstairs: 'Second floor · Snuggle loft', kitchen: 'Ground floor · Kitchen', bedroom: 'Second floor · Bedroom', sunroom: 'Ground floor · Sunroom', attic: 'Top floor · Attic hideout' };
+export const FLOORS: Record<HomeFloor, string> = { ground: 'Ground floor · Entry & shop', basement: 'Basement · Training & building', upstairs: 'Second floor · Master bedroom', kitchen: 'Ground floor · Kitchen', bedroom: 'Second floor · Bedroom', sunroom: 'Ground floor · Sunroom', attic: 'Top floor · Attic hideout' };
 export const COMPANIONS = [
-    { id: 'opal', dog: 'Opal', homeX: 380, accessory: 'collar' as Accessory, greeting: 'Hmph. You tracked mud in. Sammy! I mean Lammy. Where is my lamb? And where is that handsome Samwise? Not that I care. I am coming along to supervise.' },
+    { id: 'opal', dog: 'Opal', homeX: 380, accessory: 'collar' as Accessory, greeting: 'Hmph. This white carpet is my spot. It has smelled particularly lovely ever since Sammy visited. Do not wash it. Sammy! I mean Lammy. Where is my lamb? And where is that handsome Samwise? Not that I care. I am coming along to supervise.' },
     { id: 'ruby', dog: 'Ruby', homeX: 690, accessory: 'coat' as Accessory, greeting: 'Blep! I saved you a sploot spot. Opal keeps looking at Samwise instead of ME. I could just eat that little noodle… Only joking. Mostly. Let’s play!' },
     { id: 'samwise', dog: 'Samwise', homeX: 990, accessory: 'hat' as Accessory, greeting: 'Did someone say snacks? The little boy looked away and his toast just… vanished. Why is Opal calling me Lammy? Why is Ruby staring? Wait. Was that a HONK? Please tell me it wasn’t a goose.' },
 ] as const;
-export type QuestStatus = 'accepted' | 'found' | 'complete';
+export type QuestStatus = 'accepted' | 'carrying' | 'found' | 'complete';
 export type QuestProgress = Record<string, QuestStatus>;
 export interface Quest {
     id: string; dog: string; item: string; level: number; x: number; rise: number;
@@ -25,7 +25,7 @@ export interface Quest {
 }
 export const QUESTS: Quest[] = [
     { id: 'peace', dog: 'Samwise', item: 'distraction biscuits', level: HOME_LEVEL, room: 'kitchen', x: 870, rise: 132, requires: [], reward: 12, icon: '🍪', hint: 'The blue biscuit tin is on the kitchen floor, beside the pantry.', request: 'Onyx! Opal keeps calling me Sammy, Ruby keeps licking her lips, and I have absolutely no idea why! Fetch the kitchen biscuits. We can share them. From a safe distance.', thanks: 'Biscuits for everyone! Opal has stopped chasing me. Ruby has stopped… whatever that was. Now we can explore the house!' },
-    { id: 'lammy', dog: 'Opal', item: 'Lammy the lamb', level: 5, x: 1520, rise: 482, requires: ['peace'], reward: 18, icon: '🐑', hint: 'On the broad high ledge before the first moving mountain platform in level 5.', request: 'This basket is empty. Sammy is missing! No, Lammy. My lamb toy. I left him in the mountains. Fetch him, please. I am not worried. Much.', thanks: 'Lammy! My darling Sammy—LAMMY. Stop looking at me like that. He belongs right here in my basket.' },
+    { id: 'lammy', dog: 'Opal', item: 'Lammy the lamb', level: 5, x: 1520, rise: 482, requires: ['peace'], reward: 18, icon: '🐑', hint: 'On the broad high ledge before the first moving mountain platform in level 5.', request: 'The carpet smells like Sammy, but my basket is empty. Sammy is missing! No, Lammy. My lamb toy. I left him in the mountains. Fetch him, please. I am not worried. Much.', thanks: 'Lammy! My darling Sammy—LAMMY. Stop looking at me like that. He belongs right here in my basket.' },
     { id: 'cushion', dog: 'Ruby', item: 'sploot cushion', level: 4, x: 1200, rise: 332, requires: ['peace'], reward: 16, icon: '🛏️', hint: 'At the right end of the first high sandy beach ledge in level 4.', request: 'Look at this SUNBEAM. A perfect sploot spot! My cushion is at the beach. Bring it home so I can do absolutely nothing on it. Blep.', thanks: 'Sunbeam. Cushion. Blep. This is the best day. Wake me if Opal finally notices me.' },
     { id: 'lunch', dog: 'Samwise', item: 'little boy’s lunchbox', level: 1, x: 1330, rise: 382, requires: ['peace'], reward: 20, icon: '🥪', hint: 'On the high platform above the last pound gap in level 1.', request: 'I am guarding the little boy’s toast. With my mouth. His lunchbox is still in the pound. Could you fetch it before he notices? We should probably give something back.', thanks: 'Lunchbox returned! The boy says we can bake biscuits together. I promise to eat only the samples.' },
     { id: 'ribbon', dog: 'Opal', item: 'turquoise ribbon', level: HOME_LEVEL, room: 'sunroom', x: 1040, rise: 132, requires: ['lammy', 'cushion', 'lunch'], reward: 16, icon: '🎀', hint: 'Follow the goose to the far end of the sunroom. He left the ribbon beside his flowerpot.', request: 'Lammy needs a bow. For our tea party with Sammy. That outrageous goose pinched my turquoise ribbon! It is beside his flowerpot. I refuse to negotiate with poultry.', thanks: 'Perfect. Lammy looks very handsome. So does Sammy. I said LAMMY. Tea in the kitchen, please.' },
@@ -81,11 +81,11 @@ export class HomeDog extends Entity {
         if (!this.following) { ctx.translate(this.x + 20 - camX, this.y + 40); ctx.scale(1.3, 1.3); ctx.translate(-(this.x + 20 - camX), -(this.y + 40)); }
         drawFamilyDog(ctx, this.quest.id, this.x - camX, this.y, this.facingRight, Math.abs(this.velX) > .5, this.animTime, this.following, this.quest.id === 'samwise' && this.gooseNearby, this.activity);
         ctx.restore();
-        ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 14px sans-serif';
-        if (this.following) { ctx.fillStyle = '#263b48df'; ctx.fillRect(this.x - 15 - camX, this.y - 42, 70, 23); }
-        ctx.fillStyle = this.following ? '#fff3cc' : '#332e38'; ctx.fillText(this.quest.dog, this.x + 20 - camX, this.y - 40);
-        if (this.nearby) { ctx.fillStyle = '#fff3cd'; ctx.fillRect(this.x - 58 - camX, this.y - 85, 156, 25); ctx.fillStyle = '#3d423c'; ctx.fillText(COMPANIONS.some(c => c.id === this.quest.id) ? 'E · Talk / join party' : 'E · Talk / fetch quest', this.x + 20 - camX, this.y - 67); }
-        ctx.restore();
+        if (this.following) {
+            ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 14px sans-serif';
+            ctx.fillStyle = '#263b48df'; ctx.fillRect(this.x - 15 - camX, this.y - 55, 70, 23);
+            ctx.fillStyle = '#fff3cc'; ctx.fillText(this.quest.dog, this.x + 20 - camX, this.y - 40); ctx.restore();
+        }
     }
 }
 
@@ -128,7 +128,7 @@ export const ROOM_DOORS: Record<HomeFloor, { x: number; to: HomeFloor; label: st
     ground: [{ x: 220, to: 'kitchen', label: 'Kitchen' }],
     kitchen: [{ x: 220, to: 'ground', label: 'Entry hall' }, { x: 1240, to: 'sunroom', label: 'Sunroom' }],
     upstairs: [{ x: 1250, to: 'bedroom', label: 'Bedroom' }],
-    bedroom: [{ x: 220, to: 'upstairs', label: 'Snuggle loft' }, { x: 1250, to: 'attic', label: 'Attic hideout' }],
+    bedroom: [{ x: 220, to: 'upstairs', label: 'Master bedroom' }, { x: 1250, to: 'attic', label: 'Attic hideout' }],
     sunroom: [{ x: 220, to: 'kitchen', label: 'Kitchen' }],
     attic: [{ x: 220, to: 'bedroom', label: 'Bedroom' }],
     basement: [],

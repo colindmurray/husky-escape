@@ -104,7 +104,7 @@ export class SecretDoghouse extends Entity {
             ctx.fillStyle = this.unlocked ? '#efce89' : '#322e32'; ctx.beginPath(); ctx.roundRect(x + 28, y + 31, 34, 35, [16, 16, 0, 0]); ctx.fill();
             for (let i = 0; i < 3; i++) { ctx.fillStyle = this.seals[i] || this.unlocked ? '#f6d484' : '#5e5745'; ctx.beginPath(); ctx.arc(x + 29 + i * 15, y + 20, 4, 0, Math.PI * 2); ctx.fill(); }
             if (!this.unlocked) { ctx.strokeStyle = '#bea779'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 30, y + 42); ctx.lineTo(x + 60, y + 57); ctx.stroke(); }
-            if (this.nearby) { ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c8'; ctx.strokeStyle = '#283f41'; ctx.lineWidth = 3; const text = this.unlocked ? 'E · Enter doghouse' : 'Find the 3 paw seals'; ctx.strokeText(text, x + 44, y - 20); ctx.fillText(text, x + 44, y - 20); }
+            if (this.nearby && this.trail.length) { ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff2c8'; ctx.strokeStyle = '#283f41'; ctx.lineWidth = 3; const text = this.unlocked ? 'E · Enter doghouse' : 'Find the 3 paw seals'; ctx.strokeText(text, x + 44, y - 20); ctx.fillText(text, x + 44, y - 20); }
         }
         ctx.restore();
     }

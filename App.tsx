@@ -301,8 +301,8 @@ export default function App() {
             <div className="absolute inset-0 pointer-events-none flex flex-col justify-between">
                 <div className="p-5 flex justify-between items-start w-full z-50 text-white pointer-events-none">
                     {(gameState === GameState.PLAYING || gameState === GameState.LEVEL_COMPLETE) ? (
-                         <div className="text-2xl drop-shadow-md font-bold flex gap-4 pointer-events-auto">
-                            <span>Onyx Escape</span>
+                         <div className={`${engineRef.current?.world.isHome ? 'text-lg' : 'text-2xl'} drop-shadow-md font-bold flex gap-4 pointer-events-auto`}>
+                            {!engineRef.current?.world.isHome && <span>Onyx Escape</span>}
                             <span>🍖 {bones}</span>
                         </div>
                     ) : <div></div>}
