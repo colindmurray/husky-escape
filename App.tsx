@@ -302,11 +302,11 @@ export default function App() {
                 <div className="p-5 flex justify-between items-start w-full z-50 text-white pointer-events-none">
                     {(gameState === GameState.PLAYING || gameState === GameState.LEVEL_COMPLETE) ? (
                          <div className={`${engineRef.current?.world.isHome ? 'text-lg' : 'text-2xl'} drop-shadow-md font-bold flex gap-4 pointer-events-auto`}>
-                            {!engineRef.current?.world.isHome && <span>Onyx Escape</span>}
+                            {!engineRef.current?.world.isHome && !engineRef.current?.world.shopRoom && <span>Onyx Escape</span>}
                             <span>🍖 {bones}</span>
                         </div>
                     ) : <div></div>}
-                    {(gameState === GameState.PLAYING && !engineRef.current?.world.isHome) && (
+                    {(gameState === GameState.PLAYING && !engineRef.current?.world.isHome && !engineRef.current?.world.shopRoom) && (
                         <div className="absolute top-5 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto">
                             <span className="text-xs uppercase tracking-[0.3em] font-bold text-gray-400">Time</span>
                             <span className={`text-4xl drop-shadow-lg font-bold tabular-nums ${timeLeft < 30 ? 'text-red-500 animate-pulse' : 'text-white'}`}>{timeLeft}</span>

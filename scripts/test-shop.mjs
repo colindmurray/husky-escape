@@ -54,6 +54,8 @@ try {
         world.player.x = door.x + 20; world.player.y = door.y + door.h - world.player.h; world.player.grounded = true;
         door.update(world.player);
         check(world.openShop(), 'An unlocked nearby doghouse opens');
+        world.belongings.shopSupplies[3] = ['spring', 'hush', 'leap'];
+        world.shopRoom.player.x = 770; world.interactShop();
         const paused = () => JSON.stringify({ player: world.player, time: world.timeLeft, platforms: world.platforms, enemies: world.enemies });
         const before = paused(); for (let f = 0; f < 180; f++) world.update();
         check(paused() === before, 'Shop pauses physics, enemies, item timers, and the level clock');
@@ -72,7 +74,7 @@ try {
         check(world.player.bonesCollected === 5 && world.player.accessories.size === 3, 'All accessory categories can be worn together');
         world.buyGood('hat'); world.buyGood('hat');
         check(world.player.bonesCollected === 5 && world.player.accessories.has('hat'), 'Owned accessories can be removed and reworn without charging');
-        world.closeShop();
+        world.closeShop(); world.shopRoom.player.x = 88; world.interactShop();
         check(!world.buyGood('time'), 'Purchases are unavailable outside a shop');
         check(!world.useInventorySlot(-1) && !world.useInventorySlot(3), 'Invalid pocket indexes do nothing');
         world.belongings.slots = ['shield', 'magnet', 'time']; // Legacy pockets remain usable.
@@ -131,7 +133,7 @@ try {
             world.loadLevel(level, false, difficulty); const [x, rise] = starts[level];
             world.player.x = x; world.player.y = 800 - rise - world.player.h;
             let i = 0, held = false; const oldDeaths = deaths.length;
-            for (let f = 0; f < 1600 && deaths.length === oldDeaths && !world.shopOpen; f++) {
+            for (let f = 0; f < 1600 && deaths.length === oldDeaths && !world.shopRoom; f++) {
                 const p = world.player, door = world.shopDoor, target = door.trail[i];
                 if (door.seals[i] && p.grounded && i < 2) i++;
                 const dx = (door.unlocked ? door.x + door.w / 2 : target.x + 10) - p.x - p.w / 2 - (level === 6 ? p.velX * 10 : 0);
@@ -141,7 +143,7 @@ try {
                 if (door.unlocked && door.nearby) inputManager.keys.KeyE = true;
                 world.update();
             }
-            check(world.shopOpen && deaths.length === oldDeaths, `${difficulty} level ${level}: all paw seals and shop reached from branch approach with live hazards`);
+            check(world.shopRoom && deaths.length === oldDeaths, `${difficulty} level ${level}: all paw seals and shop reached from branch approach with live hazards`);
             check(world.belongings.unlockedShops.has(level), 'Earned shop access is retained for retries');
             const canvas = document.createElement('canvas'); canvas.width = 1280; canvas.height = 800;
             const renderer = new Renderer(canvas);
@@ -153,7 +155,7 @@ try {
         world.loadLevel(3, false, 'EASY');
         world.shopDoor.unlocked = true;
         world.player.x = world.shopDoor.x + 20; world.player.y = world.shopDoor.y + world.shopDoor.h - world.player.h; world.player.grounded = true;
-        world.shopDoor.update(world.player); world.openShop(); world.player.bonesCollected = 87;
+        world.shopDoor.update(world.player); world.openShop(); world.shopRoom.player.x = 770; world.interactShop(); world.player.bonesCollected = 87;
         for (const id of ['hat', 'coat', 'collar', 'crown', 'cat', 'fox']) check(world.buyGood(id), `Purchase new wardrobe: ${id}`);
         check(world.player.bonesCollected === 13, 'Expanded wardrobe charges exactly the listed prices');
         check(world.player.accessories.has('crown') && !world.player.accessories.has('hat') && world.player.accessories.has('fox') && !world.player.accessories.has('cat'), 'Purchasing headwear and skins replaces the previous item in the same category');
@@ -183,10 +185,10 @@ try {
         const engine = window.__husky.engine; engine.startLevel(3, 'EASY'); engine.stop(); const w = engine.world;
         w.player.bonesCollected = 50; w.shopDoor.unlocked = true;
         w.player.x = w.shopDoor.x + 20; w.player.y = w.shopDoor.y + w.shopDoor.h - w.player.h; w.player.grounded = true;
-        w.shopDoor.update(w.player); w.openShop();
+        w.shopDoor.update(w.player); w.openShop(); w.shopRoom.player.x = 770; w.interactShop();
     });
     await page.getByRole('dialog').waitFor();
-    assert.equal(await page.getByRole('article').count(), 9);
+    assert.equal(await page.getByRole('article').count(), 10);
     for (const name of ['Little crown', 'Tuxedo cat', 'Red fox']) {
         const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name, exact: true }) });
         await card.getByRole('button').click();

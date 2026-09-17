@@ -5,7 +5,7 @@
 .pocket-hud button small { display:block; font-size:10px; }
 .pocket-hud kbd { position:absolute; top:4px; left:7px; font-size:10px; color:#d4ba82; }
 .pocket-hud button.enter-shop { min-height:46px; background:#44877a; font-weight:700; white-space:nowrap; }
-.shop-backdrop { position:absolute; z-index:100; inset:0; padding:22px; display:flex; justify-content:center; align-items:center; background:#142d32c9; backdrop-filter:blur(8px); color:#3f3430; }
+.shop-backdrop { position:absolute; z-index:100; inset:0; padding:22px; display:flex; justify-content:center; align-items:center; background:#142d3280; backdrop-filter:blur(3px); color:#3f3430; }
 .husky-shop { width:min(920px,100%); max-height:100%; overflow:auto; border:3px solid #be9662; border-radius:24px; background:#f4e7cd; box-shadow:0 24px 70px #102c3e80; }
 .husky-shop header { display:flex; justify-content:space-between; gap:20px; align-items:center; padding:20px 26px 14px; border-bottom:1px solid #cfae774d; }
 .husky-shop header small { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#82624b; }
@@ -17,11 +17,9 @@
 .husky-shop button:focus-visible,.pocket-hud button:focus-visible { outline:3px solid #dc9438; outline-offset:3px; }
 .husky-shop button.leave-shop { background:transparent; border-color:#bb9b70; color:#66513c; font-size:12px; flex-shrink:0; }
 .husky-shop kbd { margin-left:7px; opacity:.65; font-size:10px; }
-.shop-welcome { display:grid; grid-template-columns:320px 1fr; gap:24px; padding:18px 26px; align-items:center; }
-.shop-welcome canvas { width:100%; border-radius:13px; }
+.shop-welcome { display:grid; grid-template-columns:1fr auto; gap:24px; padding:18px 26px; align-items:center; }
 .shop-welcome p { font-size:14px; line-height:1.45; margin:0 0 10px; }
 .shop-welcome strong { display:block; color:#3b7769; font-size:20px; }
-.shop-welcome small { display:block; color:#866e58; font-size:11px; margin-top:6px; }
 .shop-shelves { padding:0 26px; }
 .shop-shelves section { margin-bottom:20px; }
 .shop-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
@@ -36,8 +34,8 @@
 .shop-pockets span { border:1px solid #c5a779; padding:6px 9px; border-radius:7px; }
 .husky-shop footer p { font-size:12px; margin:10px 0 0; min-height:18px; }
 .shop-backdrop.classic { backdrop-filter:none; }
-.classic .husky-shop,.classic .shop-cards article,.classic .shop-welcome canvas,.classic .husky-shop button { border-radius:2px; box-shadow:none; }
-@media(max-width:650px) { .shop-backdrop{padding:8px}.husky-shop header{padding:14px;gap:8px}.husky-shop h1{font-size:26px}.shop-welcome{grid-template-columns:110px 1fr;padding:14px;gap:12px}.shop-welcome canvas{height:120px;object-fit:cover}.shop-welcome p{font-size:12px}.shop-welcome h2{font-size:17px}.shop-shelves{padding:0 14px}.shop-cards{gap:7px}.shop-cards article{padding:9px}.shop-cards h3{font-size:13px}.shop-cards p{font-size:11px}.husky-shop footer{padding:12px 14px}.pocket-hud button{min-width:65px;padding:5px 8px}.pocket-hud{bottom:10px}.shop-pockets{gap:5px;font-size:10px} }
+.classic .husky-shop,.classic .shop-cards article,.classic .husky-shop button { border-radius:2px; box-shadow:none; }
+@media(max-width:650px) { .shop-backdrop{padding:8px}.husky-shop header{padding:14px;gap:8px}.husky-shop h1{font-size:26px}.shop-welcome{grid-template-columns:1fr;padding:14px;gap:12px}.shop-welcome p{font-size:12px}.shop-welcome h2{font-size:17px}.shop-shelves{padding:0 14px}.shop-cards{gap:7px}.shop-cards article{padding:9px}.shop-cards h3{font-size:13px}.shop-cards p{font-size:11px}.husky-shop footer{padding:12px 14px}.pocket-hud button{min-width:65px;padding:5px 8px}.pocket-hud{bottom:10px}.shop-pockets{gap:5px;font-size:10px} }
 
 .outfit-preview { width:100%; height:100px; object-fit:contain; border-radius:9px; background:#ead9b54d; }
 
@@ -46,3 +44,10 @@
 @media(max-width:650px) { .shop-shelves section:nth-child(2) .shop-cards { grid-template-columns:repeat(2,1fr); } }
 
 .active-treats { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); width:max-content; max-width:90vw; text-align:center; background:#203b3de8; color:#fff0cf; border-radius:8px; padding:6px 10px; font-size:12px; }
+
+.shop-cards .shop-exclusive { margin:0 0 8px; color:#805927; font-size:10px; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
+
+.shop-walk-controls { display:none; position:absolute; bottom:18px; left:18px; z-index:55; gap:10px; }
+.shop-walk-controls button { width:52px; height:48px; border:1px solid #e3c88b99; border-radius:50%; background:#203b3dcc; color:#fff0cf; font-size:22px; touch-action:none; }
+.shop-walk-controls button:focus-visible { outline:3px solid #dc9438; outline-offset:3px; }
+@media(pointer:coarse) { .shop-walk-controls { display:flex; } }

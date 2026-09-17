@@ -16,6 +16,8 @@ export const SHOP_GOODS = {
     feather: { name: 'Feather wafer', icon: '🪶', price: 8, description: 'On land, hold jump to float gently down for 12 seconds.' },
     feast: { name: 'Bakery bonus', icon: '🥨', price: 10, description: 'Each bone you collect is worth two for 15 seconds.' },
     hush: { name: 'Quiet-time cookie', icon: '💤', price: 10, description: 'Enemies and their projectiles pause for 5 seconds. They still hurt on contact.' },
+    leap: { name: 'Sky biscuit', icon: '☁', price: 8, description: 'An instant upward bounce on land, even in midair, with two fresh jumps.' },
+    trailmix: { name: 'Trail mix', icon: '🥜', price: 12, description: 'Higher jumps and faster running together for 15 seconds on land.' },
     goose: { name: 'Mischievous goose', icon: '🪿', price: 16, description: 'White feathers, a long neck, orange feet, and absolutely no manners.' },
     scarf: { name: 'Snowday scarf', icon: '🧣', price: 10, description: 'A golden scarf with a fluttering tail. Only at Snowdrift.' },
     sailor: { name: 'Sailor cap', icon: '⚓', price: 10, description: 'A crisp white cap with a blue ribbon. Only at the Lighthouse.' },
@@ -29,22 +31,26 @@ export const SHOP_GOODS = {
     collar: { name: 'Moonstone collar', icon: '💎', price: 8, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
-export type Supply = 'shield' | 'magnet' | 'time' | 'spring' | 'sprint' | 'feather' | 'feast' | 'hush';
+export const SUPPLIES = ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush', 'leap', 'trailmix'] as const;
+export type Supply = typeof SUPPLIES[number];
 export type Skin = 'cat' | 'fox' | 'goose';
 export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | 'scarf' | 'sailor' | 'chef' | 'bow' | Skin;
 export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox' || id === 'goose';
-export const isSupply = (id: ShopGood): id is Supply => ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush'].includes(id);
+export const isSupply = (id: ShopGood): id is Supply => (SUPPLIES as readonly string[]).includes(id);
 
-const LOCAL_STOCK: Record<number, ShopGood[]> = {
-    3: ['goose', 'spring', 'hush'],
-    6: ['scarf', 'sprint', 'spring'],
-    9: ['sailor', 'feather', 'sprint'],
-    12: ['chef', 'feast', 'feather'],
-    15: ['bow', 'hush', 'feast'],
-};
-export const shopStock = (level: number): ShopGood[] => [
-    ...(LOCAL_STOCK[level] ?? []), 'hat', 'crown', 'cat', 'fox', 'coat', 'collar',
-];
+export const SHOP_COSMETICS: Record<number, Accessory> = { 3: 'goose', 6: 'scarf', 9: 'sailor', 12: 'chef', 15: 'bow' };
+export function shopStock(level: number, belongings: Belongings): ShopGood[] {
+    if (!Object.hasOwn(SHOP_COSMETICS, level)) return [];
+    if (!belongings.shopSupplies[level]) {
+        const supplies = [...SUPPLIES];
+        for (let i = supplies.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [supplies[i], supplies[j]] = [supplies[j], supplies[i]];
+        }
+        belongings.shopSupplies[level] = supplies.slice(0, 3);
+    }
+    return [SHOP_COSMETICS[level], ...belongings.shopSupplies[level], 'hat', 'crown', 'cat', 'fox', 'coat', 'collar'];
+}
 const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
@@ -57,6 +63,7 @@ export class Belongings {
     public equipped = new Set<Accessory>();
     public collectedBones = new Set<string>();
     public unlockedShops = new Set<number>();
+    public shopSupplies: Record<number, Supply[]> = {};
 
     public toggleAccessory(id: Accessory) {
         if (this.equipped.delete(id)) return;

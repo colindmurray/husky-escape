@@ -90,15 +90,22 @@ The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platfo
 
 Optional shops appear every three levels: a canopy trail in 3, snowy ledges in 6, lighthouse perches in 9, and bakery rafters in 12. Follow the three gold paw seals above the main path to unlock a doghouse. Hard and Hardcore have narrower approach ledges. These challenges never gate the normal exit.
 
-Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper stocks a different pair of new power-ups and an exclusive new cosmetic in each shop. The original six cosmetics remain available everywhere, and owned exclusives can be re-equipped anywhere. Shopping pauses the level, enemies, and active effects; **Escape**, **E**, or **Back to trail** returns to the same spot.
+Press **E** beside an unlocked door, or tap **Enter doghouse**, to walk into a themed room. Walk to Juniper behind the counter and press the nearby **E** prompt to open the store HUD. **Escape**, **E**, or **Back to shop** closes the HUD; walk back to the entrance and use **E** to leave. Touch devices have left/right walking buttons. The room uses an original eight-bar shop tune in both audio modes, restoring the previous theme on departure.
+
+The entire exterior stays paused while inside: position, hazards, clock, effects, companions, and unfinished quest pickups resume where you left them. Shopping cannot finish a fetch quest. Each branch rolls three different consumables from the ten below and keeps that stock throughout the journey, including revisits and retries. Practice copies stock without changing the real journey. Each shop also has one exclusive cosmetic on display; the original six cosmetics and already-owned outfits remain available at every counter.
 
 | Purchase | Bones | Effect |
 | --- | ---: | --- |
+| Star treat | 6 | Protection from enemies for 5 seconds; falls, water and the parade band still end the run |
+| Bone magnet | 8 | Attract nearby bones for 10 seconds |
+| Time biscuit | 6 | Add 30 seconds to the clock |
 | Spring biscuit | 8 | Higher land jumps for 12 seconds |
 | Zoomie snack | 8 | Faster running on land for 12 seconds |
 | Feather wafer | 8 | Hold jump to slow your descent on land for 12 seconds |
 | Bakery bonus | 10 | Double bone value for 15 seconds; collected bones still cannot be farmed |
 | Quiet-time cookie | 10 | Pause enemies and their projectiles for 5 seconds; contact still hurts |
+| Sky biscuit | 8 | Instant upward bounce on land, even in midair, with two fresh jumps |
+| Trail mix | 12 | Higher jumps and faster running together for 15 seconds on land |
 | Trail cap | 10 | Teal hat; cosmetic |
 | Little crown | 12 | Gold crown with a rose jewel; cosmetic |
 | Tuxedo cat | 16 | Dark fur, white socks, green eyes and whiskers; cosmetic skin |
@@ -106,21 +113,23 @@ Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper stocks a
 | Berry sweater | 12 | Knitted coat; cosmetic |
 | Moonstone collar | 8 | Violet collar and pendant; cosmetic |
 
-| Shop | Exclusive cosmetic | Power-ups |
+| Shop | Exclusive cosmetic | Interior |
 | --- | --- | --- |
-| Canopy, level 3 | Mischievous goose (16 bones) | Spring biscuit, Quiet-time cookie |
-| Snowdrift, level 6 | Snowday scarf (10) | Zoomie snack, Spring biscuit |
-| Lighthouse, level 9 | Sailor cap (10) | Feather wafer, Zoomie snack |
-| Rafters, level 12 | Chef’s toque (10) | Bakery bonus, Feather wafer |
-| Home | Welcome-home bow (10) | Quiet-time cookie, Bakery bonus |
+| Canopy, level 3 | Mischievous goose (16 bones) | Hanging vines, mushrooms, forest window and fireflies |
+| Snowdrift, level 6 | Snowday scarf (10) | Timber chalet, snowy mountains and a glowing hearth |
+| Lighthouse, level 9 | Sailor cap (10) | Ocean porthole, sweeping lighthouse beam, ropes and a life ring |
+| Rafters, level 12 | Chef’s toque (10) | Brick oven, baking bread and a checked countercloth |
+| Home | Welcome-home bow (10) | Garden window, dresser, houseplant and a framed heart |
 
-The goose has a long white neck, orange beak and feet, and a waddling walk inspired by Untitled Goose Game. It is a cosmetic skin with the same controls and collision box. Legacy star treats, magnets, and time biscuits already in pockets still work, but new shops stock the new recipes.
+The goose has a long white neck, orange beak and feet, and a waddling walk inspired by Untitled Goose Game. It is a cosmetic skin with the same controls and collision box.
 
 Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket on the trail. Full pockets and insufficient bones block a purchase without charging. Already-active effects cannot consume another matching treat. Owned accessories can be worn or removed in any shop without paying again, and headwear, sweater, collar, and a skin can be worn together in both visual modes. One headwear item and one skin can be active at a time. Taking off a skin restores husky Onyx. Shop previews show each cosmetic with the current outfit; all skins retain Onyx’s movement, hitbox, and level equipment.
 
-Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access also survives retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
+Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access and randomized stock also survive retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
 
 `npm run test:shop` checks purchases, the run economy, item use, pause behavior, cosmetics, and movement-only access from each side-route approach with hazards active on Easy, Hard, and Hardcore. It uses the same local Chrome setup as `test:town`.
+
+`npm run test:shop-rooms` checks walk-in/counter/exit controls, frozen exterior state, quest pickup preservation, stock variety and persistence, exclusive cosmetics, both new consumables, practice isolation, music selection/muting, distinct artwork, desktop interaction, and mobile touch/rotation.
 
 `npm run test:home` checks the complete seven-quest chain, level-completion requirements, abandoned/failed fetch runs, prerequisite gates, room changes, once-only rewards, first-visit cutscene completion/skip, proximity prompts, collapsed journals, trail pause, keyboard/touch UI, boy dialogue, and both visual modes.
 

@@ -16,6 +16,7 @@
     "test:backyard": "node scripts/test-backyard.mjs",
     "test:town": "node scripts/test-town.mjs",
     "test:shop": "node scripts/test-shop.mjs",
+    "test:shop-rooms": "node scripts/test-shop-rooms.mjs",
     "dsh:headless": "dsh-ox --profile headless",
     "dsh:web": "dsh-ox web",
     "preview": "vite preview"

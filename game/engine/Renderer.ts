@@ -33,6 +33,7 @@ export class Renderer {
 
     public drawGame(world: World) {
         const { width, height, cameraX, cameraY, currentLevel } = world;
+        if (world.shopRoom) { world.shopRoom.draw(this.ctx, width, height); return; }
         const enhanced = gfxSettings.visualMode === 'enhanced';
         this.ctx.clearRect(0, 0, width, height);
 

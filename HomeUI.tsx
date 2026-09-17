@@ -26,7 +26,7 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
         window.addEventListener('keydown', trap);
         return () => { window.removeEventListener('keydown', trap); focusGame(); };
     }, [panel]);
-    if (!world.belongings.homeUnlocked) return null;
+    if (!world.belongings.homeUnlocked || world.shopRoom) return null;
     const companion = COMPANIONS.find(c => c.id === panel);
     const party = COMPANIONS.filter(c => world.belongings.companions.has(c.id));
     const chapter = houseChapter(progress);
@@ -113,17 +113,17 @@ function DogPortrait({ id, activity }: { id: string; activity: string }) {
     return <canvas ref={canvas} width={180} height={140} className="dog-portrait" role="img" aria-label={`Portrait of ${COMPANIONS.find(c => c.id === id)?.dog}`} />;
 }
 
-function InteractionPrompt({ world, focusGame }: { world: GameEngine['world']; focusGame: () => void }) {
+export function InteractionPrompt({ world, focusGame }: { world: GameEngine['world']; focusGame: () => void }) {
     const button = useRef<HTMLButtonElement>(null);
     useEffect(() => {
         let frame: number;
         const update = () => {
-            const target = world.homeInteraction, node = button.current;
+            const target = world.shopRoom ? world.shopRoom.interaction : world.homeInteraction, node = button.current;
             if (node) {
                 node.hidden = !target;
                 if (target) {
-                    node.style.left = `${Math.max(26, Math.min(world.width - 26, target.x - world.cameraX))}px`;
-                    node.style.top = `${Math.max(90, target.y - world.cameraY)}px`;
+                    node.style.left = `${Math.max(26, Math.min(world.width - 26, target.x - (world.shopRoom ? 0 : world.cameraX)))}px`;
+                    node.style.top = `${Math.max(90, target.y - (world.shopRoom ? 0 : world.cameraY))}px`;
                     node.setAttribute('aria-label', target.label); node.title = target.label;
                 }
             }
@@ -131,5 +131,5 @@ function InteractionPrompt({ world, focusGame }: { world: GameEngine['world']; f
         };
         update(); return () => cancelAnimationFrame(frame);
     }, [world]);
-    return <button ref={button} hidden className="home-interaction" aria-keyshortcuts="E" onClick={() => { world.interactHome(); focusGame(); }}><span aria-hidden="true">E</span></button>;
+    return <button ref={button} hidden className="home-interaction" aria-keyshortcuts="E" onClick={() => { if (world.shopRoom) world.interactShop(); else world.interactHome(); focusGame(); }}><span aria-hidden="true">E</span></button>;
 }
