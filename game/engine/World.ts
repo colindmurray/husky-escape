@@ -1,8 +1,8 @@
-import { getHome, HOME_LEVEL, HOME_WIDTH, HomeDog, QUESTS, QuestPickup, COMPANIONS, FLOORS, type HomeFloor } from '../Home';
+import { getHome, HOME_LEVEL, HOME_WIDTH, HomeDog, QUESTS, QuestPickup, COMPANIONS, FLOORS, ROOM_DOORS, type HomeFloor } from '../Home';
 import { buildCustomLevel, CUSTOM_LEVEL, loadDraft } from '../LevelBuilder';
 import { BossRaccoon, Raccoon, TrashLid } from '../entities/Backyard';
 
-import { addSecretShop, Belongings, SHOP_GOODS, isSupply, type ShopGood, SecretDoghouse } from "../Shop";
+import { addSecretShop, Belongings, SHOP_GOODS, shopStock, isSupply, type ShopGood, SecretDoghouse } from "../Shop";
 import { Entity, Player, Collectible, Exit, Water, Porcupine, Jellyfish, Shark, Wolf, Crab, Seagull, Snowball, ChaserEnemy, BossCatcher, BossWolf, BossExcavator, ControlPanel, FallingDebris, WreckingBall, Supervisor, JackhammerOperator, SecurityDrone, Pastry, FlourMoth, DoughBlob, BakerChaser, BossBaker, PackagingPress, OvenMouth, BatterVat } from "../entities/index";
 import { MarchingBand, TownPlatform, TownPedestrian, TownCyclist, RollingApple, TownTimedHazard, YardDog } from "../entities/Town";
 import { initLevel } from "../levels/index";
@@ -58,6 +58,7 @@ export class World {
     public get isCustom() { return this.currentLevel === CUSTOM_LEVEL; }
     public get isHome() { return this.currentLevel === HOME_LEVEL; }
     public raccoonIntroPending = false;
+    public hushTimer = 0;
     public shopMessage = '';
     private shopKeyHeld: Record<string, boolean> = {};
     private boneIds = new Map<Collectible, string>();
@@ -86,7 +87,7 @@ export class World {
         const newJourney = !persistBones || !this.player;
         if (newJourney) { this.belongings = new Belongings(); this.homeFloor = 'ground'; this.practice = false; }
         this.homePanel = null; this.shopOpen = false; this.shopMessage = ''; this.shopKeyHeld = {}; inputManager.clear();
-        this.ended = false; this.raccoonIntroPending = false;
+        this.ended = false; this.hushTimer = 0; this.raccoonIntroPending = false;
         this.currentLevel = level;
         this.difficulty = difficulty;
         
@@ -166,7 +167,9 @@ export class World {
                 else if (this.shopOpen) this.closeShop();
                 else if (this.isHome) {
                     const dog = this.props.find(p => p instanceof HomeDog && p.nearby) as HomeDog | undefined;
-                    if (dog) this.openHomePanel(dog.quest.id);
+                    const door = this.nearbyRoomDoor;
+                    if (door) this.changeHomeFloor(door.to);
+                    else if (dog) this.openHomePanel(dog.quest.id);
                     else if (Math.abs(this.player.x - 1110) < 85) this.openHomePanel('floors');
                     else if (this.homeFloor === 'basement' && Math.abs(this.player.x - 430) < 100) this.openHomePanel('practice');
                     else if (this.homeFloor === 'basement' && Math.abs(this.player.x - 830) < 100) this.openHomePanel('builder');
@@ -212,7 +215,9 @@ export class World {
             if (prop instanceof HomeDog && near !== prop.nearby) this.events.onShopUpdate?.();
         }
         this.waters.forEach(w => w.update());
+        const previousDoor = this.nearbyRoomDoor;
         this.player.update(this.platforms, inputManager.keys, this.height, this.currentLevel);
+        if (previousDoor !== this.nearbyRoomDoor) this.events.onShopUpdate?.();
         const wasNear = this.shopDoor?.nearby, wasUnlocked = this.shopDoor?.unlocked;
         this.shopDoor?.update(this.player);
         if (this.shopDoor?.unlocked) this.belongings.unlockedShops.add(this.currentLevel);
@@ -239,10 +244,13 @@ export class World {
             return;
         }
 
+        const enemiesPaused = this.hushTimer > 0;
+        if (enemiesPaused) this.hushTimer--;
+
         // Enemy Collisions
         this.enemies.forEach(enemy => {
             if (this.ended || enemy.markedForDeletion) return;
-            enemy.update(this.platforms, this.player, this.enemies, this.waters);
+            if (!enemiesPaused) enemy.update(this.platforms, this.player, this.enemies, this.waters);
             
             if (enemy.markedForDeletion) return;
             const townHazard = enemy instanceof TownCyclist || enemy instanceof RollingApple || enemy instanceof TownTimedHazard || enemy instanceof YardDog;
@@ -290,7 +298,9 @@ export class World {
                     if (stomp) {
                         this.player.y = enemy.y - this.player.h;
                         this.player.velY = -12; this.player.grounded = false; this.player.jumpsLeft = 1;
-                        if (enemy instanceof BossRaccoon) enemy.takeHit(this.enemies);
+                        if (enemy instanceof BossRaccoon) {
+                            if (enemy.takeHit(this.enemies)) this.player.invincibleTimer = 30;
+                        }
                         else { enemy.markedForDeletion = true; audioManager.playSFX(SoundType.BOSS_HIT); }
                     } else if (!(enemy instanceof BossRaccoon && enemy.isStunned)) {
                         this.triggerGameOver('raccoon', enemy instanceof BossRaccoon ? 'Baron von Bins charged into you! Dodge, then jump on his head while he is dizzy.' : 'Caught by a backyard raccoon! Jump over it or land on its head.');
@@ -439,7 +449,7 @@ export class World {
                 bone.markedForDeletion = true;
                 const id = this.boneIds.get(bone);
                 if (id) this.belongings.collectedBones.add(id);
-                this.player.bonesCollected++;
+                this.player.bonesCollected += this.player.feastTimer > 0 ? 2 : 1;
                 this.events.onScoreUpdate(this.player.bonesCollected);
                 audioManager.playSFX(SoundType.COLLECT);
             }
@@ -468,6 +478,8 @@ export class World {
 
     public get followingDogs() { return this.companions.filter((_, i) => this.playerTrail.length > (i + 1) * 24); }
 
+    public get nearbyRoomDoor() { return this.isHome && this.player ? ROOM_DOORS[this.homeFloor].find(d => Math.abs(this.player!.x - d.x - 22) < 55) : undefined; }
+
     public changeHomeFloor(floor: HomeFloor) {
         if (!this.isHome || !this.belongings.homeUnlocked || this.shopOpen || !Object.hasOwn(FLOORS, floor)) return false;
         this.homeFloor = floor; this.loadLevel(HOME_LEVEL, true, this.difficulty);
@@ -493,8 +505,8 @@ export class World {
         this.homePanel = null; inputManager.clear(); this.events.onShopUpdate?.();
     }
 
-    public respondToDog() {
-        const quest = QUESTS.find(q => q.id === this.homePanel);
+    public respondToDog(id: string = this.homePanel ?? '') {
+        const quest = QUESTS.find(q => q.id === id && (q.id === this.homePanel || COMPANIONS.some(c => c.id === this.homePanel && c.dog === q.dog)));
         if (!quest || !this.isHome || !this.player || this.ended) return false;
         const status = this.belongings.quests[quest.id];
         if (!status) this.belongings.quests[quest.id] = 'accepted';
@@ -526,6 +538,7 @@ export class World {
 
     public buyGood(id: ShopGood) {
         if (!this.shopOpen || this.ended || !this.player || !Object.hasOwn(SHOP_GOODS, id)) return false;
+        if (!shopStock(this.currentLevel).includes(id) && (isSupply(id) || !this.belongings.owned.has(id))) return false;
         const good = SHOP_GOODS[id];
         if (!isSupply(id) && this.belongings.owned.has(id)) {
             this.belongings.toggleAccessory(id);
@@ -554,7 +567,15 @@ export class World {
         } else if (item === 'magnet') {
             if (this.player.magnetTimer > 0) return false;
             this.player.magnetTimer = 600;
-        } else { this.timeLeft += 30; this.events.onTimeUpdate(this.timeLeft); }
+        } else if (item === 'time') { this.timeLeft += 30; this.events.onTimeUpdate(this.timeLeft); }
+        else if (item === 'hush') {
+            if (this.hushTimer > 0) return false;
+            this.hushTimer = 300;
+        } else {
+            const key = `${item}Timer` as 'springTimer' | 'sprintTimer' | 'featherTimer' | 'feastTimer';
+            if (this.player[key] > 0) return false;
+            this.player[key] = item === 'feast' ? 900 : 720;
+        }
         this.belongings.slots[index] = null;
         audioManager.playSFX(SoundType.BOOST); this.events.onShopUpdate?.(); return true;
     }

@@ -53,17 +53,17 @@ try {
         check(!death && raccoon.markedForDeletion && world.player.velY < 0, 'Landing on a small raccoon defeats it and bounces Onyx');
         world.loadLevel(14, false, 'EASY');
         const boss = world.enemies.find(e => e instanceof BossRaccoon); world.enemies = [boss]; boss.activate();
-        const landOnBoss = (penetration = 10) => { world.player.x = boss.x + 45; world.player.y = boss.y - world.player.h + penetration; world.player.velY = 4; world.player.invincibleTimer = 0; world.update(); };
-        landOnBoss(); check(boss.health === 3 && world.player.velY < 0, 'The top hat blocks damage before the boss is dizzy');
+        const landOnBoss = (penetration = 10) => { world.enemies = [boss]; world.player.x = boss.x + 45; world.player.y = boss.y - world.player.h + penetration; world.player.velY = 4; world.player.invincibleTimer = 0; world.update(); };
+        landOnBoss(); check(boss.health === 4 && world.player.velY < 0, 'The top hat blocks damage before the boss is dizzy');
         boss.state = 'stunned'; boss.timer = 0; landOnBoss(30); world.update();
         check(!death && world.player.y + world.player.h < boss.y, 'A deeply overlapping valid stomp clears the boss before the next frame');
-        check(boss.health === 2 && boss.state === 'recover', 'One dizzy opening permits one damaging bonk');
-        for (let i = 0; i < 2; i++) { boss.state = 'stunned'; boss.timer = 0; landOnBoss(); }
+        check(boss.health === 3 && boss.state === 'recover', 'One dizzy opening permits one damaging bonk');
+        for (let i = 0; i < 3; i++) { boss.state = 'stunned'; boss.timer = 0; landOnBoss(); }
         check(boss.health === 0 && !world.exit.locked && world.platforms.filter(p => p instanceof BackyardGate).every(p => !p.isActive), 'Defeating the boss unlocks home and lowers both gates');
         world.player.x = world.exit.x; world.player.y = world.exit.y; world.update(); world.update();
         check(wins === 1, 'The backyard exit wins the game exactly once');
         world.loadLevel(14, true, 'HARD'); const hardBoss = world.enemies.find(e => e instanceof BossRaccoon); hardBoss.activate(); hardBoss.update(world.platforms, world.player, world.enemies);
-        check(hardBoss.health === 4 && world.enemies.filter(e => e instanceof TrashLid).length === 2, 'Hard boss adds a fourth hit and two telegraphed lid arcs');
+        check(hardBoss.health === 5 && world.enemies.filter(e => e instanceof TrashLid).length === 3, 'Hard boss adds a fifth hit and three telegraphed lid arcs');
         for (const [edge, outward] of [[hardBoss.minX, -1], [hardBoss.maxX, 1]]) {
             hardBoss.x = edge; hardBoss.state = 'windup'; hardBoss.timer = 0;
             world.player.x = edge + outward * 200;

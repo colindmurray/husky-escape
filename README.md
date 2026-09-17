@@ -43,10 +43,10 @@ Run `npm run test:town` after installing dependencies. It uses the existing Play
 
 The town exit advances to the backyard; Dev Mode also offers a direct warp to 14. Follow the fence tops past leaking hydrants and raccoon patrols. Small raccoons hurt on side contact and can be defeated by landing on their heads.
 
-- **Easy:** fixed fences with raised, narrower tops above a continuous lawn, five hydrants with longer bursts, six ground patrols plus a raccoon on a fence, and a three-hit boss.
-- **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, three faster moving sections, and eight raccoons that telegraph a pounce. The boss needs four hits and throws two arcing trash lids before charging.
+- **Easy:** fixed fences with raised, narrower tops above a continuous lawn, five hydrants with longer bursts, six ground patrols plus a raccoon on a fence, and a four-hit boss who throws a lid before each charge.
+- **Hard / Hardcore:** two flooded stretches force an upper route with narrower fences, three faster moving sections, and eight raccoons that telegraph a pounce. The boss needs five hits and throws three arcing trash lids before charging. Both difficulties have faster charges, shorter warnings, and shorter dizzy openings. A successful boss hit gives half a second of protection for the bounce.
 - **Boss:** approaching the arena starts a nine-second cutscene: a trash can rattles, its lid flies off, and Baron von Bins leaps out wearing a top hat. Skip resumes the same run. The level clock, player, hazards, and inventory effects pause throughout the reveal.
-- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. After recovering at either end, he charges back across the arena, so camping beside one endpoint cannot repeatedly stun him. Reposition during the warning, then use the opening after his crash. Successful stomps lift Onyx clear of his body before she bounces. Defeating him lowers the arena gates and opens home. Reaching the exit completes the story and unlocks the house. Choose **Go inside · Home** on the victory screen.
+- **Fight:** the arrow warns which way he will charge. Dodge using the fence platforms; when he crashes at the end of a charge and sees stars, jump on his head. His hat blocks damage outside that opening. After recovering at either end, he charges back across the arena, so camping beside one endpoint cannot repeatedly stun him. Reposition during the warning, then use the opening after his crash. Successful stomps lift Onyx clear of his body before she bounces. Defeating him lowers the arena gates and opens home. Reaching the exit unlocks the house and plays a five-part reunion with your owner. Watching it or choosing Skip leads to victory. Choose **Go inside · Home** on the victory screen.
 
 Classic and Enhanced share gameplay, with flat versus shaded art, parallax houses and hedges, ringed raccoon tails, metallic trash cans, a backyard melody, a boss theme, and raccoon chatter. Existing shop outfits and supplies work here.
 
@@ -56,17 +56,21 @@ Classic and Enhanced share gameplay, with flat versus shaded art, parallax house
 
 Finish the backyard, then choose **Go inside · Home**. Walk through Onyx’s house with arrows/WASD and press **E** near a dog to talk. Pippin wants his red ball from level 5 (12 bones), Pearl wants her pink shell from level 4 (10 bones), and Biscuit wants his squeaky duck from level 1 (8 bones). Accept a request before searching; touch the glowing item, return home, and talk to its owner for the one-time reward. The travel list includes hints and quest progress.
 
-**Explore old levels** unlocks all 14 levels without Dev Mode. **Return home** is available during a replay and after a failed attempt; completing a replay also leads home. Free travel preserves the chosen difficulty, but Hardcore deaths after finishing the story allow retries. Juniper’s doghouse on the right is always open, with the same stock, wallet, outfits, and three pockets as the secret shops. Home has no countdown or hazards, conversations pause movement, and consumables cannot be wasted there. Quest items use a separate bag.
+**Explore old levels** unlocks all 14 levels without Dev Mode. **Return home** is available during a replay and after a failed attempt; completing a replay also leads home. Free travel preserves the chosen difficulty, but Hardcore deaths after finishing the story allow retries. Juniper’s doghouse on the right is always open, with its own stock and the shared wallet, outfits, and three pockets. Home has no countdown or hazards, conversations pause movement, and consumables cannot be wasted there. Quest items use a separate bag.
 
 Home access, quests, bones, and purchases persist within the current journey, including retries and return trips. Starting a new journey or reloading the page resets them. Both Classic and Enhanced graphics and audio are supported. Run `npm run test:home` for quest, reward, travel, non-dev UI, keyboard, and mobile checks.
 
 ## House floors, companions, and building
 
-Use **Change floor**, or press **E** beside the stairs, to move between three rooms:
+Use **Change floor**, or press **E** beside the stairs, to move between the three floors. Walk to marked doorways and press **E** (or tap **Enter**) to visit the kitchen off the living room and the bedroom off the companion loft. The room chooser also offers direct access to all five spaces:
 
 - **Ground floor:** the fetch-quest dogs, Juniper’s shop, and free travel.
 - **Basement:** choose **Hardcore practice** for any of the 14 real Hardcore layouts. Retries restore the supplies you entered with. Training uses a separate copy of bones, outfits, party, and quest progress; leaving restores the real journey and selected difficulty. Practice does not advance fetch quests or earn spending bones. **Retry practice** and **Back to basement** are available during a run; completed and failed attempts also offer another try.
 - **Second floor:** talk to **Opal**, **Ruby**, and **Samwise** with E and invite them along. All three can join. They follow Onyx’s recorded path, including jumps and swimming, without blocking her, taking damage, or collecting items. Talk to them upstairs to ask them to stay home. Party choices last for the current journey.
+
+Opal is a larger cream-white golden retriever with a turquoise collar, a grumpy expression, and a soft spot for Sammy and Lammy. Ruby is a white husky with a red collar, a blep, and an idle sploot. Samwise is a curly light-brown Italian waterdog, worried about geese and suspiciously fond of the little boy’s lunch. Their dialogue, home portraits, and traveling sprites reflect these personalities. Wearing the goose skin gives Samwise a special reaction.
+
+Each companion also has a fetch request: Opal’s Lammy in level 5 (18 bones), Ruby’s cushion in level 4 (16 bones), and Samwise’s lunchbox in level 1 (20 bones). These use the same accept/find/return flow as the three ground-floor requests.
 
 The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platforms, water, raccoons, bones, a start, and an exit. Click/tap a square to place the selected tile; arrow keys move the focused square and Enter/Space places it. Scroll horizontally to reach the entire course. Start, exit, and raccoons need supporting platforms. Moving the start or exit replaces its old position. **Undo** retains 30 edits; **Starter layout** asks before replacing the draft.
 
@@ -78,13 +82,15 @@ The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platfo
 
 Optional shops appear every three levels: a canopy trail in 3, snowy ledges in 6, lighthouse perches in 9, and bakery rafters in 12. Follow the three gold paw seals above the main path to unlock a doghouse. Hard and Hardcore have narrower approach ledges. These challenges never gate the normal exit.
 
-Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper the husky sells three consumables and six cosmetics. Shopping pauses the level, enemies, and active effects; **Escape**, **E**, or **Back to trail** returns to the same spot.
+Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper stocks a different pair of new power-ups and an exclusive new cosmetic in each shop. The original six cosmetics remain available everywhere, and owned exclusives can be re-equipped anywhere. Shopping pauses the level, enemies, and active effects; **Escape**, **E**, or **Back to trail** returns to the same spot.
 
 | Purchase | Bones | Effect |
 | --- | ---: | --- |
-| Star treat | 6 | 5 seconds of protection from enemies; water, falls, timeout, and the packed parade band still defeat Onyx |
-| Bone magnet | 8 | Pulls nearby bones toward Onyx for 10 seconds |
-| Time biscuit | 6 | Adds 30 seconds to the current level |
+| Spring biscuit | 8 | Higher land jumps for 12 seconds |
+| Zoomie snack | 8 | Faster running on land for 12 seconds |
+| Feather wafer | 8 | Hold jump to slow your descent on land for 12 seconds |
+| Bakery bonus | 10 | Double bone value for 15 seconds; collected bones still cannot be farmed |
+| Quiet-time cookie | 10 | Pause enemies and their projectiles for 5 seconds; contact still hurts |
 | Trail cap | 10 | Teal hat; cosmetic |
 | Little crown | 12 | Gold crown with a rose jewel; cosmetic |
 | Tuxedo cat | 16 | Dark fur, white socks, green eyes and whiskers; cosmetic skin |
@@ -92,11 +98,23 @@ Press **E** beside an unlocked door, or tap **Enter doghouse**. Juniper the husk
 | Berry sweater | 12 | Knitted coat; cosmetic |
 | Moonstone collar | 8 | Violet collar and pendant; cosmetic |
 
+| Shop | Exclusive cosmetic | Power-ups |
+| --- | --- | --- |
+| Canopy, level 3 | Mischievous goose (16 bones) | Spring biscuit, Quiet-time cookie |
+| Snowdrift, level 6 | Snowday scarf (10) | Zoomie snack, Spring biscuit |
+| Lighthouse, level 9 | Sailor cap (10) | Feather wafer, Zoomie snack |
+| Rafters, level 12 | Chef’s toque (10) | Bakery bonus, Feather wafer |
+| Home | Welcome-home bow (10) | Quiet-time cookie, Bakery bonus |
+
+The goose has a long white neck, orange beak and feet, and a waddling walk inspired by Untitled Goose Game. It is a cosmetic skin with the same controls and collision box. Legacy star treats, magnets, and time biscuits already in pockets still work, but new shops stock the new recipes.
+
 Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket on the trail. Full pockets and insufficient bones block a purchase without charging. Already-active effects cannot consume another matching treat. Owned accessories can be worn or removed in any shop without paying again, and headwear, sweater, collar, and a skin can be worn together in both visual modes. One headwear item and one skin can be active at a time. Taking off a skin restores husky Onyx. Shop previews show each cosmetic with the current outfit; all skins retain Onyx’s movement, hitbox, and level equipment.
 
 Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access also survives retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
 
 `npm run test:shop` checks purchases, the run economy, item use, pause behavior, cosmetics, and movement-only access from each side-route approach with hazards active on Easy, Hard, and Hardcore. It uses the same local Chrome setup as `test:town`.
+
+`npm run test:revamp` checks exclusive stock, new effects, room doorways, dog and goose rendering, companion requests, owner reunion completion/skip, and mobile layout.
 
 ## Local development
 

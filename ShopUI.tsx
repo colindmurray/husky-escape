@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import type { World } from './game/engine/World';
 import { Player } from './game/entities/Player';
-import { SHOP_GOODS, isSupply, isSkin, Belongings, type Accessory, type ShopGood } from './game/Shop';
+import { SHOP_GOODS, shopStock, isSupply, isSkin, Belongings, type Accessory } from './game/Shop';
 import './shop.css';
 
 function OutfitPreview({ id, equipped, visualMode }: { id: Accessory; equipped: ReadonlySet<Accessory>; visualMode: string }) {
@@ -53,9 +53,13 @@ export function ShopUI({ world, visualMode }: { world: World; visualMode: string
         ctx.fillStyle = '#ddbf93'; ctx.fillRect(251, 78, 43, 30); ctx.fillStyle = '#498d84'; ctx.font = '24px sans-serif'; ctx.fillText('✦', 260, 102);
     }, [world.shopOpen, visualMode]);
     const { belongings } = world;
+    const effects = world.player ? [
+        ['spring', world.player.springTimer], ['sprint', world.player.sprintTimer], ['feather', world.player.featherTimer], ['feast', world.player.feastTimer], ['hush', world.hushTimer],
+    ] as const : [];
     const visible = belongings.slots.some(Boolean) || belongings.owned.size > 0;
     return <>
         {!world.shopOpen && !world.homePanel && <div className="pocket-hud" aria-label="Inventory">
+            {effects.some(([, frames]) => frames > 0) && <p className="active-treats">{effects.filter(([, frames]) => frames > 0).map(([id, frames]) => `${SHOP_GOODS[id].icon} ${SHOP_GOODS[id].name} ${Math.ceil(frames / 60)}s`).join(" · ")}</p>}
             {visible && belongings.slots.map((item, index) => <button key={index} disabled={!item || world.isHome} aria-label={item ? `Use ${SHOP_GOODS[item].name}, slot ${index + 1}` : `Empty slot ${index + 1}`} title={item ? SHOP_GOODS[item].description : 'Find a secret doghouse to buy treats'} onClick={() => { world.useInventorySlot(index); focusGame(); }}>
                 <kbd>{index + 1}</kbd><span>{item ? SHOP_GOODS[item].icon : '·'}</span><small>{item ? SHOP_GOODS[item].name : 'Empty'}</small>
             </button>)}
@@ -64,8 +68,8 @@ export function ShopUI({ world, visualMode }: { world: World; visualMode: string
         {world.shopOpen && <div className={`shop-backdrop ${visualMode}`}>
             <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="shop-title" className="husky-shop">
                 <header><div><small>SECRET DOGHOUSE · {world.shopDoor?.title}</small><h1 id="shop-title">The Hidden Paw</h1></div><button className="leave-shop" onClick={leave} aria-label="Leave shop">{world.isHome ? 'Back home' : 'Back to trail'} <kbd>Esc</kbd></button></header>
-                <div className="shop-welcome"><canvas ref={portrait} width={320} height={145} role="img" aria-label="Juniper the husky shopkeeper behind a wooden counter" /><div><h2>Awoo, fellow explorer!</h2><p>I'm Juniper. Pick a treat for the trail, or try on something lovely.</p><strong>🍖 {world.player?.bonesCollected ?? 0} bones</strong><small>The trail is paused. Your belongings stay with you through this journey.</small></div></div>
-                <div className="shop-shelves">{(['Treats for the trail', 'Wear something lovely', 'A different look'] as const).map((title, section) => <section key={title}><h2>{title}</h2><div className="shop-cards">{(Object.keys(SHOP_GOODS) as ShopGood[]).filter(id => section === 0 ? isSupply(id) : section === 1 ? !isSupply(id) && !isSkin(id) : isSkin(id)).map(id => {
+                <div className="shop-welcome"><canvas ref={portrait} width={320} height={145} role="img" aria-label="Juniper the husky shopkeeper behind a wooden counter" /><div><h2>Awoo, fellow explorer!</h2><p>I'm Juniper. Every hideaway has its own special outfit and a different pair of new trail treats! Your old outfits are always here to wear again.</p><strong>🍖 {world.player?.bonesCollected ?? 0} bones</strong><small>The trail is paused. Your belongings stay with you through this journey.</small></div></div>
+                <div className="shop-shelves">{(['Treats for the trail', 'Wear something lovely', 'A different look'] as const).map((title, section) => <section key={title}><h2>{title}</h2><div className="shop-cards">{[...new Set([...shopStock(world.currentLevel), ...belongings.owned])].filter(id => section === 0 ? isSupply(id) : section === 1 ? !isSupply(id) && !isSkin(id) : isSkin(id)).map(id => {
                     const good = SHOP_GOODS[id], supply = isSupply(id), owned = !supply && belongings.owned.has(id), equipped = !supply && belongings.equipped.has(id);
                     const full = supply && !belongings.slots.includes(null), affordable = (world.player?.bonesCollected ?? 0) >= good.price;
                     return <article key={id}>{isSupply(id) ? <span className={`shop-item-icon ${id}`} aria-hidden="true">{good.icon}</span> : <OutfitPreview id={id} equipped={belongings.equipped} visualMode={visualMode} />}<h3>{good.name}</h3><p>{good.description}</p><button disabled={!owned && (full || !affordable)} onClick={() => world.buyGood(id)}>{owned ? (equipped ? 'Take off' : 'Wear') : full ? 'Pockets full' : `Buy · ${good.price} bones`}</button>{equipped && <small>Wearing ✓</small>}</article>;

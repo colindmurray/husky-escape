@@ -11,6 +11,16 @@ export const SHOP_GOODS = {
     shield: { name: 'Star treat', icon: '✦', price: 6, description: '5 seconds safe from enemies. Falls, water and the parade band still end the run.' },
     magnet: { name: 'Bone magnet', icon: '🧲', price: 8, description: 'Nearby bones fly to you for 10 seconds.' },
     time: { name: 'Time biscuit', icon: '◷', price: 6, description: 'Adds 30 seconds to the level clock.' },
+    spring: { name: 'Spring biscuit', icon: '🌱', price: 8, description: 'Higher land jumps for 12 seconds. Your double jump still works.' },
+    sprint: { name: 'Zoomie snack', icon: '💨', price: 8, description: 'Run faster on land for 12 seconds. Take care near ledges!' },
+    feather: { name: 'Feather wafer', icon: '🪶', price: 8, description: 'On land, hold jump to float gently down for 12 seconds.' },
+    feast: { name: 'Bakery bonus', icon: '🥨', price: 10, description: 'Each bone you collect is worth two for 15 seconds.' },
+    hush: { name: 'Quiet-time cookie', icon: '💤', price: 10, description: 'Enemies and their projectiles pause for 5 seconds. They still hurt on contact.' },
+    goose: { name: 'Mischievous goose', icon: '🪿', price: 16, description: 'White feathers, a long neck, orange feet, and absolutely no manners.' },
+    scarf: { name: 'Snowday scarf', icon: '🧣', price: 10, description: 'A golden scarf with a fluttering tail. Only at Snowdrift.' },
+    sailor: { name: 'Sailor cap', icon: '⚓', price: 10, description: 'A crisp white cap with a blue ribbon. Only at the Lighthouse.' },
+    chef: { name: 'Chef’s toque', icon: '👨‍🍳', price: 10, description: 'A tall, fluffy baker’s hat. Only in the Rafters.' },
+    bow: { name: 'Welcome-home bow', icon: '🎀', price: 10, description: 'A coral bow for your homecoming. Only at Juniper’s home shop.' },
     hat: { name: 'Trail cap', icon: '🧢', price: 10, description: 'A little teal cap for a big adventure.' },
     crown: { name: 'Little crown', icon: '👑', price: 12, description: 'Three golden points and a tiny rose jewel. Fit for Queen Onyx.' },
     cat: { name: 'Tuxedo cat', icon: '🐈‍⬛', price: 16, description: 'White socks, green eyes and whiskers. Same brave Onyx underneath.' },
@@ -19,11 +29,23 @@ export const SHOP_GOODS = {
     collar: { name: 'Moonstone collar', icon: '💎', price: 8, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
-export type Supply = 'shield' | 'magnet' | 'time';
-export type Skin = 'cat' | 'fox';
-export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | Skin;
-export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox';
-export const isSupply = (id: ShopGood): id is Supply => id === 'shield' || id === 'magnet' || id === 'time';
+export type Supply = 'shield' | 'magnet' | 'time' | 'spring' | 'sprint' | 'feather' | 'feast' | 'hush';
+export type Skin = 'cat' | 'fox' | 'goose';
+export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | 'scarf' | 'sailor' | 'chef' | 'bow' | Skin;
+export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox' || id === 'goose';
+export const isSupply = (id: ShopGood): id is Supply => ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush'].includes(id);
+
+const LOCAL_STOCK: Record<number, ShopGood[]> = {
+    3: ['goose', 'spring', 'hush'],
+    6: ['scarf', 'sprint', 'spring'],
+    9: ['sailor', 'feather', 'sprint'],
+    12: ['chef', 'feast', 'feather'],
+    15: ['bow', 'hush', 'feast'],
+};
+export const shopStock = (level: number): ShopGood[] => [
+    ...(LOCAL_STOCK[level] ?? []), 'hat', 'crown', 'cat', 'fox', 'coat', 'collar',
+];
+const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
     public homeUnlocked = false;
@@ -37,8 +59,8 @@ export class Belongings {
 
     public toggleAccessory(id: Accessory) {
         if (this.equipped.delete(id)) return;
-        if (isSkin(id)) { this.equipped.delete('cat'); this.equipped.delete('fox'); }
-        if (id === 'hat' || id === 'crown') { this.equipped.delete('hat'); this.equipped.delete('crown'); }
+        if (isSkin(id)) { this.equipped.delete('cat'); this.equipped.delete('fox'); this.equipped.delete('goose'); }
+        if (HEADWEAR.includes(id)) HEADWEAR.forEach(hat => this.equipped.delete(hat));
         this.equipped.add(id);
     }
 }
@@ -115,6 +137,19 @@ export function addSecretShop(data: LevelData, level: number, height: number, di
 
 export function drawAccessories(ctx: CanvasRenderingContext2D, x: number, y: number, equipped: ReadonlySet<Accessory>) {
     const rich = gfxSettings.visualMode === 'enhanced';
+    if (equipped.has('scarf')) {
+        ctx.fillStyle = '#f3b940'; ctx.fillRect(x + 23, y + 18, 15, 5);
+        ctx.beginPath(); ctx.moveTo(x + 26, y + 20); ctx.lineTo(x + 8, y + 16); ctx.lineTo(x + 7, y + 22); ctx.lineTo(x + 27, y + 25); ctx.fill();
+    }
+    if (equipped.has('sailor') || equipped.has('chef')) {
+        ctx.fillStyle = '#fff8e8'; ctx.fillRect(x + 22, y - 5, 19, 7);
+        if (equipped.has('chef')) { for (const dx of [23, 31, 39]) { ctx.beginPath(); ctx.arc(x + dx, y - 10, 7, 0, Math.PI * 2); ctx.fill(); } }
+        else { ctx.beginPath(); ctx.ellipse(x + 31, y - 7, 13, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#315b93'; ctx.fillRect(x + 22, y - 2, 19, 3); }
+    }
+    if (equipped.has('bow')) {
+        ctx.fillStyle = '#e77787'; ctx.beginPath(); ctx.moveTo(x + 31, y - 1); ctx.lineTo(x + 20, y - 9); ctx.lineTo(x + 20, y + 2); ctx.lineTo(x + 42, y - 9); ctx.lineTo(x + 42, y + 2); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffb5aa'; ctx.beginPath(); ctx.arc(x + 31, y - 2, 3, 0, Math.PI * 2); ctx.fill();
+    }
     if (equipped.has('coat')) {
         ctx.fillStyle = '#a95170'; ctx.beginPath(); ctx.ellipse(x + 18, y + 25, 15, 10, 0, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#f7dfb5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 5, y + 24); ctx.lineTo(x + 11, y + 28); ctx.lineTo(x + 17, y + 24); ctx.lineTo(x + 23, y + 28); ctx.lineTo(x + 29, y + 24); ctx.stroke();

@@ -44,3 +44,5 @@
 .shop-shelves section:nth-child(2) .shop-cards { grid-template-columns:repeat(4,1fr); }
 .shop-shelves section:nth-child(3) .shop-cards { grid-template-columns:repeat(2,1fr); }
 @media(max-width:650px) { .shop-shelves section:nth-child(2) .shop-cards { grid-template-columns:repeat(2,1fr); } }
+
+.active-treats { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); width:max-content; max-width:90vw; text-align:center; background:#203b3de8; color:#fff0cf; border-radius:8px; padding:6px 10px; font-size:12px; }

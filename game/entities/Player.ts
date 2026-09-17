@@ -1,4 +1,5 @@
 
+import { drawGoose } from '../engine/FamilyArt';
 import { drawAccessories, type Accessory } from "../Shop";
 import { Entity, GRAVITY, FRICTION, JUMP_FORCE } from "./Entity";
 import { InputState, SoundType } from "../../types";
@@ -33,6 +34,10 @@ export class Player extends Entity {
 
     public accessories = new Set<Accessory>();
     public magnetTimer = 0;
+    public springTimer = 0;
+    public sprintTimer = 0;
+    public featherTimer = 0;
+    public feastTimer = 0;
     public hasBandana = false;
     public townBumpFrames = 0;
 
@@ -48,6 +53,7 @@ export class Player extends Entity {
         const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
         if (this.magnetTimer > 0) this.magnetTimer--;
+        for (const key of ['springTimer', 'sprintTimer', 'featherTimer', 'feastTimer'] as const) if (this[key] > 0) this[key]--;
         if (this.townBumpFrames > 0) this.townBumpFrames--;
 
         // --- LEVEL 8: UNDERWATER PHYSICS ---
@@ -172,7 +178,7 @@ export class Player extends Entity {
         // --- STANDARD PHYSICS (Levels 1-7, 9) ---
         if (input.ArrowUp || input.Space) {
             if (!this.jumpKeyHeld && this.jumpsLeft > 0) {
-                this.velY = JUMP_FORCE;
+                this.velY = JUMP_FORCE * (this.springTimer > 0 ? 1.2 : 1);
                 this.jumpsLeft--;
                 this.grounded = false;
                 this.jumpKeyHeld = true;
@@ -183,11 +189,11 @@ export class Player extends Entity {
         }
 
         if (input.ArrowLeft) {
-            this.velX -= 0.7;
+            this.velX -= this.sprintTimer > 0 ? 1 : 0.7;
             this.facingRight = false;
         }
         if (input.ArrowRight) {
-            this.velX += 0.7;
+            this.velX += this.sprintTimer > 0 ? 1 : 0.7;
             this.facingRight = true;
         }
 
@@ -209,6 +215,8 @@ export class Player extends Entity {
             this.velY += GRAVITY;
         }
         
+        if (this.featherTimer > 0 && (input.ArrowUp || input.Space) && this.velY > 1.5) this.velY = 1.5;
+
         if (currentLevel === 6 && this.grounded) {
             if (this.velX < 8) {
                 this.velX += 0.4;
@@ -326,10 +334,14 @@ export class Player extends Entity {
             ctx.translate(-(x + this.w / 2), -y);
         }
 
-        const skin = this.accessories.has('cat') ? 'cat' : this.accessories.has('fox') ? 'fox' : undefined;
+        const skin = this.accessories.has('goose') ? 'goose' : this.accessories.has('cat') ? 'cat' : this.accessories.has('fox') ? 'fox' : undefined;
         if (gfxSettings.visualMode === 'enhanced' || skin) {
             if (this.hasUmbrella && this.facingRight) this.drawHeldUmbrella(ctx, x, y);
-            drawHuskyEnhanced(ctx, x, y, {
+            if (skin === 'goose') {
+                drawGoose(ctx, x, y, Date.now() / 1000, Math.abs(this.velX) > .5);
+                if (currentLevel === 6) { ctx.fillStyle = '#c0392b'; ctx.fillRect(x - 5, y + 39, 52, 3); }
+                if (currentLevel === 8) { ctx.strokeStyle = '#4dbbd0'; ctx.lineWidth = 3; ctx.strokeRect(x + 30, y - 2, 12, 8); }
+            } else drawHuskyEnhanced(ctx, x, y, {
                 velX: this.velX,
                 velY: this.velY,
                 grounded: this.grounded,
