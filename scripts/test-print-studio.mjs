@@ -33,6 +33,12 @@ try {
     await page.getByRole('button', { name: 'Back to main menu' }).click();
     assert.equal(await page.getByRole('button', { name: 'Free Roam', exact: true }).count(), 1);
     assert.equal(await page.evaluate(() => window.__husky.engine.gameState), 'INTRO');
+    // Closing print must not resume a story abandoned at the title screen.
+    await page.evaluate(() => { const e = window.__husky.engine; e.startFreeRoam(); e.startChaseCutscene(); e.returnToTitle(); });
+    await page.getByRole('button', { name: 'Print & draw levels' }).click();
+    await page.getByRole('button', { name: 'Back to main menu' }).click();
+    await page.waitForTimeout(3200);
+    assert.equal(await page.evaluate(() => window.__husky.engine.gameState), 'INTRO');
     // Direct print entry mounts no live game and handles every existing story.
     await page.goto(`${base}/?print=1&level=11&difficulty=HARD&graphics=enhanced`);
     assert.equal(await page.evaluate(() => !!window.__husky), false);

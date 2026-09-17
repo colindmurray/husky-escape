@@ -42,7 +42,7 @@ export class GameEngine {
 
     public setPrintPaused(paused: boolean) {
         this.printPaused = paused;
-        this.cutsceneManager.setPaused(paused);
+        this.cutsceneManager.setPaused(paused || this.gameState !== GameState.CUTSCENE);
     }
     private practiceSession: { belongings: Belongings; bones: number; difficulty: Difficulty; level: number } | null = null;
 
