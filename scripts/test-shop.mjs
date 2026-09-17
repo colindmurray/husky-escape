@@ -41,16 +41,12 @@ try {
             if (world.shopDoor) {
                 const locked = world.exit.locked;
                 check(!world.openShop(), `Level ${level} shop cannot open from the main path`);
-                for (const [i, seal] of world.shopDoor.trail.entries()) {
-                    world.player.x = seal.x; world.player.y = seal.y; world.shopDoor.update(world.player);
-                    check(world.shopDoor.unlocked === (i === 2), `Level ${level} needs all three paw seals (${i + 1}/3)`);
-                }
                 check(world.exit.locked === locked, `Level ${level} shop challenge is independent of the main exit`);
             }
         }
         world.loadLevel(3, false, 'EASY');
         const door = world.shopDoor;
-        door.seals.fill(true); door.unlocked = true;
+        door.unlocked = true;
         world.player.x = door.x + 20; world.player.y = door.y + door.h - world.player.h; world.player.grounded = true;
         door.update(world.player);
         check(world.openShop(), 'An unlocked nearby doghouse opens');
@@ -127,31 +123,6 @@ try {
         world.player.invincibleTimer = 0; world.update();
         check(deaths.length === beforeShield + 1, 'The same enemy is dangerous once protection ends');
 
-        // Start at each existing branch approach; reach the optional doghouse using only movement and jumps, with live hazards.
-        const starts = { 3: [1920, 150], 6: [3020, 150], 9: [3020, 400], 12: [930, 490] };
-        for (const difficulty of ['EASY', 'HARD', 'HARDCORE']) for (const level of [3, 6, 9, 12]) {
-            world.loadLevel(level, false, difficulty); const [x, rise] = starts[level];
-            world.player.x = x; world.player.y = 800 - rise - world.player.h;
-            let i = 0, held = false; const oldDeaths = deaths.length;
-            for (let f = 0; f < 1600 && deaths.length === oldDeaths && !world.shopRoom; f++) {
-                const p = world.player, door = world.shopDoor, target = door.trail[i];
-                if (door.seals[i] && p.grounded && i < 2) i++;
-                const dx = (door.unlocked ? door.x + door.w / 2 : target.x + 10) - p.x - p.w / 2 - (level === 6 ? p.velX * 10 : 0);
-                inputManager.keys.ArrowRight = dx > 6; inputManager.keys.ArrowLeft = dx < -6;
-                const jump = !door.unlocked && (p.grounded || p.jumpsLeft === 1 && p.velY > 0 && p.y + p.h > target.y - 20);
-                inputManager.keys.Space = jump && !held; held = !!inputManager.keys.Space;
-                if (door.unlocked && door.nearby) inputManager.keys.KeyE = true;
-                world.update();
-            }
-            check(world.shopRoom && deaths.length === oldDeaths, `${difficulty} level ${level}: all paw seals and shop reached from branch approach with live hazards`);
-            check(world.belongings.unlockedShops.has(level), 'Earned shop access is retained for retries');
-            const canvas = document.createElement('canvas'); canvas.width = 1280; canvas.height = 800;
-            const renderer = new Renderer(canvas);
-            for (const mode of ['classic', 'enhanced']) {
-                gfxSettings.setVisualMode(mode); world.player.accessories = new Set(['hat', 'coat', 'collar']);
-                const state = paused(); renderer.drawGame(world); check(state === paused(), `${mode} shop route and accessories draw without changing gameplay`);
-            }
-        }
         world.loadLevel(3, false, 'EASY');
         world.shopDoor.unlocked = true;
         world.player.x = world.shopDoor.x + 20; world.player.y = world.shopDoor.y + world.shopDoor.h - world.player.h; world.player.grounded = true;
@@ -177,7 +148,7 @@ try {
         check(images.size === 4, 'Both skins and both graphics modes produce distinct artwork');
         const engine = window.__husky.engine;
         engine.setDifficulty('HARD'); engine.startPoundEscapeCutscene(); engine.skipCutscene(); engine.stop();
-        check(engine.world.difficulty === 'HARD' && engine.world.platforms.some(p => p.x === 2160 && p.w === 85), 'Selected Hard difficulty carries through the forest intro to the shop route');
+        check(engine.world.difficulty === 'HARD' && engine.world.platforms.some(p => p.minX === 2150 && p.w === 110), 'Selected Hard difficulty carries through the forest intro to the shop route');
         inputManager.clear();
         return passed;
     });

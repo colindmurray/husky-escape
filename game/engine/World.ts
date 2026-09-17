@@ -100,11 +100,11 @@ export class World {
         const data = this.isHome ? getHome(this.height, this.homeFloor, this.belongings.quests) : this.isCustom ? buildCustomLevel(this.editorDraft, this.height) : initLevel(level, this.height, difficulty);
         this.shopDoor = addSecretShop(data, level, this.height, difficulty);
         if (this.shopDoor && this.belongings.unlockedShops.has(level)) {
-            this.shopDoor.unlocked = true; this.shopDoor.seals.fill(true);
+            this.shopDoor.unlocked = true;
         }
         if (this.isHome && this.homeFloor === 'ground') {
-            this.shopDoor = new SecretDoghouse(1260, this.height - 166, [], 'Home branch');
-            this.shopDoor.unlocked = true; this.shopDoor.seals.fill(true); data.props!.push(this.shopDoor);
+            this.shopDoor = new SecretDoghouse(1260, this.height - 166, 'Home branch', { kind: 'home' });
+            this.shopDoor.unlocked = this.belongings.quests.peace === 'complete'; data.props!.push(this.shopDoor);
         }
         for (const quest of QUESTS) {
             if (!this.practice && this.belongings.homeUnlocked && quest.level === level && (!quest.room || quest.room === this.homeFloor) && questAvailable(quest, this.belongings.quests) && this.belongings.quests[quest.id] === 'accepted') {
@@ -493,14 +493,14 @@ export class World {
         if (this.homeFloor === 'basement' && Math.abs(this.player.x - 430) < 100) return { id: 'practice', label: 'Hardcore practice', x: 455, y: floor - 258 };
         if (this.homeFloor === 'basement' && Math.abs(this.player.x - 830) < 100) return { id: 'builder', label: 'Create a level', x: 850, y: floor - 203 };
         if (this.homeFloor === 'ground' && Math.abs(this.player.x - 100) < 90) return { id: 'travel', label: 'Travel to a level', x: 114, y: floor - 209 };
-        if (this.shopDoor?.nearby && this.shopDoor.unlocked) return { id: 'shop', label: 'Enter doghouse', x: this.shopDoor.x + 44, y: this.shopDoor.y - 34 };
+        if (this.shopDoor?.nearby) return { id: 'shop', label: this.shopDoor.unlocked ? 'Enter doghouse' : 'Talk to Juniper', x: this.shopDoor.x + 44, y: this.shopDoor.y - 34 };
     }
 
     public interactHome() {
         const target = this.homeInteraction;
         if (!target || this.homePanel || this.shopOpen) return false;
         if (target.to) return this.changeHomeFloor(target.to);
-        return target.id === 'shop' ? this.openShop() : this.openHomePanel(target.id);
+        return target.id === 'shop' ? (this.shopDoor?.unlocked ? this.openShop() : this.openHomePanel('shop')) : this.openHomePanel(target.id);
     }
 
     public changeHomeFloor(floor: HomeFloor) {
@@ -518,7 +518,7 @@ export class World {
 
     public openHomePanel(panel: string) {
         if ((!this.isHome && panel !== 'journal') || !this.belongings.homeUnlocked || this.ended || this.shopRoom || !this.player) return false;
-        const station = panel === 'journal' || (this.isHome && (panel === 'floors' || panel === 'travel' || (panel === 'boy' && this.homeInteraction?.id === 'boy') || (this.homeFloor === 'basement' && (panel === 'practice' || panel === 'builder'))));
+        const station = panel === 'journal' || (this.isHome && (panel === 'floors' || panel === 'travel' || (panel === 'shop' && this.homeInteraction?.id === 'shop') || (panel === 'boy' && this.homeInteraction?.id === 'boy') || (this.homeFloor === 'basement' && (panel === 'practice' || panel === 'builder'))));
         if (!station && !this.props.some(p => p instanceof HomeDog && p.quest.id === panel && p.nearby)) return false;
         this.homePanel = panel; this.player.velX = 0; inputManager.clear();
         audioManager.playSFX(station ? SoundType.COLLECT : SoundType.DOG_BARK); this.events.onShopUpdate?.(); return true;
@@ -545,6 +545,7 @@ export class World {
             this.homeNotice = `${quest.thanks} (+${quest.reward} bones)`;
             this.homePanel = null;
             this.props = [...this.props.filter(p => !(p instanceof HomeDog)), ...homeDogs(this.height, this.homeFloor, this.belongings.quests)];
+            if (quest.id === 'peace' && this.shopDoor) this.shopDoor.unlocked = true;
         } else return false;
         audioManager.playSFX(status === 'found' ? SoundType.WIN_SHORT : SoundType.COLLECT);
         this.events.onShopUpdate?.(); return true;

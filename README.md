@@ -88,7 +88,17 @@ The basement’s **Create a level** opens a 32 × 10 tile workshop. Place platfo
 
 ## Secret doghouse shops
 
-Optional shops appear every three levels: a canopy trail in 3, snowy ledges in 6, lighthouse perches in 9, and bakery rafters in 12. Follow the three gold paw seals above the main path to unlock a doghouse. Hard and Hardcore have narrower approach ledges. These challenges never gate the normal exit.
+Each optional shop has its own entrance challenge. Route markers turn gold as you complete the required actions, and the door opens when you reach it. These challenges never gate the normal level exit; earned access survives ordinary retries.
+
+| Branch | Entrance challenge |
+| --- | --- |
+| Forest, level 3 | Ride each of two marked moving logs until its paw lights up, then jump to the canopy landing |
+| Snowdrift, level 6 | Climb onto the flagged side ramp, take its boosted ski jump, and land on the high shelf; it is above normal double-jump height from the approach |
+| Lighthouse, level 9 | Take the umbrella on the high launch perch, glide through both wind rings in one flight, and land at the shop; landing early resets the rings |
+| Bakery, level 12 | Climb the little entry step, run against the conveyor, and pass beneath both timed presses while they are raised; jumping over them does not count |
+| Home | Return the kitchen distraction biscuits to Samwise to end the chase; Juniper explains this when approached before opening |
+
+Hard and Hardcore use narrower forest logs and ski/glide landings, faster logs, and tighter bakery press timing. The main level’s ski ramps retain their original launch strength; only the optional shop ramp has the extra boost.
 
 Press **E** beside an unlocked door, or tap **Enter doghouse**, to walk into a themed room. Walk to Juniper behind the counter and press the nearby **E** prompt to open the store HUD. **Escape**, **E**, or **Back to shop** closes the HUD; walk back to the entrance and use **E** to leave. Touch devices have left/right walking buttons. The room uses an original eight-bar shop tune in both audio modes, restoring the previous theme on departure.
 
@@ -127,7 +137,9 @@ Three pockets hold one consumable each. Use **1**, **2**, **3**, or tap a pocket
 
 Belongings and unspent bones carry between levels and survive ordinary retries; used items remain used and collected bones do not respawn for farming. Earned shop access and randomized stock also survive retries. Temporary effects end when a level reloads. A new journey, Start Over, or Hardcore restart clears the run's belongings and balance. This inventory is in-memory for the current playthrough; it is not a browser-reload save system.
 
-`npm run test:shop` checks purchases, the run economy, item use, pause behavior, cosmetics, and movement-only access from each side-route approach with hazards active on Easy, Hard, and Hardcore. It uses the same local Chrome setup as `test:town`.
+`npm run test:shop` checks purchases, the run economy, item use, pause behavior, and cosmetics. It uses the same local Chrome setup as `test:town`.
+
+`npm run test:shop-challenges` checks all four trail routes using movement alone with live hazards on Easy, Hard, and Hardcore, in short/tall viewports and different pier wind conditions. It also checks shortcut rejection, camera framing, retry access, the home biscuit unlock, and Juniper’s nearby hint.
 
 `npm run test:shop-rooms` checks walk-in/counter/exit controls, frozen exterior state, quest pickup preservation, stock variety and persistence, exclusive cosmetics, both new consumables, practice isolation, music selection/muting, distinct artwork, desktop interaction, and mobile touch/rotation.
 
