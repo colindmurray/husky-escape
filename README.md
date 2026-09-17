@@ -56,6 +56,8 @@ Classic and Enhanced share gameplay, with flat versus shaded art, parallax house
 
 Finish the backyard and owner reunion, then choose **Go inside · Home**. The first visit opens a four-part chase: Opal follows Samwise with hearts overhead, Ruby is furious, and Samwise asks Onyx for emergency biscuits. Watching or skipping the scene starts the same first quest. The scene plays once per journey.
 
+With **Dev Mode** enabled, the warp selector includes **Home** after level 14. This unlocks the house immediately, including from a fresh game, and uses the same first-visit chase and quest progression.
+
 Walk with arrows/WASD. Press **E** near a dog, stairway, or doorway; touch users have matching buttons. **Change floor** offers all seven spaces, and **Quests & travel** lists available requests, the dogs’ current rooms, and all 14 replay levels. Home has no countdown or hazards. Conversations pause movement and room animations. Quest items have a separate bag and never use treat pockets.
 
 | Chapter | Requests and dog locations | Unlock |

@@ -3,6 +3,7 @@ import { HomeUI } from './HomeUI';
 import { ShopUI } from './ShopUI';
 import React, { useEffect, useRef, useState } from 'react';
 import { GameEngine } from './game/GameEngine';
+import { HOME_LEVEL } from './game/Home';
 import { GameState, Difficulty } from './types';
 import { audioManager } from './game/Audio';
 import { inputManager } from './game/Input';
@@ -177,11 +178,19 @@ export default function App() {
     };
     
     const startSpecificLevel = (lvl: number) => {
+         const engine = engineRef.current;
+         if (!devMode || !engine) return;
          setHuskyWisdom("");
          levelFailuresRef.current = 0;
          levelHistoryRef.current = [];
          // Pass difficulty to cutscenes or levels
-         if (lvl === 3) engineRef.current?.startPoundEscapeCutscene();
+         if (lvl === HOME_LEVEL) {
+             if (!engine.world.player) engine.startGame(difficulty);
+             engine.world.belongings.homeUnlocked = true;
+             engine.setDifficulty(difficulty);
+             engine.goHome();
+         }
+         else if (lvl === 3) engineRef.current?.startPoundEscapeCutscene();
          else if (lvl === 7) engineRef.current?.startChaseCutscene();
          else if (lvl === 8) engineRef.current?.startUnderwaterCutscene();
          else if (lvl === 9) engineRef.current?.startPierCutscene();
@@ -274,8 +283,8 @@ export default function App() {
          <div className="mt-8 pt-4 border-t border-white/10 w-full">
             <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest text-center">Dev Mode: Warp</p>
             <div className="flex gap-2 justify-center flex-wrap">
-                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(lvl => (
-                    <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="w-8 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl}</button>
+                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,HOME_LEVEL].map(lvl => (
+                    <button key={lvl} onClick={() => startSpecificLevel(lvl)} className="min-w-8 px-2 h-8 bg-blue-900/40 hover:bg-blue-500 rounded text-sm transition">{lvl === HOME_LEVEL ? 'Home' : lvl}</button>
                 ))}
             </div>
         </div>

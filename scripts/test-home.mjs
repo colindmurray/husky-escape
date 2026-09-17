@@ -17,6 +17,25 @@ try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 720 } });
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(base); await page.waitForFunction(() => window.__husky);
+    await page.getByRole('button', { name: 'Start Journey', exact: true }).click();
+    await page.getByRole('button', { name: 'Skip >>', exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: 'Home', exact: true }).count(), 0);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Dev Mode', exact: true }).click();
+    await page.getByRole('button', { name: 'Hard (Extra Challenges)', exact: true }).click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: 'Home', exact: true }).evaluate(b => b.previousElementSibling.textContent), '14');
+    assert.equal(await page.evaluate(() => window.__husky.engine.world.player), null);
+    await page.getByRole('button', { name: 'Home', exact: true }).click();
+    assert.deepEqual(await page.evaluate(() => { const e = window.__husky.engine; e.stop(); return [e.world.currentLevel, e.world.belongings.homeUnlocked, e.world.difficulty, e.cutsceneManager.currentType]; }), [15, true, 'HARD', 'house_chase']);
+    await page.getByRole('button', { name: 'Skip >>', exact: true }).click();
+    assert.equal(await page.evaluate(() => window.__husky.engine.world.belongings.quests.peace), 'accepted');
+    await page.evaluate(() => { const e = window.__husky.engine; e.stop(); e.world.player.bonesCollected = 37; e.world.belongings.quests.peace = 'complete'; e.startLevel(14, 'HARD'); e.stop(); e.world.triggerLevelComplete(); e.skipCutscene(); });
+    await page.getByRole('button', { name: 'Home', exact: true }).click();
+    assert.deepEqual(await page.evaluate(() => { const e = window.__husky.engine; e.stop(); return [e.world.currentLevel, e.gameState, e.world.player.bonesCollected, e.world.belongings.quests.peace]; }), [15, 'PLAYING', 37, 'complete']);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Dev Mode', exact: true }).click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
     const checks = await page.evaluate(async () => {
         const { World } = await import('/game/engine/World.ts');
         const { HOME_LEVEL, QUESTS, COMPANIONS, FLOORS, HomeDog, QuestPickup, questAvailable, dogRoom, houseChapter } = await import('/game/Home.ts');
@@ -132,5 +151,5 @@ try {
     await page.evaluate(()=>{const e=window.__husky.engine;e.currentCutscene='house_chase';e.gameState='CUTSCENE';e.cutsceneManager.start('house_chase');e.cutsceneManager.setPaused(true);e.cutsceneManager.frame=45;e.renderer.drawCutscene(e.cutsceneManager,1100,720);});
     await page.screenshot({path:'.playwright-mcp/living-chase.png'});
     await page.evaluate(()=>window.__husky.engine.skipCutscene());
-    assert.deepEqual(errors,[]); console.log(checks.join('\n')); console.log(`PASS: ${checks.length} staged-house checks plus starter quest UI, journal gating, portraits and mobile.`);
+    assert.deepEqual(errors,[]); console.log(checks.join('\n')); console.log(`PASS: ${checks.length} staged-house checks plus Dev Mode home warp, starter quest UI, journal gating, portraits and mobile.`);
 } finally {await browser?.close();server.kill('SIGTERM');}
