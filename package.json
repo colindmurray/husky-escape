@@ -12,6 +12,7 @@
     "build": "vite build",
     "test:house-floors": "node scripts/test-house-floors.mjs",
     "test:revamp": "node scripts/test-revamp.mjs",
+    "test:family": "node scripts/test-family.mjs",
     "test:home": "node scripts/test-home.mjs",
     "test:backyard": "node scripts/test-backyard.mjs",
     "test:town": "node scripts/test-town.mjs",

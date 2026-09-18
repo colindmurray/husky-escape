@@ -34,6 +34,7 @@ export class Player extends Entity {
 
     public accessories = new Set<Accessory>();
     public magnetTimer = 0;
+    public spinTimer = 0;
     public springTimer = 0;
     public sprintTimer = 0;
     public featherTimer = 0;
@@ -56,7 +57,7 @@ export class Player extends Entity {
         const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
         if (this.magnetTimer > 0) this.magnetTimer--;
-        for (const key of ['springTimer', 'sprintTimer', 'featherTimer', 'feastTimer'] as const) if (this[key] > 0) this[key]--;
+        for (const key of ['spinTimer', 'springTimer', 'sprintTimer', 'featherTimer', 'feastTimer'] as const) if (this[key] > 0) this[key]--;
         if (this.townBumpFrames > 0) this.townBumpFrames--;
 
         // --- LEVEL 8: UNDERWATER PHYSICS ---
@@ -333,6 +334,13 @@ export class Player extends Entity {
         const y = this.y;
         
         ctx.save();
+        if (this.spinTimer > 0) {
+            const phase = (360 - this.spinTimer) / 60 * Math.PI * 2;
+            ctx.strokeStyle = '#edc975'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.ellipse(x + 20, y + 38, 29, 6, 0, phase, phase + 4.7); ctx.stroke();
+            for (let i = 0; i < 3; i++) { const a = phase + i * 2.1; ctx.fillStyle = ['#ebc878', '#78b5ad', '#daa4b9'][i]; ctx.beginPath(); ctx.arc(x + 20 + Math.cos(a) * 29, y + 16 + Math.sin(a) * 14, 2, 0, Math.PI * 2); ctx.fill(); }
+            ctx.translate(x + 20, y + 40); ctx.scale(Math.cos(phase), 1); ctx.translate(-x - 20, -y - 40);
+        }
         if (!this.facingRight) {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);

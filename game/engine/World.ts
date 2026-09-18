@@ -1,5 +1,5 @@
 import { ShopRoom } from '../ShopRoom';
-import { getHome, HOME_LEVEL, HOME_WIDTH, HomeDog, QUESTS, QuestPickup, COMPANIONS, FLOORS, ROOM_DOORS, questAvailable, homeDogs, type HomeFloor } from '../Home';
+import { getHome, HOME_LEVEL, HOME_WIDTH, HomeDog, HomePerson, QUESTS, QuestPickup, COMPANIONS, FLOORS, ROOM_DOORS, questAvailable, homeDogs, type HomeFloor } from '../Home';
 import { buildCustomLevel, CUSTOM_LEVEL, loadDraft } from '../LevelBuilder';
 import { BossRaccoon, Raccoon, TrashLid } from '../entities/Backyard';
 
@@ -97,6 +97,7 @@ export class World {
         this.currentLevel = level;
         this.difficulty = difficulty;
         
+        for (const quest of QUESTS) if (quest.cosmetic && this.belongings.quests[quest.id] === 'complete') this.belongings.owned.add(quest.cosmetic);
         const data = this.isHome ? getHome(this.height, this.homeFloor, this.belongings.quests) : this.isCustom ? buildCustomLevel(this.editorDraft, this.height) : initLevel(level, this.height, difficulty);
         this.shopDoor = addSecretShop(data, level, this.height, difficulty);
         if (this.shopDoor && this.belongings.unlockedShops.has(level)) {
@@ -211,9 +212,9 @@ export class World {
             }
         });
         for (const prop of this.props) {
-            const near = prop instanceof HomeDog && prop.nearby;
+            const near = (prop instanceof HomeDog || prop instanceof HomePerson) && prop.nearby;
             if (prop !== this.shopDoor) prop.update(this.player);
-            if (prop instanceof HomeDog && near !== prop.nearby) this.events.onShopUpdate?.();
+            if ((prop instanceof HomeDog || prop instanceof HomePerson) && near !== prop.nearby) this.events.onShopUpdate?.();
         }
         this.waters.forEach(w => w.update());
         const previousDoor = this.nearbyRoomDoor;
@@ -487,7 +488,9 @@ export class World {
         const floor = this.height - 100, door = this.nearbyRoomDoor;
         if (door) return { id: `door:${door.to}`, label: `Enter ${door.label}`, x: door.x + 42, y: floor - 186, to: door.to };
         const dog = this.props.filter((p): p is HomeDog => p instanceof HomeDog && p.nearby).sort((a, b) => Math.abs(this.player!.x - a.x) - Math.abs(this.player!.x - b.x))[0];
-        if (this.homeFloor === 'kitchen' && Math.abs(this.player.x - 722) < 90 && (!dog || Math.abs(this.player.x - 722) < Math.abs(this.player.x - dog.x))) return { id: 'boy', label: 'Talk to the little boy', x: 722, y: floor - 181 };
+        const person = this.props.filter((p): p is HomePerson => p instanceof HomePerson && p.nearby).sort((a, b) => Math.abs(this.player!.x - a.x) - Math.abs(this.player!.x - b.x))[0];
+        if (person && (!dog || Math.abs(this.player.x - person.x) < Math.abs(this.player.x - dog.x))) return { id: person.person.id, label: `Talk to ${person.person.name}`, x: person.x + 20, y: floor - 180 };
+        if (this.homeFloor === 'kitchen' && Math.abs(this.player.x - 722) < 90 && (!dog || Math.abs(this.player.x - 722) < Math.abs(this.player.x - dog.x))) return { id: 'boy', label: 'Talk to Xander', x: 722, y: floor - 181 };
         if (dog) return { id: dog.quest.id, label: `Talk to ${dog.quest.dog}`, x: dog.x + 20, y: dog.y - 53 };
         if (Math.abs(this.player.x - 1110) < 85) return { id: 'floors', label: 'Change floor', x: 1135, y: floor - 174 };
         if (this.homeFloor === 'basement' && Math.abs(this.player.x - 430) < 100) return { id: 'practice', label: 'Hardcore practice', x: 455, y: floor - 258 };
@@ -519,7 +522,8 @@ export class World {
     public openHomePanel(panel: string) {
         if ((!this.isHome && panel !== 'journal') || !this.belongings.homeUnlocked || this.ended || this.shopRoom || !this.player) return false;
         const station = panel === 'journal' || (this.isHome && (panel === 'floors' || panel === 'travel' || (panel === 'shop' && this.homeInteraction?.id === 'shop') || (panel === 'boy' && this.homeInteraction?.id === 'boy') || (this.homeFloor === 'basement' && (panel === 'practice' || panel === 'builder'))));
-        if (!station && !this.props.some(p => p instanceof HomeDog && p.quest.id === panel && p.nearby)) return false;
+        if (!station && !this.props.some(p => (p instanceof HomeDog && p.quest.id === panel || p instanceof HomePerson && p.person.id === panel) && p.nearby)) return false;
+        if (this.props.some(p => p instanceof HomePerson && p.person.id === panel)) this.homeNotice = '';
         this.homePanel = panel; this.player.velX = 0; inputManager.clear();
         audioManager.playSFX(station ? SoundType.COLLECT : SoundType.DOG_BARK); this.events.onShopUpdate?.(); return true;
     }
@@ -541,14 +545,40 @@ export class World {
         else if (status === 'found') {
             this.belongings.quests[quest.id] = 'complete';
             this.player.bonesCollected += quest.reward;
+            if (quest.cosmetic) this.belongings.owned.add(quest.cosmetic);
             this.events.onScoreUpdate(this.player.bonesCollected);
-            this.homeNotice = `${quest.thanks} (+${quest.reward} bones)`;
+            this.homeNotice = `${quest.thanks} (+${quest.reward} bones)${quest.cosmetic ? ` Unlocked: ${SHOP_GOODS[quest.cosmetic].name}. Wear it at any shop.` : ''}`;
             this.homePanel = null;
             this.props = [...this.props.filter(p => !(p instanceof HomeDog)), ...homeDogs(this.height, this.homeFloor, this.belongings.quests)];
             if (quest.id === 'peace' && this.shopDoor) this.shopDoor.unlocked = true;
         } else return false;
         audioManager.playSFX(status === 'found' ? SoundType.WIN_SHORT : SoundType.COLLECT);
         this.events.onShopUpdate?.(); return true;
+    }
+
+    public receiveFamilyGift() {
+        const id = this.homePanel;
+        if (!this.isHome || this.ended || !this.player || (id !== 'maria' && id !== 'belle') ||
+            this.belongings.familyGifts.includes(id) || !this.props.some(p => p instanceof HomePerson && p.person.id === id && p.nearby)) return false;
+        if (id === 'belle') {
+            const slot = this.belongings.slots.indexOf(null);
+            if (slot < 0) { this.homeNotice = 'Your pockets are full. Belle will keep your treat until you have an empty pocket.'; this.events.onShopUpdate?.(); return false; }
+            this.belongings.slots[slot] = 'spin';
+            this.homeNotice = `Belle’s spin treat is in pocket ${slot + 1}. Press ${slot + 1} or tap the pocket to twirl!`;
+        } else {
+            this.belongings.owned.add('book'); this.belongings.equipped.add('book');
+            this.homeNotice = 'Maria gave you a little storybook! Onyx is wearing it in a ribboned satchel.';
+        }
+        this.belongings.familyGifts.push(id);
+        audioManager.playSFX(SoundType.WIN_SHORT); this.events.onShopUpdate?.(); return true;
+    }
+
+    public familyActivity() {
+        if (!this.isHome || this.ended || !this.player || !this.props.some(p => p instanceof HomePerson && p.person.id === this.homePanel && p.nearby)) return false;
+        if (this.homePanel === 'maria' && this.belongings.owned.has('book')) this.belongings.toggleAccessory('book');
+        else if (this.homePanel === 'belle') { this.player.spinTimer = 360; this.closeHomePanel(); }
+        else return false;
+        audioManager.playSFX(SoundType.COLLECT); this.events.onShopUpdate?.(); return true;
     }
 
     public finishRaccoonIntro() {
@@ -612,9 +642,12 @@ export class World {
     }
 
     public useInventorySlot(index: number) {
-        if (this.ended || this.isHome || this.homePanel || this.shopRoom || this.raccoonIntroPending || !this.player || !Number.isInteger(index) || index < 0 || index > 2) return false;
-        const item = this.belongings.slots[index]; if (!item) return false;
-        if (item === 'shield') {
+        if (this.ended || this.homePanel || this.shopRoom || this.raccoonIntroPending || !this.player || !Number.isInteger(index) || index < 0 || index > 2) return false;
+        const item = this.belongings.slots[index]; if (!item || (this.isHome && item !== 'spin')) return false;
+        if (item === 'spin') {
+            if (this.player.spinTimer > 0 || this.player.magnetTimer > 0) return false;
+            this.player.spinTimer = this.player.magnetTimer = 360;
+        } else if (item === 'shield') {
             if (this.player.invincibleTimer > 0) return false;
             this.player.invincibleTimer = 300;
         } else if (item === 'magnet') {
