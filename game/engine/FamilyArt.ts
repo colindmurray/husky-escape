@@ -34,20 +34,55 @@ export function drawGoose(ctx: CanvasRenderingContext2D, x: number, y: number, t
 export function drawFamilyDog(ctx: CanvasRenderingContext2D, id: string, x: number, y: number, facing: boolean, moving: boolean, t: number, following = false, worried = false, activity = '') {
     const opal = id === 'opal', ruby = id === 'ruby', rich = gfxSettings.visualMode === 'enhanced';
     if (ruby && activity === 'curl' && !following) {
-        ctx.save(); ctx.translate(x + 20, y + 26);
-        const breath = 1 + Math.sin(t * 1.8) * .012; ctx.scale(breath, breath);
-        ellipse(ctx, 0, 14, 33, 5, '#3c3b3f24');
-        ellipse(ctx, 0, 0, 31, 24, rich ? furShade(ctx, '#fffdf8', '#c5d1d4') : '#f8f6ef');
-        ellipse(ctx, 2, 1, 16, 12, '#dce2df'); ellipse(ctx, 8, 6, 11, 9, '#fffaf0');
-        ctx.fillStyle = '#eee6dd'; ctx.beginPath(); ctx.moveTo(-12, 3); ctx.lineTo(-21, -13); ctx.lineTo(-3, -5); ctx.fill();
-        ellipse(ctx, -7, 5, 15, 12, '#fffdf5'); ellipse(ctx, 2, 10, 8, 5, '#f6f5ed');
-        ellipse(ctx, 7, 8, 2.4, 2, '#454b4b');
-        ctx.strokeStyle = '#6c7c83'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-12, 1); ctx.quadraticCurveTo(-8, 4, -4, 1); ctx.stroke();
-        ctx.strokeStyle = '#d64e54'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-8, 6, 12, 1.5, 2.6); ctx.stroke();
-        ctx.lineCap = 'round'; ctx.strokeStyle = '#d0d9d8'; ctx.lineWidth = 12;
-        ctx.beginPath(); ctx.moveTo(20, -11); ctx.bezierCurveTo(40, 5, 19, 24, -2, 13); ctx.stroke();
-        ctx.strokeStyle = '#fffdf6'; ctx.lineWidth = 9; ctx.stroke();
-        if (rich) { ctx.strokeStyle = '#fefef9'; ctx.lineWidth = 1; for (let i=0;i<6;i++) { ctx.beginPath(); ctx.moveTo(-21+i*6, -10); ctx.lineTo(-17+i*6, -14); ctx.stroke(); } }
+        ctx.save(); ctx.translate(x + 20, y + 26); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ellipse(ctx, 0, 14, 33, 4, '#3c3b3f24');
+        const breath = 1 + Math.sin(t * 1.8) * .012;
+        ctx.translate(0, 14); ctx.scale(breath, breath); ctx.translate(0, -14);
+        const coat = ctx.createRadialGradient(-14, -18, 3, -8, -1, 34);
+        coat.addColorStop(0, '#fffef7'); coat.addColorStop(.55, '#f4f3eb'); coat.addColorStop(1, '#c8d2d5');
+        // Her raised haunch wraps around a tucked chest, rather than an empty ring.
+        ctx.fillStyle = rich ? coat : '#f5f3ea'; ctx.beginPath(); ctx.moveTo(-30, 7);
+        ctx.bezierCurveTo(-40, -17, -20, -29, -4, -25);
+        ctx.bezierCurveTo(12, -34, 30, -24, 30, -7);
+        ctx.bezierCurveTo(31, 9, 13, 15, -5, 16);
+        ctx.quadraticCurveTo(-23, 20, -30, 7); ctx.fill();
+        ellipse(ctx, 4, -1, 14, 15, rich ? '#b9c9cd' : '#d8dfdc');
+        ellipse(ctx, -13, 0, 18, 16, rich ? coat : '#f5f3ea');
+        ellipse(ctx, 10, 10, 9, 4, '#eeeae1');
+        ctx.strokeStyle = '#c2cac8'; ctx.lineWidth = .7;
+        for (const px of [10, 13]) { ctx.beginPath(); ctx.moveTo(px, 9); ctx.lineTo(px + 1, 12); ctx.stroke(); }
+        // Red harness nestles into the thick shoulder ruff.
+        ctx.strokeStyle = '#a64645'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(-3, -25); ctx.quadraticCurveTo(5, -19, 9, -8); ctx.moveTo(12, -24); ctx.quadraticCurveTo(9, -16, 15, -11); ctx.stroke();
+        ctx.strokeStyle = '#ce6257'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-3, -25); ctx.lineTo(12, -24); ctx.stroke();
+        ctx.fillStyle = '#5b6060'; ctx.beginPath(); ctx.roundRect(-2, -24, 5.5, 5, 1); ctx.fill();
+        ctx.strokeStyle = '#bcbdb0'; ctx.lineWidth = .7; ctx.strokeRect(-1, -23, 3.5, 3);
+        ellipse(ctx, 17, -13, 13, 12, rich ? '#e1e7e2' : '#eeeae0');
+        // Both upright ears remain visible above her resting head.
+        ctx.fillStyle = '#eeeee5'; ctx.beginPath(); ctx.moveTo(24, -14); ctx.quadraticCurveTo(28, -20, 33, -24); ctx.quadraticCurveTo(35, -13, 29, -6); ctx.fill();
+        ctx.fillStyle = '#cbb8b3'; ctx.beginPath(); ctx.moveTo(28, -14); ctx.lineTo(32, -20); ctx.lineTo(31, -10); ctx.fill();
+        ellipse(ctx, 18, -5, 14, 13, rich ? '#fbfaf2' : '#fffdf4');
+        ctx.fillStyle = '#fbfaf2'; ctx.beginPath(); ctx.moveTo(8, -12); ctx.quadraticCurveTo(8, -22, 13, -27); ctx.quadraticCurveTo(25, -23, 25, -14); ctx.fill();
+        ctx.fillStyle = '#c8afa9'; ctx.beginPath(); ctx.moveTo(12, -15); ctx.quadraticCurveTo(12, -21, 14, -23); ctx.quadraticCurveTo(22, -21, 21, -16); ctx.fill();
+        if (rich) { ctx.strokeStyle = '#ede8dd'; ctx.lineWidth = 1; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(12 + i * 2, -15); ctx.lineTo(11 + i * 2, -19 - i % 2 * 2); ctx.stroke(); } }
+        ctx.fillStyle = rich ? '#f1f3eb' : '#f1f0e7'; ctx.beginPath(); ctx.moveTo(16, -1); ctx.quadraticCurveTo(10, 4, 3, 5); ctx.quadraticCurveTo(-3, 9, 4, 12); ctx.quadraticCurveTo(15, 12, 23, 4); ctx.fill();
+        ctx.strokeStyle = '#66706d'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(11, -4); ctx.quadraticCurveTo(13, -2.5, 16, -4); ctx.stroke();
+        ellipse(ctx, 3, 7, 3, 2.2, '#745551'); ellipse(ctx, 2.3, 6.3, 1.1, .6, '#af8b83');
+        ctx.strokeStyle = '#8e7b70'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(3, 9); ctx.quadraticCurveTo(6, 11, 10, 9); ctx.stroke();
+        // A broad, tapered plume lies across her paws and up against her muzzle.
+        const tail = ctx.createLinearGradient(0, 3, 0, 18); tail.addColorStop(0, '#fffdf3'); tail.addColorStop(1, '#ced6d3');
+        ctx.fillStyle = rich ? tail : '#e8e9e0'; ctx.beginPath(); ctx.moveTo(-29, 4);
+        ctx.bezierCurveTo(-31, 18, -12, 21, 3, 16);
+        ctx.quadraticCurveTo(18, 16, 23, 6);
+        ctx.quadraticCurveTo(13, 10, 6, 7);
+        ctx.bezierCurveTo(-7, 12, -16, 13, -29, 4); ctx.fill();
+        if (rich) {
+            ctx.strokeStyle = '#bdc8c34a'; ctx.lineWidth = .5;
+            for (const [fx, fy, dx, dy] of [[-28,-9,3,-4],[-22,-16,4,-3],[-15,-20,4,-1],[-27,-1,4,-2],[-21,5,4,1],[-14,9,4,1],[-17,-9,4,-2],[-8,-13,3,-1],[-24,12,5,2],[-17,15,5,0],[-8,16,5,-1],[2,14,5,-2],[11,12,5,-3]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx * .4, fy + dy, fx + dx, fy + dy); ctx.stroke(); }
+            ctx.strokeStyle = '#fffdf5'; ctx.lineWidth = .9;
+            for (const [fx, fy] of [[-30,-8],[-26,-17],[-18,-23],[-10,-24],[18,-17],[26,-9],[-20,12],[-9,14],[5,12]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + 2, fy - 1); ctx.lineTo(fx + 1.5, fy + .5); ctx.stroke(); }
+        }
+        ellipse(ctx, 6, 11.5, 2.3, 3, '#e89ba9');
+        ctx.strokeStyle = '#be7088'; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(6, 10.5); ctx.lineTo(6, 13); ctx.stroke();
         ctx.restore(); return;
     }
     const sleeping = activity === 'sleep' && !following;
