@@ -7,7 +7,7 @@ function oval(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, r
     ctx.fillStyle = fill; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill();
 }
 
-function face(ctx: CanvasRenderingContext2D, coat: Coat, resting: boolean, t: number, rich: boolean) {
+function restingFace(ctx: CanvasRenderingContext2D, coat: Coat, rich: boolean) {
     const [fur, dark, white] = colors(coat), ruby = coat === 'ruby';
     const shade = ctx.createRadialGradient(-5, -10, 2, 0, 2, 25);
     shade.addColorStop(0, ruby ? '#fffef9' : '#96948a'); shade.addColorStop(1, fur);
@@ -32,21 +32,16 @@ function face(ctx: CanvasRenderingContext2D, coat: Coat, resting: boolean, t: nu
         if (rich) { ctx.strokeStyle = ruby ? '#b8c6c050' : '#ab9b8260'; ctx.lineWidth = .65; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(13 + i, 4 + i * .8); ctx.quadraticCurveTo(15 + i, 8 + i * .8, 12 + i, 11 + i); ctx.stroke(); } }
         ctx.restore();
     }
-    const blink = resting || t % 5 < .12;
     for (const side of [-1, 1]) {
         const ex = side * 8.5;
-        if (blink) { ctx.strokeStyle = '#535b59'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(ex - 3, 1); ctx.quadraticCurveTo(ex, 3, ex + 3, 1); ctx.stroke(); }
-        else {
-            oval(ctx, ex, 1, 3.1, 2.8, '#3c3b36'); oval(ctx, ex + .3, 1, 2, 2.2, coat === 'cat' ? '#a9bd75' : '#87735a');
-            oval(ctx, ex + .5, 1.2, 1.35, 1.9, '#171e22'); oval(ctx, ex - .5, -.1, .85, .85, '#fffef7');
-        }
+        ctx.strokeStyle = '#535b59'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(ex - 3, 1); ctx.quadraticCurveTo(ex, 3, ex + 3, 1); ctx.stroke();
     }
     const muzzle = ctx.createLinearGradient(0, 5, 0, 20); muzzle.addColorStop(0, '#fffdf3'); muzzle.addColorStop(1, '#dadcd4');
     oval(ctx, 0, 12, 9, 7.5, rich ? muzzle : white);
     ctx.fillStyle = ruby ? '#765853' : coat === 'cat' ? '#c58d93' : '#282d30'; ctx.beginPath(); ctx.moveTo(-5, 10); ctx.quadraticCurveTo(0, 7.5, 5, 10); ctx.quadraticCurveTo(4, 14, 0, 14.5); ctx.quadraticCurveTo(-4, 14, -5, 10); ctx.fill();
     oval(ctx, -.6, 10.2, 2.3, .9, ruby ? '#b28b80' : '#846c65');
     ctx.strokeStyle = '#70655f'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(0, 14.5); ctx.lineTo(0, 16); ctx.moveTo(-5, 16); ctx.quadraticCurveTo(0, 18, 5, 16); ctx.stroke();
-    if ((resting && ruby) || (!resting && t % 7 > 2)) {
+    if (ruby) {
         // Attached to the mouth, above the tail's upper edge.
         ctx.fillStyle = '#df8f9f'; ctx.beginPath(); ctx.moveTo(-1.8, 17); ctx.lineTo(1.8, 17); ctx.quadraticCurveTo(2.8, 21.5, 0, 21.5); ctx.quadraticCurveTo(-2.5, 21, -1.8, 17); ctx.fill();
         ctx.strokeStyle = '#b66d81'; ctx.lineWidth = .55; ctx.beginPath(); ctx.moveTo(0, 18); ctx.lineTo(0, 20); ctx.stroke();
@@ -78,7 +73,7 @@ export function drawCurledHusky(ctx: CanvasRenderingContext2D, coat: Coat, x: nu
         ctx.strokeStyle = ruby ? '#bec9bf70' : '#d8ceba65'; ctx.lineWidth = .6;
         for (const [fx, fy, dx, dy] of [[-29,-9,3,-4],[-23,-17,4,-3],[-15,-21,4,-1],[-29,-1,4,-2],[-23,5,4,1],[-16,9,4,1],[-18,-10,4,-2],[-9,-14,3,-1],[-23,12,5,2],[-17,15,5,0],[-8,16,5,-1],[2,14,5,-1],[13,14,4,-1]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx * .4, fy + dy, fx + dx, fy + dy); ctx.stroke(); }
     }
-    ctx.save(); ctx.translate(17, -5); ctx.scale(.68, .68); face(ctx, coat, true, t, rich); ctx.restore();
+    ctx.save(); ctx.translate(17, -5); ctx.scale(.68, .68); restingFace(ctx, coat, rich); ctx.restore();
     ctx.restore();
 }
 
@@ -111,7 +106,33 @@ export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: nu
     ctx.strokeStyle = '#e1d7bd85'; ctx.lineWidth = .65;
     for (const [fx, fy, dx, dy] of [[4,17,4,1],[9,15,4,2],[14,15,4,2],[3,22,5,3],[8,24,5,3],[15,24,4,3],[5,28,4,3],[19,19,2,6],[21,23,2,6],[25,24,1,6],[29,24,-1,6],[-9,13,2,4],[-9,20,3,4]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx, fy + dy * .4, fx + dx, fy + dy); ctx.stroke(); }
     if (o.level === 6) { ctx.fillStyle = '#c0392b'; ctx.fillRect(-4, 39, 49, 3); ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(44, 40); ctx.quadraticCurveTo(49, 39, 50, 33); ctx.stroke(); }
-    ctx.save(); ctx.translate(32, 11); ctx.rotate(moving ? Math.sin(phase * 2) * .025 : 0); ctx.scale(.57, .57); face(ctx, 'onyx', false, o.t, true); ctx.restore();
-    if (o.level === 8) { ctx.strokeStyle = '#63b8c9'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.roundRect(24.5, 8.5, 15, 6, 2); ctx.stroke(); ctx.fillStyle = '#b9e9e936'; ctx.fill(); }
+    // Player.draw mirrors this right-facing profile with the rest of her body.
+    ctx.save(); ctx.translate(32, 11); ctx.rotate(moving ? Math.sin(phase * 2) * .025 : 0); ctx.scale(.57, .57);
+    ctx.fillStyle = '#747975'; ctx.beginPath(); ctx.moveTo(-17, -10); ctx.lineTo(-17, -30); ctx.quadraticCurveTo(-4, -24, -3, -12); ctx.fill();
+    ctx.fillStyle = '#d8cdb5'; ctx.beginPath(); ctx.moveTo(-14, -14); ctx.lineTo(-15, -24); ctx.lineTo(-7, -14); ctx.fill();
+    const head = ctx.createLinearGradient(-17, -20, 9, 16); head.addColorStop(0, '#aaa392'); head.addColorStop(.35, '#626a6d'); head.addColorStop(1, '#393f42');
+    ctx.fillStyle = head; ctx.beginPath(); ctx.moveTo(-19, -7); ctx.bezierCurveTo(-18, -24, 5, -24, 10, -10); ctx.quadraticCurveTo(12, -3, 18, 2);
+    ctx.lineTo(12, 16); ctx.quadraticCurveTo(-1, 22, -13, 17); ctx.lineTo(-19, 18); ctx.lineTo(-18, 13); ctx.lineTo(-23, 12); ctx.lineTo(-21, 7); ctx.lineTo(-24, 7); ctx.closePath(); ctx.fill();
+    const mask = ctx.createLinearGradient(-7, -9, 9, 20); mask.addColorStop(0, '#fffbed'); mask.addColorStop(1, '#d8d6c8');
+    ctx.fillStyle = mask; ctx.beginPath(); ctx.moveTo(-12, 1); ctx.quadraticCurveTo(-8, -12, 1, -14); ctx.quadraticCurveTo(7, -12, 10, -4);
+    ctx.quadraticCurveTo(13, 1, 25, 3); ctx.quadraticCurveTo(31, 6, 25, 10); ctx.quadraticCurveTo(16, 12, 12, 15);
+    ctx.quadraticCurveTo(4, 22, -7, 18); ctx.lineTo(-11, 20); ctx.lineTo(-12, 15); ctx.lineTo(-18, 15); ctx.lineTo(-15, 10); ctx.quadraticCurveTo(-18, 7, -12, 1); ctx.fill();
+    ctx.fillStyle = head; ctx.beginPath(); ctx.moveTo(-8, -13); ctx.quadraticCurveTo(-9, -24, -3, -32); ctx.quadraticCurveTo(8, -25, 6, -14); ctx.fill();
+    ctx.fillStyle = '#c6b6a5'; ctx.beginPath(); ctx.moveTo(-4, -15); ctx.lineTo(-2, -26); ctx.quadraticCurveTo(4, -23, 3, -15); ctx.fill();
+    ctx.strokeStyle = '#f2e8d3'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-5 + i * 2, -13); ctx.lineTo(-4 + i * 1.5, -18 - i % 2 * 2); ctx.stroke(); }
+    if (o.t % 5 < .12) { ctx.strokeStyle = '#41494a'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(2, -1); ctx.lineTo(8, -1); ctx.stroke(); }
+    else { oval(ctx, 5, -1, 3.4, 2.5, '#3a403d'); oval(ctx, 6, -1, 2, 2.1, '#907c5e'); oval(ctx, 6.7, -.9, 1.15, 1.7, '#172025'); oval(ctx, 6.1, -2, .75, .75, '#fffdf4'); }
+    ctx.fillStyle = '#282e30'; ctx.beginPath(); ctx.moveTo(24, 2.6); ctx.quadraticCurveTo(29, 2, 29, 5); ctx.quadraticCurveTo(28, 8, 24, 7); ctx.quadraticCurveTo(22, 5, 24, 2.6); ctx.fill();
+    oval(ctx, 25.7, 3.9, 1.5, .65, '#8c7469');
+    ctx.strokeStyle = '#74675d'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(25, 9); ctx.quadraticCurveTo(18, 13, 12, 10); ctx.stroke();
+    if (o.t % 7 > 2) { ctx.fillStyle = '#d9919e'; ctx.beginPath(); ctx.moveTo(17, 11.3); ctx.lineTo(21, 10.8); ctx.quadraticCurveTo(22, 17, 18.5, 16.8); ctx.quadraticCurveTo(16.8, 16, 17, 11.3); ctx.fill(); }
+    ctx.strokeStyle = '#c8c0a966'; ctx.lineWidth = .65;
+    for (const [fx, fy, dx, dy] of [[-17,-10,2,5],[-14,-15,3,3],[-11,-18,3,2],[-19,2,3,5],[-15,6,2,5],[-11,10,3,4],[-6,13,4,3],[1,15,4,1]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx, fy + 1, fx + dx, fy + dy); ctx.stroke(); }
+    ctx.restore();
+    if (o.level === 8) {
+        ctx.strokeStyle = '#397a89'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(21, 10); ctx.lineTo(33, 10); ctx.stroke();
+        ctx.strokeStyle = '#63b8c9'; ctx.beginPath(); ctx.roundRect(32, 7.5, 8, 6, 2); ctx.stroke(); ctx.fillStyle = '#b9e9e936'; ctx.fill();
+    }
     ctx.restore();
 }
