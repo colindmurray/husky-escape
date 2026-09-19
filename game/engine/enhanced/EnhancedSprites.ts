@@ -4,6 +4,7 @@
 // richer alternates selected at draw-time purely by presentation mode.
 // Nothing here mutates game state — all functions only paint.
 
+import { drawOnyxEnhanced } from '../HuskyArt';
 import { hash2 } from "./Rng";
 
 const TAU = Math.PI * 2;
@@ -574,6 +575,7 @@ export interface HuskyOpts {
  * Classic skins use flat colors and a simpler trot; the caller handles facing.
  */
 export function drawHuskyEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, o: HuskyOpts) {
+    if (!o.skin && !o.classic) { drawOnyxEnhanced(ctx, x, y, o); return; }
     const { velX, velY, grounded, level, t } = o;
     const cat = o.skin === 'cat', fox = o.skin === 'fox';
     const fur = cat ? '#303441' : fox ? '#cc682e' : '#8a99a5';

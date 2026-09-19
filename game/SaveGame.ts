@@ -7,7 +7,7 @@ export const SAVE_SLOTS = 4;
 export const saveKey = (slot: number) => `husky-escape:save-v1:${slot}`;
 export const saveName = (name: string) => Array.from(name.trim()).slice(0, 20).join('');
 export type SavedBelongings = {
-    homeUnlocked: boolean; houseIntroSeen: boolean; companions: string[];
+    homeUnlocked: boolean; houseIntroSeen: boolean; companions: string[]; familyGifts?: ('maria' | 'belle')[];
     quests: Record<string, QuestStatus>; slots: (Supply | null)[];
     owned: Accessory[]; equipped: Accessory[]; collectedBones: string[];
     unlockedShops: number[]; shopSupplies: Record<number, Supply[]>;
@@ -22,12 +22,12 @@ export type SaveSlot = { game: SaveGame | null; error: string | null };
 export function packBelongings(b: Belongings): SavedBelongings {
     return { ...b, companions: [...b.companions], owned: [...b.owned], equipped: [...b.equipped],
         collectedBones: [...b.collectedBones], unlockedShops: [...b.unlockedShops],
-        quests: { ...b.quests }, slots: [...b.slots], shopSupplies: structuredClone(b.shopSupplies) };
+        familyGifts: [...(b.familyGifts ?? [])], quests: { ...b.quests }, slots: [...b.slots], shopSupplies: structuredClone(b.shopSupplies) };
 }
 export function unpackBelongings(b: SavedBelongings): Belongings {
     return Object.assign(new Belongings(), {
         homeUnlocked: b.homeUnlocked, houseIntroSeen: b.houseIntroSeen,
-        quests: { ...b.quests }, slots: [...b.slots], shopSupplies: structuredClone(b.shopSupplies),
+        familyGifts: [...(b.familyGifts ?? [])], quests: { ...b.quests }, slots: [...b.slots], shopSupplies: structuredClone(b.shopSupplies),
         companions: new Set(b.companions), owned: new Set(b.owned), equipped: new Set(b.equipped),
         collectedBones: new Set(b.collectedBones), unlockedShops: new Set(b.unlockedShops),
     });
@@ -49,6 +49,7 @@ export function parseSave(raw: string): SaveGame {
         !cutscenes.includes(s.cutscene) || (s.reason !== undefined && (typeof s.reason !== 'string' || s.reason.length > 200)) ||
         !record(b) || typeof b.homeUnlocked !== 'boolean' || typeof b.houseIntroSeen !== 'boolean' ||
         (s.level === 15 && !b.homeUnlocked) || !list(b.companions, id => COMPANIONS.some(d => d.id === id)) ||
+        (b.familyGifts !== undefined && !list(b.familyGifts, id => id === 'maria' || id === 'belle')) ||
         !record(b.quests) || !Object.entries(b.quests).every(([id, status]) => QUESTS.some(q => q.id === id) && ['accepted', 'carrying', 'found', 'complete'].includes(status as string)) ||
         !list(b.slots, v => v === null || supply(v)) || b.slots.length !== 3 ||
         !list(b.owned, cosmetic) || !list(b.equipped, v => cosmetic(v) && b.owned.includes(v)) ||

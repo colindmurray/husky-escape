@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { GameEngine } from './game/GameEngine';
 import { LevelBuilderUI } from './LevelBuilderUI';
-import { HomeDog, QUESTS, COMPANIONS, FLOORS, questAvailable, houseChapter, dogRoom, type Quest, type HomeFloor } from './game/Home';
-import { drawFamilyDog } from './game/engine/FamilyArt';
+import { HomeDog, FAMILY, QUESTS, COMPANIONS, FLOORS, questAvailable, houseChapter, dogRoom, type Quest, type HomeFloor } from './game/Home';
+import { drawFamilyDog, drawFamilyPerson } from './game/engine/FamilyArt';
 import { gfxSettings } from './game/GfxSettings';
+import { SHOP_GOODS } from './game/Shop';
 import './home.css';
 
 const LEVEL_NAMES = ['The Pound', 'Pound Escape', 'The Forest', 'The Beach', 'The Mountains', 'The Ski Slopes', 'The Chase', 'Underwater', 'The Pier', 'Construction', 'Neon City', 'The Bakery', 'The Town', 'The Backyard'];
@@ -11,6 +12,8 @@ const LEVEL_NAMES = ['The Pound', 'Pound Escape', 'The Forest', 'The Beach', 'Th
 export function HomeUI({ engine }: { engine: GameEngine }) {
     const world = engine.world, panel = world.homePanel, progress = world.belongings.quests;
     const dialog = useRef<HTMLDivElement>(null);
+    const [storyLine, setStoryLine] = useState(-1);
+    useEffect(() => setStoryLine(-1), [panel]);
     const focusGame = () => document.querySelector<HTMLCanvasElement>('canvas[tabindex]')?.focus();
     const close = () => { world.closeHomePanel(); focusGame(); };
     useEffect(() => {
@@ -27,6 +30,7 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
         return () => { window.removeEventListener('keydown', trap); focusGame(); };
     }, [panel]);
     if (!world.belongings.homeUnlocked || world.shopRoom) return null;
+    const person = FAMILY.find(p => p.id === panel);
     const companion = COMPANIONS.find(c => c.id === panel);
     const party = COMPANIONS.filter(c => world.belongings.companions.has(c.id));
     const chapter = houseChapter(progress);
@@ -53,13 +57,26 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
             {world.isHome && <InteractionPrompt world={world} focusGame={focusGame} />}
         </>}
         {panel && <div className="home-backdrop"><div className={`home-dialog ${panel === "builder" ? "builder-dialog" : panel === "journal" ? "journal-dialog" : ""}`} ref={dialog} role="dialog" aria-modal="true" aria-labelledby="home-title">
-            <header><div><small>ONYX’S HOUSE</small><h1 id="home-title">{companion ? `Meet ${companion.dog}` : panel === 'shop' ? 'Juniper' : panel === 'boy' ? 'The little boy' : panel === 'journal' ? 'Quest journal' : panel === 'floors' ? 'Make yourself at home' : panel === 'practice' ? 'Hardcore practice' : panel === 'builder' ? 'Build your own adventure' : 'Where shall we go?'}</h1></div><button onClick={close} aria-label="Close home conversation">Close · Esc</button></header>
+            <header><div><small>ONYX’S HOUSE</small><h1 id="home-title">{person ? person.name : companion ? `Meet ${companion.dog}` : panel === 'shop' ? 'Juniper' : panel === 'boy' ? 'Xander' : panel === 'journal' ? 'Quest journal' : panel === 'floors' ? 'Make yourself at home' : panel === 'practice' ? 'Hardcore practice' : panel === 'builder' ? 'Build your own adventure' : 'Where shall we go?'}</h1></div><button onClick={close} aria-label="Close home conversation">Close · Esc</button></header>
             {['journal', 'floors', 'travel'].includes(panel) && world.isHome && <nav className="home-panel-nav" aria-label="House navigation">
                 <button aria-current={panel === 'journal' ? 'page' : undefined} onClick={() => world.openHomePanel('journal')}>Quest journal</button>
                 <button aria-current={panel === 'floors' ? 'page' : undefined} onClick={() => world.openHomePanel('floors')}>Rooms</button>
                 <button aria-current={panel === 'travel' ? 'page' : undefined} onClick={() => world.openHomePanel('travel')}>Travel</button>
             </nav>}
-            {panel === 'journal' ? <>
+            {person ? <>
+                <div className="dog-conversation family-conversation"><PersonPortrait id={person.id} /><div><h2>“{storyLine < 0 ? person.greeting : person.lines[storyLine % person.lines.length]}”</h2><p>{person.id === 'maria' && dogRoom('ruby', progress) !== 'bedroom' ? 'Maria turns a page quietly. A blanket and a warm patch of sunlight are waiting for Ruby to come back.' : person.detail}</p></div></div>
+                <div className="family-actions">
+                    <button onClick={() => setStoryLine(n => n + 1)}>Keep chatting</button>
+                    {person.id === 'maria' && <button className="home-primary" onClick={() => { world.readWithMaria(); focusGame(); }}>Curl up & read with Maria</button>}
+                    {(person.id === 'maria' || person.id === 'belle') && !world.belongings.familyGifts.includes(person.id) && <button className="home-primary" onClick={() => world.receiveFamilyGift()}>{person.id === 'maria' ? 'Read together · unlock little storybook' : 'Take a spin treat'}</button>}
+                    {person.id === 'maria' && world.belongings.owned.has('book') && <button onClick={() => world.familyActivity()}>{world.belongings.equipped.has('book') ? 'Put my book away' : 'Wear my little storybook'}</button>}
+                    {person.id === 'belle' && <button onClick={() => world.familyActivity()}>Let’s spin together!</button>}
+                </div>
+                {world.homeNotice && <p role="status">{world.homeNotice}</p>}
+                {person.id === 'maria' && world.belongings.owned.has('book') && <p className="home-note">Your book is a cosmetic. Wear it with any skin, or change your outfit at Juniper’s shop.</p>}
+                {person.id === 'maria' && <p className="home-note">Stay for a chapter. Move, jump, or choose Stand up whenever you’re ready.</p>}
+                {person.id === 'belle' && <p className="home-note">Belle’s pocket treat is a one-time gift for this journey. You can always come back and dance together.</p>}
+            </> : panel === 'journal' ? <>
                 <p className="journal-chapter">{chapterNames[chapter]}</p>
                 <section className="home-journal"><h2>In progress · {pending.length}</h2>
                     {!pending.length && <p className="home-note">No errands in progress.</p>}
@@ -67,7 +84,7 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
                 </section>
                 {available.length > 0 && <section className="home-journal"><h2>Around the house</h2>{available.map(q => <article key={q.id}><h3>{q.icon} {q.dog} · {q.item}</h3><p>Talk to {q.dog} · {FLOORS[dogRoom(COMPANIONS.find(c => c.dog === q.dog)!.id, progress)]}.</p></article>)}</section>}
                 <details className="home-journal completed-quests"><summary>Completed · {completed.length}</summary>{completed.map(q => <p key={q.id}>✓ {q.dog} · {q.item} <small>+{q.reward} bones</small></p>)}</details>
-                {world.isHome && <details className="home-journal"><summary>Find a friend</summary><div className="dog-locations">{COMPANIONS.map(dog => <button key={dog.id} onClick={() => { world.changeHomeFloor(dogRoom(dog.id, progress)); focusGame(); }}>{dog.dog} · {FLOORS[dogRoom(dog.id, progress)]}</button>)}</div></details>}
+                {world.isHome && <details className="home-journal"><summary>Find a friend</summary><div className="dog-locations">{FAMILY.map(person => <button key={person.id} onClick={() => { world.changeHomeFloor(person.room); focusGame(); }}>{person.name} · {FLOORS[person.room]}</button>)}<button onClick={() => { world.changeHomeFloor('kitchen'); focusGame(); }}>Xander · Kitchen</button>{COMPANIONS.map(dog => <button key={dog.id} onClick={() => { world.changeHomeFloor(dogRoom(dog.id, progress)); focusGame(); }}>{dog.dog} · {FLOORS[dogRoom(dog.id, progress)]}</button>)}</div></details>}
                 {party.length > 0 && <p className="home-note">Coming along: {party.map(c => c.dog).join(', ')}</p>}
                 {world.practice && <><p className="home-note">Practice has unlimited retries and does not advance quests.</p>{world.isCustom && <button onClick={() => engine.returnToEditor()}>Back to editor</button>}</>}
                 {world.homeNotice && world.isHome && <p className="home-note">{world.homeNotice}</p>}
@@ -77,7 +94,7 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
             : panel === 'boy' ? <div className="boy-conversation"><span aria-hidden="true">🎮</span><h2>“{['AHHHH, Demo’ed!!! That car came out of NOWHERE!', 'I’m going for the demo! Onyx, watch this. WATCH THIS!', 'Samwise demo’ed my sandwich. I wasn’t even AFK!', 'One more Rocket League match. Just one. I’m on a demo streak.'][Math.floor(world.homeFrame / 180) % 4]}”</h2><p>He keeps one eye on Rocket League and the other on his toast.</p></div>
             : panel === 'builder' ? <LevelBuilderUI engine={engine} />
             : panel === 'practice' ? <><p>Train on the actual Hardcore layouts. A mistake restarts only this practice attempt. Each retry restores your starting supplies; your real bones, quests, and belongings stay safe.</p><div className="home-levels">{LEVEL_NAMES.map((name, i) => <button key={name} onClick={() => { engine.startPractice(i + 1); focusGame(); }}><b>{i + 1}</b><span>{name}</span></button>)}</div></>
-            : companion ? <><div className="dog-conversation"><DogPortrait id={companion.id} activity={world.props.find((p): p is HomeDog => p instanceof HomeDog && p.quest.id === companion.id)?.activity ?? ''} /><div><h2>{companion.dog}</h2><p>{companion.id === 'samwise' && world.player?.accessories.has('goose') ? 'GOOSE! HONK! Onyx? Is that you in there? Please take the feathers off before Opal sees me hiding behind this cushion.' : chapter === 3 ? 'Tea party in the kitchen! Everybody is home, the biscuits are warm, and nobody is chasing anybody. For now.' : lastRequest && !nextQuest ? lastRequest.thanks : companion.greeting}</p></div></div>
+            : companion ? <><div className="dog-conversation"><DogPortrait id={companion.id} activity={world.props.find((p): p is HomeDog => p instanceof HomeDog && p.quest.id === companion.id)?.activity ?? ''} /><div><h2>{companion.dog}</h2><p>{companion.id === 'samwise' && world.player?.accessories.has('goose') ? 'GOOSE! HONK! Onyx? Is that you in there? Please take the feathers off before Opal sees me hiding behind this cushion.' : chapter === 3 && companion.id === 'ruby' ? 'Maria saved me a place in the reading nook. Biscuits, a blanket, and one more chapter. Blep… zzz.' : chapter === 3 ? 'Tea party in the kitchen! Everybody is home, the biscuits are warm, and nobody is chasing anybody. For now.' : lastRequest && !nextQuest ? lastRequest.thanks : companion.greeting}</p></div></div>
                 {nextQuest ? <FetchRequest world={world} quest={nextQuest} /> : <p className="home-note">{chapter === 0 ? 'Bring the kitchen biscuits to Samwise in the entry hall first.' : chapter < 2 ? 'Help the other dogs settle in to unlock our next adventure.' : 'All my requests are finished. Let’s check on everyone else!'}</p>}
                 {chapter > 0 && <><button onClick={() => world.toggleCompanion()}>{world.belongings.companions.has(companion.id) ? `Ask ${companion.dog} to stay home` : `Invite ${companion.dog} along`}</button><p className="home-note">Talk to a friend in their current room to change your traveling party.</p></>}
             </>
@@ -98,11 +115,20 @@ function FetchRequest({ world, quest }: { world: GameEngine['world']; quest: Que
     return <section className="home-journal">
         <h2>{quest.icon} {quest.item}</h2>
         <p>{status === 'complete' ? quest.thanks : status === 'found' ? `You found my ${quest.item}! Is that for me?` : status === 'carrying' ? `Reach the exit of level ${quest.level} to bring it home.` : status === 'accepted' ? quest.hint : quest.request}</p>
-        <p className="quest-reward">{status === 'complete' ? `✓ Reunited · ${quest.reward} bones rewarded` : `Thank-you gift: ${quest.reward} bones`}</p>
+        <p className="quest-reward">{status === 'complete' ? `✓ Reunited · ${quest.reward} bones rewarded` : `Thank-you gift: ${quest.reward} bones`}{quest.cosmetic && ` + ${SHOP_GOODS[quest.cosmetic].name} skin`}</p>
         {!status && questAvailable(quest, world.belongings.quests) && <button className="home-primary" onClick={() => world.respondToDog(quest.id)}>I’ll find it!</button>}
         {status === 'found' && <button className="home-primary" onClick={() => world.respondToDog(quest.id)}>Give {quest.item} · receive {quest.reward} bones</button>}
         {status === 'accepted' && <><p>{quest.room ? 'Find the item in the house and bring it back.' : 'Collect the item and finish its level before bringing it home.'}</p><button className="home-primary" onClick={() => quest.room ? world.changeHomeFloor(quest.room) : world.openHomePanel('travel')}>{quest.room ? `Go to ${FLOORS[quest.room]}` : 'Choose a level'}</button></>}
     </section>;
+}
+
+function PersonPortrait({ id }: { id: string }) {
+    const canvas = useRef<HTMLCanvasElement>(null);
+    useEffect(() => {
+        const ctx = canvas.current?.getContext('2d'); if (!ctx) return;
+        ctx.clearRect(0, 0, 180, 210); ctx.save(); ctx.translate(90, 196); ctx.scale(1.08, 1.08); drawFamilyPerson(ctx, id, 0, 0, 0); ctx.restore();
+    }, [id, gfxSettings.visualMode]);
+    return <canvas ref={canvas} width={180} height={210} className="dog-portrait" role="img" aria-label={`Portrait of ${FAMILY.find(p => p.id === id)?.name}`} />;
 }
 
 function DogPortrait({ id, activity }: { id: string; activity: string }) {
