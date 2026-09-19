@@ -67,12 +67,14 @@ export function HomeUI({ engine }: { engine: GameEngine }) {
                 <div className="dog-conversation family-conversation"><PersonPortrait id={person.id} /><div><h2>“{storyLine < 0 ? person.greeting : person.lines[storyLine % person.lines.length]}”</h2><p>{person.id === 'maria' && dogRoom('ruby', progress) !== 'bedroom' ? 'Maria turns a page quietly. A blanket and a warm patch of sunlight are waiting for Ruby to come back.' : person.detail}</p></div></div>
                 <div className="family-actions">
                     <button onClick={() => setStoryLine(n => n + 1)}>Keep chatting</button>
+                    {person.id === 'maria' && <button className="home-primary" onClick={() => { world.readWithMaria(); focusGame(); }}>Curl up & read with Maria</button>}
                     {(person.id === 'maria' || person.id === 'belle') && !world.belongings.familyGifts.includes(person.id) && <button className="home-primary" onClick={() => world.receiveFamilyGift()}>{person.id === 'maria' ? 'Read together · unlock little storybook' : 'Take a spin treat'}</button>}
                     {person.id === 'maria' && world.belongings.owned.has('book') && <button onClick={() => world.familyActivity()}>{world.belongings.equipped.has('book') ? 'Put my book away' : 'Wear my little storybook'}</button>}
                     {person.id === 'belle' && <button onClick={() => world.familyActivity()}>Let’s spin together!</button>}
                 </div>
                 {world.homeNotice && <p role="status">{world.homeNotice}</p>}
                 {person.id === 'maria' && world.belongings.owned.has('book') && <p className="home-note">Your book is a cosmetic. Wear it with any skin, or change your outfit at Juniper’s shop.</p>}
+                {person.id === 'maria' && <p className="home-note">Stay for a chapter. Move, jump, or choose Stand up whenever you’re ready.</p>}
                 {person.id === 'belle' && <p className="home-note">Belle’s pocket treat is a one-time gift for this journey. You can always come back and dance together.</p>}
             </> : panel === 'journal' ? <>
                 <p className="journal-chapter">{chapterNames[chapter]}</p>

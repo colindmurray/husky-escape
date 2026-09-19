@@ -177,7 +177,7 @@ export class World {
                 else if (this.isHome) this.interactHome();
                 else this.openShop();
             }
-            else if (key === 'Escape') { if (this.shopOpen) this.closeShop(); if (this.homePanel) this.closeHomePanel(); }
+            else if (key === 'Escape') { if (this.shopOpen) this.closeShop(); if (this.homePanel) this.closeHomePanel(); if (this.player.isReading) { this.player.isReading = false; this.events.onShopUpdate?.(); } }
             else if (key.startsWith('Digit') && !this.shopOpen) this.useInventorySlot(Number(key.at(-1)) - 1);
         }
         if (this.shopOpen || this.homePanel) return;
@@ -486,6 +486,7 @@ export class World {
     public get homeInteraction(): { id: string; label: string; x: number; y: number; to?: HomeFloor } | undefined {
         if (!this.isHome || !this.player || this.ended) return;
         const floor = this.height - 100, door = this.nearbyRoomDoor;
+        if (this.player.isReading) return { id: 'stand', label: 'Stand up', x: this.player.x + 20, y: floor - 90 };
         if (door) return { id: `door:${door.to}`, label: `Enter ${door.label}`, x: door.x + 42, y: floor - 186, to: door.to };
         const dog = this.props.filter((p): p is HomeDog => p instanceof HomeDog && p.nearby).sort((a, b) => Math.abs(this.player!.x - a.x) - Math.abs(this.player!.x - b.x))[0];
         const person = this.props.filter((p): p is HomePerson => p instanceof HomePerson && p.nearby).sort((a, b) => Math.abs(this.player!.x - a.x) - Math.abs(this.player!.x - b.x))[0];
@@ -502,6 +503,7 @@ export class World {
     public interactHome() {
         const target = this.homeInteraction;
         if (!target || this.homePanel || this.shopOpen) return false;
+        if (target.id === 'stand') { this.player!.isReading = false; this.events.onShopUpdate?.(); return true; }
         if (target.to) return this.changeHomeFloor(target.to);
         return target.id === 'shop' ? (this.shopDoor?.unlocked ? this.openShop() : this.openHomePanel('shop')) : this.openHomePanel(target.id);
     }
@@ -579,6 +581,16 @@ export class World {
         else if (this.homePanel === 'belle') { this.player.spinTimer = 360; this.closeHomePanel(); }
         else return false;
         audioManager.playSFX(SoundType.COLLECT); this.events.onShopUpdate?.(); return true;
+    }
+
+    public readWithMaria() {
+        if (!this.isHome || this.homeFloor !== 'bedroom' || this.homePanel !== 'maria' || this.ended || !this.player ||
+            !this.props.some(p => p instanceof HomePerson && p.person.id === 'maria' && p.nearby)) return false;
+        this.player.x = 655; this.player.y = this.height - 100 - this.player.h;
+        this.player.velX = this.player.velY = this.player.spinTimer = 0;
+        this.player.grounded = true; this.player.jumpsLeft = 2;
+        this.player.isReading = true; this.player.readingTime = 0;
+        this.closeHomePanel(); audioManager.playSFX(SoundType.COLLECT); return true;
     }
 
     public finishRaccoonIntro() {
@@ -668,6 +680,7 @@ export class World {
             if (this.player[key] > 0) return false;
             this.player[key] = item === 'feast' ? 900 : 720;
         }
+        this.player.isReading = false;
         this.belongings.slots[index] = null;
         audioManager.playSFX(SoundType.BOOST); this.events.onShopUpdate?.(); return true;
     }

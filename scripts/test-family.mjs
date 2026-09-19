@@ -32,6 +32,21 @@ try {
         check(!w.receiveFamilyGift() && w.player.bonesCollected === bones, 'One book gift with no currency changes');
         check(w.familyActivity() && !w.player.accessories.has('book'), 'Put book away');
         check(w.familyActivity() && w.player.accessories.has('book'), 'Wear book again');
+        check(w.readWithMaria() && w.player.isReading && !w.homePanel, 'Maria starts a reading pose and closes the conversation');
+        const resting = [w.player.x, w.player.y, w.player.w, w.player.h];
+        for (let i=0;i<120;i++) w.update();
+        check(w.player.isReading && w.player.readingTime > 1.9 && JSON.stringify(resting) === JSON.stringify([w.player.x,w.player.y,w.player.w,w.player.h]), 'Reading breathes in place without changing collision size');
+        check(w.homeInteraction?.label === 'Stand up' && w.interactHome() && !w.player.isReading, 'Nearby interaction stands up');
+        for (const key of ['ArrowRight','ArrowUp','Escape','KeyE']) {
+            visit('maria'); w.readWithMaria(); inputManager.setKey(key,true); w.update(); inputManager.clear();
+            check(!w.player.isReading, `${key} leaves the reading pose`);
+            if (key === 'ArrowUp') check(w.player.velY < 0, 'Jumping directly out of reading works');
+        }
+        visit('maria'); w.readWithMaria(); w.openHomePanel('journal'); const time = w.player.readingTime; w.update();
+        check(w.player.readingTime === time, 'Reading pauses with the journal'); w.closeHomePanel();
+        w.resize(390,480); check(w.player.isReading && w.player.y + w.player.h === 380,'Reading stays on the floor after resize');
+        w.changeHomeFloor('attic'); check(!w.player.isReading && w.player.accessories.has('book') && !w.readWithMaria(),'Room changes clear pose and preserve outfit; distant reading rejected');
+        w.resize(1200,800);
         w.closeHomePanel(); visit('belle');
         w.belongings.slots = ['time', 'shield', 'magnet'];
         check(!w.receiveFamilyGift() && !w.belongings.familyGifts.includes('belle'), 'Full pockets preserve unclaimed gift');
@@ -76,6 +91,18 @@ try {
             for (const level of [6,8,9]) player.draw(ctx,0,level);
             player.spinTimer=0; player.hasUmbrella=false;
         }
+        const { drawCurledHusky } = await import('/game/engine/HuskyArt.ts');
+        for (const mode of ['classic','enhanced']) {
+            gfxSettings.setVisualMode(mode);
+            ctx.clearRect(0,0,160,160); drawCurledHusky(ctx,'ruby',60,60,2,mode==='classic');
+            const alpha = ctx.getImageData(0,159,160,1).data;
+            check(!alpha.some((value,i)=>i%4===3&&value), 'Curled Ruby stays inside the canvas');
+            for (const skin of ['onyx','cat','fox','goose']) {
+                player.accessories = new Set(skin==='onyx'?['book','crown']:[skin,'book','crown']); player.isReading=true;
+                const outfit=[...player.accessories].join(); ctx.clearRect(0,0,160,160); player.draw(ctx,0,15);
+                check([...player.accessories].join()===outfit && ctx.getTransform().isIdentity, `${skin} reading preserves outfit and canvas state in ${mode}`);
+            }
+        }
         gfxSettings.setVisualMode('enhanced');
         return 'Family proximity, gifts, full pockets, spin keyboard/effects, wardrobe, old/new save parsing, goose quest reward, migration, and Ruby’s nook passed.';
     });
@@ -85,9 +112,12 @@ try {
     await page.getByRole('heading',{name:'Maria',exact:true}).waitFor();
     await page.getByRole('button',{name:'Read together · unlock little storybook'}).click();
     assert.equal(await page.getByRole('button',{name:'Put my book away'}).count(),1);
+    await page.getByRole('button',{name:'Curl up & read with Maria'}).click();
+    assert(await page.evaluate(()=>window.__husky.engine.world.player.isReading));
     await page.evaluate(()=>window.__husky.engine.saveProgress());
     await page.reload(); await page.waitForFunction(()=>window.__husky);
     await page.getByRole('button',{name:'Continue Readers'}).click();
+    assert.equal(await page.evaluate(()=>window.__husky.engine.world.player.isReading),false);
     await page.evaluate(()=>{const e=window.__husky.engine;e.stop();const w=e.world;w.player.x=720;w.update();w.interactHome();});
     assert.equal(await page.getByRole('button',{name:'Read together · unlock little storybook'}).count(),0);
     await page.getByRole('button',{name:'Keep chatting'}).click();
@@ -106,6 +136,14 @@ try {
     assert(await page.locator('.home-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth));
     await page.getByRole('button',{name:'Let’s spin together!'}).click();
     assert.equal(await page.getByRole('dialog').count(),0);
+    await page.evaluate(()=>{const e=window.__husky.engine;e.stop();const w=e.world;w.changeHomeFloor('bedroom');w.player.x=720;w.update();w.interactHome();});
+    await page.getByRole('button',{name:'Curl up & read with Maria'}).click();
+    assert.equal(await page.getByRole('dialog').count(),0);
+    await page.evaluate(()=>{const e=window.__husky.engine;for(let i=0;i<90;i++)e.world.update();e.renderer.drawGame(e.world);});
+    assert(await page.evaluate(()=>{const w=window.__husky.engine.world;return w.player.x-w.cameraX>=0 && w.player.x-w.cameraX+w.player.w<=w.width;}));
+    await page.screenshot({path:'/tmp/husky-reading-mobile.png'});
+    await page.getByRole('button',{name:'Stand up',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__husky.engine.world.player.isReading),false);
     assert.deepEqual(errors,[]);
-    console.log('PASS: real saved journey reload, family dialogue, mobile controls, and Classic/Enhanced rooms.');
+    console.log('PASS: reading and wake controls, saved journey reload, family dialogue, mobile controls, and Classic/Enhanced rooms.');
 } finally { await browser.close(); await server.close(); }

@@ -58,7 +58,7 @@ export function shopStock(level: number, belongings: Belongings): ShopGood[] {
     }
     return [SHOP_COSMETICS[level], ...belongings.shopSupplies[level], 'hat', 'crown', 'cat', 'fox', 'coat', 'collar'];
 }
-const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
+export const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
     public homeUnlocked = false;
