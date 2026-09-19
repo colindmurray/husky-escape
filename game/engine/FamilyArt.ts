@@ -113,7 +113,7 @@ export function drawFamilyDog(ctx: CanvasRenderingContext2D, id: string, x: numb
 // Feet stay on the room's floor; seated poses share the furniture's low cushion height.
 export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: number, floor: number, t: number) {
     const rich = gfxSettings.visualMode === 'enhanced', maria = id === 'maria', belle = id === 'belle', mom = id === 'mom', dad = id === 'dad';
-    const ink = '#514239', skin = '#ecc7ab', hair = dad ? '#725540' : '#644735';
+    const skin = '#ecc7ab', hair = dad ? '#343638' : '#644735';
     const box = (x: number, y: number, w: number, h: number, color: string, radius = 3) => { ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, w, h, radius); ctx.fill(); };
     const line = (x: number, y: number, ex: number, ey: number, color: string, weight = 2) => { ctx.strokeStyle = color; ctx.lineWidth = weight; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke(); };
     ctx.save(); ctx.translate(x, floor); ctx.lineCap = 'round';
@@ -125,19 +125,31 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
         ctx.strokeStyle = '#e4b978'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.ellipse(0, 0, 43, 9, 0, phase, phase + 4); ctx.stroke();
         ctx.scale(Math.cos(phase), 1);
+        ellipse(ctx, 0, -110, 26, 29, hair);
+        for (const sign of [-1, 1]) {
+            ctx.save(); ctx.scale(sign, 1); ctx.translate(Math.sin(phase) * 3, 0);
+            ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(15, -132);
+            ctx.bezierCurveTo(36, -122, 23, -107, 29, -95);
+            ctx.bezierCurveTo(43, -81, 22, -77, 33, -64);
+            ctx.quadraticCurveTo(39, -54, 26, -48);
+            ctx.bezierCurveTo(30, -65, 14, -63, 18, -79);
+            ctx.quadraticCurveTo(11, -107, 15, -132); ctx.fill();
+            ctx.strokeStyle = rich ? '#987357' : '#79583f'; ctx.lineWidth = rich ? 1.5 : 1;
+            ctx.beginPath(); ctx.moveTo(23, -120); ctx.bezierCurveTo(18, -99, 38, -88, 27, -77); ctx.quadraticCurveTo(21, -67, 30, -57); ctx.stroke();
+            ctx.restore();
+        }
         line(-10, -35, -17, -7, '#e5b992', 9); line(9, -35, 15, -5, '#e5b992', 9);
         box(-27, -9, 23, 9, '#8b536b', 5); box(8, -8, 23, 9, '#8b536b', 5);
         ctx.fillStyle = '#c67e86'; ctx.beginPath(); ctx.moveTo(-16, -85); ctx.quadraticCurveTo(-22, -48, -40, -29); ctx.quadraticCurveTo(0, -16, 41, -32); ctx.quadraticCurveTo(18, -56, 15, -85); ctx.fill();
         for (const dx of [-20, -3, 15]) { ctx.strokeStyle = '#edb4a2'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(dx / 2, -64); ctx.quadraticCurveTo(dx, -41, dx * 1.4, -29); ctx.stroke(); }
         line(-13, -81, -39, -68 + Math.sin(phase) * 5, skin, 9); line(13, -81, 43, -89 + Math.sin(phase) * 5, skin, 9);
         ellipse(ctx, -42, -67 + Math.sin(phase) * 5, 6, 5, skin); ellipse(ctx, 46, -88 + Math.sin(phase) * 5, 6, 5, skin);
-        for (const sign of [-1, 1]) { ellipse(ctx, sign * 27, -106, 12, 17, hair); line(sign * 24, -111, sign * 33, -102, '#e8b763', 5); }
-        ellipse(ctx, 0, -107, 21, 24, skin); ellipse(ctx, 0, -126, 23, 12, hair);
-        ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-21, -124); ctx.quadraticCurveTo(3, -111, 20, -119); ctx.lineTo(18, -131); ctx.fill();
-        for (const ex of [-8, 8]) { ellipse(ctx, ex, -107, 2, 2.8, '#55473b'); ellipse(ctx, ex - .5, -108, .6, .8, '#fff'); }
+        ellipse(ctx, 0, -107, 21, 24, skin);
+        ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-22, -107); ctx.quadraticCurveTo(-28, -133, -7, -135); ctx.quadraticCurveTo(17, -141, 23, -116); ctx.quadraticCurveTo(4, -119, -7, -130); ctx.quadraticCurveTo(-8, -115, -22, -107); ctx.fill();
+        for (const ex of [-8, 8]) { ellipse(ctx, ex, -107, 2, 2.8, '#586b70'); ellipse(ctx, ex - .5, -108, .6, .8, '#fff'); }
         ellipse(ctx, -14, -99, 4, 2, '#da9b913b'); ellipse(ctx, 14, -99, 4, 2, '#da9b913b');
         ctx.strokeStyle = '#9f6155'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, -102, 7, .2, Math.PI - .2); ctx.stroke();
-        if (rich) { line(-7, -82, -13, -54, '#e4a89d', 2); ellipse(ctx, 7, -129, 7, 2, '#967153'); }
+        if (rich) { line(-7, -82, -13, -54, '#e4a89d', 2); ctx.strokeStyle = '#967153'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -133); ctx.quadraticCurveTo(9, -135, 19, -120); ctx.stroke(); }
         ctx.restore(); return;
     }
     const bodyY = mom ? -119 : dad ? -126 : -111, headY = bodyY - 31;
@@ -148,15 +160,30 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
     box(-43, -19, 30, 13, maria ? '#e1c3b0' : '#766252', 6); box(16, -18, 30, 13, maria ? '#e1c3b0' : '#766252', 6);
     box(-27, bodyY, 54, -bodyY - 49, top, 15);
     if (rich) { line(-22, bodyY + 20, -22, -57, '#ffffff25', 3); line(23, bodyY + 19, 23, -57, '#25384730', 3); }
-    if (maria || mom) { ellipse(ctx, 0, headY, 26, 29, hair); box(-26, headY, 15, 53, hair, 7); box(13, headY, 15, 52, hair, 7); }
+    if (maria) {
+        ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-25, headY + 3);
+        ctx.bezierCurveTo(-34, headY - 36, 30, headY - 39, 27, headY + 1);
+        ctx.quadraticCurveTo(26, headY + 32, 34, headY + 43);
+        ctx.quadraticCurveTo(21, headY + 51, 12, headY + 38);
+        ctx.lineTo(-12, headY + 37); ctx.quadraticCurveTo(-19, headY + 49, -31, headY + 43);
+        ctx.quadraticCurveTo(-25, headY + 24, -25, headY + 3); ctx.fill();
+        if (rich) for (const sign of [-1, 1]) { ctx.strokeStyle = '#89664c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(sign * 23, headY); ctx.quadraticCurveTo(sign * 20, headY + 29, sign * 27, headY + 40); ctx.stroke(); }
+    }
+    else if (mom) { ellipse(ctx, 0, headY, 26, 29, hair); box(-26, headY, 15, 53, hair, 7); box(13, headY, 15, 52, hair, 7); }
     else { ellipse(ctx, 0, headY - 4, 25, 26, hair); }
     box(-6, bodyY - 5, 12, 13, skin, 4);
     ellipse(ctx, 0, headY + 3, 21, 25, skin);
     ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-22, headY); ctx.quadraticCurveTo(-16, headY - 30, 4, headY - 23); ctx.quadraticCurveTo(17, headY - 22, 22, headY - 8); ctx.quadraticCurveTo(10, headY - 14, 2, headY - 15); ctx.quadraticCurveTo(-10, headY - 3, -22, headY); ctx.fill();
-    for (const ex of [-8, 8]) { ellipse(ctx, ex, headY + 6, 1.7, 2.4, '#554839'); ellipse(ctx, ex + .4, headY + 5, .55, .7, '#fff'); }
+    for (const ex of [-8, 8]) { ellipse(ctx, ex, headY + 6, 1.7, 2.4, maria ? '#586b70' : '#554839'); ellipse(ctx, ex + .4, headY + 5, .55, .7, '#fff'); }
     line(0, headY + 10, -1, headY + 14, '#cc9c7f', 1);
     ctx.strokeStyle = '#a56e61'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-5, headY + 18); ctx.quadraticCurveTo(1, headY + 22, 6, headY + 17); ctx.stroke();
-    if (dad) { ctx.strokeStyle = '#534e47'; ctx.lineWidth = 1; ctx.strokeRect(-16, headY + 1, 13, 10); ctx.strokeRect(3, headY + 1, 13, 10); line(-3, headY + 5, 3, headY + 5, '#534e47', 1); }
+    if (dad) {
+        for (const sign of [-1, 1]) {
+            ctx.strokeStyle = '#929596'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(sign * 21, headY - 12); ctx.quadraticCurveTo(sign * 24, headY - 5, sign * 22, headY + 3); ctx.stroke();
+        }
+        if (rich) { ctx.strokeStyle = '#777b7c'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-10, headY - 21); ctx.quadraticCurveTo(3, headY - 27, 12, headY - 20); ctx.stroke(); }
+    }
     if (maria) {
         line(-20, -93, -34, -64, top, 13); line(20, -93, 30, -62, top, 13);
         const turn = (t % 8) > 6.5 ? Math.sin((t % 8 - 6.5) / 1.5 * Math.PI) : 0;
