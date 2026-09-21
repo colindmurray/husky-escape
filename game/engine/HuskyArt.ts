@@ -77,7 +77,8 @@ export function drawCurledHusky(ctx: CanvasRenderingContext2D, coat: Coat, x: nu
     ctx.restore();
 }
 
-export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, o: HuskyOpts) {
+export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: number, o: HuskyOpts & { pose?: 'scratch' | 'howl' }) {
+    const rich = !o.classic;
     const speed = Math.abs(o.velX), moving = o.grounded && speed > .5, phase = o.t * (7 + speed * 1.4);
     const stretch = Math.max(-.06, Math.min(.12, -o.velY * .014)), step = moving ? Math.sin(phase) : 0;
     ctx.save(); ctx.translate(x + 20, y + 40); ctx.scale(1 - stretch * .45, 1 + stretch); ctx.translate(-20, -40);
@@ -85,8 +86,14 @@ export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: nu
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const wag = Math.sin(o.t * (moving ? 8 : 2)) * (moving ? 2 : .8);
     const tail = ctx.createLinearGradient(-12, 9, 8, 30); tail.addColorStop(0, '#fff9e9'); tail.addColorStop(.5, '#d4cfbd'); tail.addColorStop(1, '#747777');
-    ctx.fillStyle = tail; ctx.beginPath(); ctx.moveTo(8, 30); ctx.bezierCurveTo(-6, 32, -18, 20, -9, 9 + wag); ctx.quadraticCurveTo(1, 0 + wag, 7, 13 + wag); ctx.quadraticCurveTo(0, 8 + wag, -2, 14 + wag); ctx.quadraticCurveTo(-5, 22, 10, 23); ctx.fill();
+    ctx.fillStyle = rich ? tail : '#d4cfbd'; ctx.beginPath(); ctx.moveTo(8, 30); ctx.bezierCurveTo(-6, 32, -18, 20, -9, 9 + wag); ctx.quadraticCurveTo(1, 0 + wag, 7, 13 + wag); ctx.quadraticCurveTo(0, 8 + wag, -2, 14 + wag); ctx.quadraticCurveTo(-5, 22, 10, 23); ctx.fill();
     const leg = (lx: number, direction: number, far: boolean) => {
+        if (o.pose === 'scratch' && lx > 20) {
+            const pawY = 19 + Math.sin(o.t * Math.PI * 5 + (far ? Math.PI : 0)) * 3;
+            ctx.strokeStyle = far ? '#aeb4a7' : '#e4dfce'; ctx.lineWidth = far ? 4 : 5;
+            ctx.beginPath(); ctx.moveTo(lx, 26); ctx.quadraticCurveTo(34, 24, 42, pawY); ctx.stroke();
+            oval(ctx, 43, pawY, 3, 2.5, far ? '#aeb4a7' : '#fff6e5'); return;
+        }
         const swing = o.grounded ? step * direction * 4 : o.velY < 0 ? -2.5 : 2;
         ctx.strokeStyle = far ? '#92978e' : '#e4dfce'; ctx.lineWidth = far ? 4 : 5;
         ctx.beginPath(); ctx.moveTo(lx, 27); ctx.quadraticCurveTo(lx - 2, 33, lx + swing, 38); ctx.stroke();
@@ -95,29 +102,29 @@ export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: nu
     };
     if (o.level !== 8) { leg(9, -1, true); leg(28, 1, true); }
     const saddle = ctx.createLinearGradient(0, 11, 0, 36); saddle.addColorStop(0, '#aaa493'); saddle.addColorStop(.28, '#535b60'); saddle.addColorStop(.6, '#777a77'); saddle.addColorStop(1, '#d7ccaf');
-    oval(ctx, 16, 25, 17, 12, saddle);
+    oval(ctx, 16, 25, 17, 12, rich ? saddle : '#777a77');
     ctx.fillStyle = '#ede6d4'; ctx.beginPath(); ctx.moveTo(2, 28); ctx.quadraticCurveTo(17, 35, 30, 25); ctx.quadraticCurveTo(34, 36, 19, 36); ctx.lineTo(16, 38); ctx.lineTo(14, 35); ctx.quadraticCurveTo(4, 35, 2, 28); ctx.fill();
     if (o.level !== 8) { leg(12, 1, false); leg(27, -1, false); }
     else {
         for (const [lx, dir] of [[11, -1], [28, 1]]) { ctx.save(); ctx.translate(lx, 36); ctx.rotate(Math.sin(o.t * 6) * .35 * dir); ctx.fillStyle = '#e89d48'; ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.lineTo(dir * 8, 12); ctx.lineTo(dir * 8 - 8, 12); ctx.closePath(); ctx.fill(); ctx.restore(); }
     }
     const ruff = ctx.createLinearGradient(16, 15, 33, 32); ruff.addColorStop(0, '#6c7374'); ruff.addColorStop(.5, '#c2bdab'); ruff.addColorStop(1, '#fff4dd');
-    ctx.fillStyle = ruff; ctx.beginPath(); ctx.moveTo(21, 9); ctx.quadraticCurveTo(12, 21, 20, 31); ctx.lineTo(22, 29); ctx.lineTo(24, 35); ctx.lineTo(27, 32); ctx.lineTo(30, 35); ctx.quadraticCurveTo(36, 25, 34, 15); ctx.fill();
+    ctx.fillStyle = rich ? ruff : '#ede6d4'; ctx.beginPath(); ctx.moveTo(21, 9); ctx.quadraticCurveTo(12, 21, 20, 31); ctx.lineTo(22, 29); ctx.lineTo(24, 35); ctx.lineTo(27, 32); ctx.lineTo(30, 35); ctx.quadraticCurveTo(36, 25, 34, 15); ctx.fill();
     ctx.strokeStyle = '#e1d7bd85'; ctx.lineWidth = .65;
     for (const [fx, fy, dx, dy] of [[4,17,4,1],[9,15,4,2],[14,15,4,2],[3,22,5,3],[8,24,5,3],[15,24,4,3],[5,28,4,3],[19,19,2,6],[21,23,2,6],[25,24,1,6],[29,24,-1,6],[-9,13,2,4],[-9,20,3,4]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx, fy + dy * .4, fx + dx, fy + dy); ctx.stroke(); }
     if (o.level === 6) { ctx.fillStyle = '#c0392b'; ctx.fillRect(-4, 39, 49, 3); ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(44, 40); ctx.quadraticCurveTo(49, 39, 50, 33); ctx.stroke(); }
     // Player.draw mirrors this right-facing profile with the rest of her body.
-    ctx.save(); ctx.translate(32, 11); ctx.rotate(moving ? Math.sin(phase * 2) * .025 : 0); ctx.scale(.57, .57);
+    ctx.save(); ctx.translate(32, 11); ctx.rotate(o.pose === 'howl' ? -.6 : moving ? Math.sin(phase * 2) * .025 : 0); ctx.scale(.57, .57);
     ctx.fillStyle = '#747975'; ctx.beginPath(); ctx.moveTo(-17, -10); ctx.lineTo(-17, -30); ctx.quadraticCurveTo(-4, -24, -3, -12); ctx.fill();
     ctx.fillStyle = '#d8cdb5'; ctx.beginPath(); ctx.moveTo(-14, -14); ctx.lineTo(-15, -24); ctx.lineTo(-7, -14); ctx.fill();
     const head = ctx.createLinearGradient(-17, -20, 9, 16); head.addColorStop(0, '#aaa392'); head.addColorStop(.35, '#626a6d'); head.addColorStop(1, '#393f42');
-    ctx.fillStyle = head; ctx.beginPath(); ctx.moveTo(-19, -7); ctx.bezierCurveTo(-18, -24, 5, -24, 10, -10); ctx.quadraticCurveTo(12, -3, 18, 2);
+    ctx.fillStyle = rich ? head : '#535b60'; ctx.beginPath(); ctx.moveTo(-19, -7); ctx.bezierCurveTo(-18, -24, 5, -24, 10, -10); ctx.quadraticCurveTo(12, -3, 18, 2);
     ctx.lineTo(12, 16); ctx.quadraticCurveTo(-1, 22, -13, 17); ctx.lineTo(-19, 18); ctx.lineTo(-18, 13); ctx.lineTo(-23, 12); ctx.lineTo(-21, 7); ctx.lineTo(-24, 7); ctx.closePath(); ctx.fill();
     const mask = ctx.createLinearGradient(-7, -9, 9, 20); mask.addColorStop(0, '#fffbed'); mask.addColorStop(1, '#d8d6c8');
-    ctx.fillStyle = mask; ctx.beginPath(); ctx.moveTo(-12, 1); ctx.quadraticCurveTo(-8, -12, 1, -14); ctx.quadraticCurveTo(7, -12, 10, -4);
+    ctx.fillStyle = rich ? mask : '#f5f0e3'; ctx.beginPath(); ctx.moveTo(-12, 1); ctx.quadraticCurveTo(-8, -12, 1, -14); ctx.quadraticCurveTo(7, -12, 10, -4);
     ctx.quadraticCurveTo(13, 1, 25, 3); ctx.quadraticCurveTo(31, 6, 25, 10); ctx.quadraticCurveTo(16, 12, 12, 15);
     ctx.quadraticCurveTo(4, 22, -7, 18); ctx.lineTo(-11, 20); ctx.lineTo(-12, 15); ctx.lineTo(-18, 15); ctx.lineTo(-15, 10); ctx.quadraticCurveTo(-18, 7, -12, 1); ctx.fill();
-    ctx.fillStyle = head; ctx.beginPath(); ctx.moveTo(-8, -13); ctx.quadraticCurveTo(-9, -24, -3, -32); ctx.quadraticCurveTo(8, -25, 6, -14); ctx.fill();
+    ctx.fillStyle = rich ? head : '#535b60'; ctx.beginPath(); ctx.moveTo(-8, -13); ctx.quadraticCurveTo(-9, -24, -3, -32); ctx.quadraticCurveTo(8, -25, 6, -14); ctx.fill();
     ctx.fillStyle = '#c6b6a5'; ctx.beginPath(); ctx.moveTo(-4, -15); ctx.lineTo(-2, -26); ctx.quadraticCurveTo(4, -23, 3, -15); ctx.fill();
     ctx.strokeStyle = '#f2e8d3'; ctx.lineWidth = 1;
     for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-5 + i * 2, -13); ctx.lineTo(-4 + i * 1.5, -18 - i % 2 * 2); ctx.stroke(); }
@@ -126,7 +133,8 @@ export function drawOnyxEnhanced(ctx: CanvasRenderingContext2D, x: number, y: nu
     ctx.fillStyle = '#282e30'; ctx.beginPath(); ctx.moveTo(24, 2.6); ctx.quadraticCurveTo(29, 2, 29, 5); ctx.quadraticCurveTo(28, 8, 24, 7); ctx.quadraticCurveTo(22, 5, 24, 2.6); ctx.fill();
     oval(ctx, 25.7, 3.9, 1.5, .65, '#8c7469');
     ctx.strokeStyle = '#74675d'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(25, 9); ctx.quadraticCurveTo(18, 13, 12, 10); ctx.stroke();
-    if (o.t % 7 > 2) { ctx.fillStyle = '#d9919e'; ctx.beginPath(); ctx.moveTo(17, 11.3); ctx.lineTo(21, 10.8); ctx.quadraticCurveTo(22, 17, 18.5, 16.8); ctx.quadraticCurveTo(16.8, 16, 17, 11.3); ctx.fill(); }
+    if (o.pose === 'howl') oval(ctx, 23, 10.5, 3.3, 2.2, '#35302f');
+    if (!o.pose && o.t % 7 > 2) { ctx.fillStyle = '#d9919e'; ctx.beginPath(); ctx.moveTo(17, 11.3); ctx.lineTo(21, 10.8); ctx.quadraticCurveTo(22, 17, 18.5, 16.8); ctx.quadraticCurveTo(16.8, 16, 17, 11.3); ctx.fill(); }
     ctx.strokeStyle = '#c8c0a966'; ctx.lineWidth = .65;
     for (const [fx, fy, dx, dy] of [[-17,-10,2,5],[-14,-15,3,3],[-11,-18,3,2],[-19,2,3,5],[-15,6,2,5],[-11,10,3,4],[-6,13,4,3],[1,15,4,1]]) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(fx + dx, fy + 1, fx + dx, fy + dy); ctx.stroke(); }
     ctx.restore();

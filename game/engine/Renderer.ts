@@ -1,4 +1,4 @@
-import { drawFamilyDog } from './FamilyArt';
+import { drawHomecoming } from './HomecomingArt';
 import { drawHome, drawHouseChase } from './HomeArt';
 import { drawBackyardBackground, drawRaccoonIntro } from './BackyardArt';
 import { BossRaccoon } from '../entities/Backyard';
@@ -570,33 +570,7 @@ export class Renderer {
 
         if (currentType === 'house_chase') { drawHouseChase(ctx, width, height, step, frame); return; }
 
-        if (currentType === 'homecoming') {
-            drawBackyardBackground(ctx, width, height, 4200, 0, frame / 60);
-            const scale = Math.min(width / 650, height / 440, 2);
-            ctx.save(); ctx.translate(width / 2, height * .51); ctx.scale(scale, scale);
-            ctx.fillStyle = '#e8be91'; ctx.fillRect(20, -190, 170, 220);
-            ctx.fillStyle = '#755542'; ctx.fillRect(60, -140, 82, 170);
-            ctx.fillStyle = '#ffdc93'; ctx.fillRect(70, -128, 61, 65);
-            ctx.fillStyle = '#bba180'; ctx.fillRect(-275, 55, 550, 14);
-            ctx.fillStyle = '#947b66'; ctx.fillRect(-250, 69, 525, 15);
-            const progress = Math.min(1, frame / 100);
-            const dogX = step === 1 ? -230 + progress * 130 : -75;
-            ctx.strokeStyle = '#344753'; ctx.lineWidth = 10; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(16, 22); ctx.lineTo(31, 49); ctx.lineTo(8, 49); ctx.moveTo(10, 22); ctx.lineTo(-7, 37); ctx.lineTo(-7, 50); ctx.stroke();
-            ctx.fillStyle = '#558e96'; ctx.beginPath(); ctx.roundRect(0, -14, 29, 40, 9); ctx.fill();
-            ctx.fillStyle = '#e8b68b'; ctx.beginPath(); ctx.arc(13, -28, 14, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#665044'; ctx.beginPath(); ctx.arc(13, -32, 14, Math.PI, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#664c3f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(8, -25, 5, .2, 2.2); ctx.stroke();
-            // A kneeling owner reaches toward Onyx as she runs home.
-            ctx.strokeStyle = '#e8b68b'; ctx.lineWidth = 8; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(-12, 11); ctx.lineTo(-36, step >= 3 ? 23 : 8); ctx.stroke();
-            drawHuskyEnhanced(ctx, dogX, 15, { velX: step === 1 ? 3 : 0, velY: 0, grounded: true, level: 14, t: frame / 60, classic: gfxSettings.visualMode === 'classic' });
-            if (step >= 3) { ctx.fillStyle = '#d96376'; ctx.font = '28px serif'; ctx.fillText('♥', -48, -22 - Math.sin(frame / 18) * 4); }
-            if (step >= 4) for (const [i, id] of ['opal', 'ruby', 'samwise'].entries()) drawFamilyDog(ctx, id, 60 + i * 65, 15, false, false, frame / 60);
-            ctx.restore();
-            townLabel(ctx, 'HOME, AT LAST', width / 2, height * .27);
-            return;
-        }
+        if (currentType === 'homecoming') { drawHomecoming(ctx, width, height, step, frame); return; }
 
         if (currentType === 'raccoon_intro') { drawRaccoonIntro(ctx, width, height, step, frame); return; }
 

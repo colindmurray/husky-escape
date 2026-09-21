@@ -45,7 +45,7 @@ try {
     await page.getByLabel('What to print').selectOption('story');
     for (const graphics of ['classic', 'enhanced']) {
         await page.getByLabel('Artwork').selectOption(graphics);
-        for (const story of ['intro','pound_escape','chase','underwater_intro','pier_intro','neon_intro','bakery_intro','town_intro','raccoon_intro']) {
+        for (const story of ['intro','pound_escape','chase','underwater_intro','pier_intro','neon_intro','bakery_intro','town_intro','raccoon_intro','homecoming']) {
             await page.getByLabel('Story', { exact: true }).selectOption(story);
             await page.getByLabel('Paper', { exact: true }).selectOption(graphics === 'classic' ? 'letter' : 'a4');
             await page.getByRole('button', { name: 'Make print preview' }).click();
@@ -63,5 +63,5 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: '/tmp/husky-print-mobile.png' });
     assert.deepEqual(errors, []);
-    console.log('PASS: production print entry, title-screen access, isolated preferences, level pages and selection, print action, main-menu return, 18 storyboard variants, paper fit, tall maps, and mobile layout.');
+    console.log('PASS: production print entry, title-screen access, isolated preferences, level pages and selection, print action, main-menu return, 20 storyboard variants, paper fit, tall maps, and mobile layout.');
 } finally { await browser.close(); await new Promise(resolve => server.httpServer.close(resolve)); }

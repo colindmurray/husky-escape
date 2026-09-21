@@ -390,7 +390,7 @@ export default function App() {
                 {gameState === GameState.INTRO && <TitleScreen onOpen={openSave} onFreeRoam={freeRoam} onPrint={openPrint} />}
 
                 {gameState === GameState.CUTSCENE && (
-                    <div className="absolute inset-0 z-20 flex flex-col justify-end items-center pb-20 pointer-events-auto">
+                    <div data-story={engineRef.current?.cutsceneManager.currentType} className="absolute inset-0 z-20 flex flex-col justify-end items-center pb-20 pointer-events-auto">
                          <div className="bg-black/70 p-8 rounded-2xl max-w-2xl mx-4 text-center backdrop-blur-md border border-white/10">
                             <h1 className="text-3xl text-white font-medium italic">{cutsceneText}</h1>
                          </div>

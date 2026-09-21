@@ -98,7 +98,7 @@ export function drawFamilyDog(ctx: CanvasRenderingContext2D, id: string, x: numb
 }
 
 // Feet stay on the room's floor; seated poses share the furniture's low cushion height.
-export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: number, floor: number, t: number) {
+export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: number, floor: number, t: number, reaction?: 'surprised' | 'baffled' | 'welcoming') {
     const rich = gfxSettings.visualMode === 'enhanced', maria = id === 'maria', belle = id === 'belle', mom = id === 'mom', dad = id === 'dad';
     const skin = '#ecc7ab', hair = dad ? '#343638' : '#644735';
     const box = (x: number, y: number, w: number, h: number, color: string, radius = 3) => { ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, w, h, radius); ctx.fill(); };
@@ -139,12 +139,17 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
         if (rich) { line(-7, -82, -13, -54, '#e4a89d', 2); ctx.strokeStyle = '#967153'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -133); ctx.quadraticCurveTo(9, -135, 19, -120); ctx.stroke(); }
         ctx.restore(); return;
     }
-    const bodyY = mom ? -119 : dad ? -126 : -111, headY = bodyY - 31;
+    const bodyY = reaction ? (dad ? -142 : -132) : mom ? -119 : dad ? -126 : -111, headY = bodyY - 31;
     const top = maria ? '#708b99' : mom ? '#9a798e' : '#657d79';
-    // Slippers, bent trouser legs and a relaxed seated torso.
-    line(-16, -50, -30, -17, maria ? '#b1a0b8' : '#677181', 16);
-    line(15, -50, 26, -16, maria ? '#b1a0b8' : '#677181', 16);
-    box(-43, -19, 30, 13, maria ? '#e1c3b0' : '#766252', 6); box(16, -18, 30, 13, maria ? '#e1c3b0' : '#766252', 6);
+    if (reaction) {
+        line(-14, -66, -17, -14, '#677181', 16); line(14, -66, 18, -14, '#677181', 16);
+        box(-33, -15, 25, 13, '#766252', 6); box(9, -15, 25, 13, '#766252', 6);
+    } else {
+        // Slippers, bent trouser legs and a relaxed seated torso.
+        line(-16, -50, -30, -17, maria ? '#b1a0b8' : '#677181', 16);
+        line(15, -50, 26, -16, maria ? '#b1a0b8' : '#677181', 16);
+        box(-43, -19, 30, 13, maria ? '#e1c3b0' : '#766252', 6); box(16, -18, 30, 13, maria ? '#e1c3b0' : '#766252', 6);
+    }
     box(-27, bodyY, 54, -bodyY - 49, top, 15);
     if (rich) { line(-22, bodyY + 20, -22, -57, '#ffffff25', 3); line(23, bodyY + 19, 23, -57, '#25384730', 3); }
     if (maria) {
@@ -161,9 +166,16 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
     box(-6, bodyY - 5, 12, 13, skin, 4);
     ellipse(ctx, 0, headY + 3, 21, 25, skin);
     ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-22, headY); ctx.quadraticCurveTo(-16, headY - 30, 4, headY - 23); ctx.quadraticCurveTo(17, headY - 22, 22, headY - 8); ctx.quadraticCurveTo(10, headY - 14, 2, headY - 15); ctx.quadraticCurveTo(-10, headY - 3, -22, headY); ctx.fill();
-    for (const ex of [-8, 8]) { ellipse(ctx, ex, headY + 6, 1.7, 2.4, maria ? '#586b70' : '#554839'); ellipse(ctx, ex + .4, headY + 5, .55, .7, '#fff'); }
+    for (const ex of [-8, 8]) {
+        if (reaction) {
+            ellipse(ctx, ex, headY + 6, 4, 4.8, '#fff9ee');
+            ellipse(ctx, ex + (reaction === 'baffled' && dad ? 1.5 : -1.5), headY + 8, 1.9, 2.7, '#554839');
+            line(ex - 4, headY - 3, ex + 3, headY - (reaction === 'baffled' ? 4 : 6), hair, 1.6);
+        } else { ellipse(ctx, ex, headY + 6, 1.7, 2.4, maria ? '#586b70' : '#554839'); ellipse(ctx, ex + .4, headY + 5, .55, .7, '#fff'); }
+    }
     line(0, headY + 10, -1, headY + 14, '#cc9c7f', 1);
     ctx.strokeStyle = '#a56e61'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-5, headY + 18); ctx.quadraticCurveTo(1, headY + 22, 6, headY + 17); ctx.stroke();
+    if (reaction && reaction !== 'welcoming') ellipse(ctx, 0, headY + 19, 3.5, reaction === 'surprised' ? 5 : 3, '#855b53');
     if (dad) {
         for (const sign of [-1, 1]) {
             ctx.strokeStyle = '#929596'; ctx.lineWidth = 2;
@@ -171,7 +183,19 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
         }
         if (rich) { ctx.strokeStyle = '#777b7c'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-10, headY - 21); ctx.quadraticCurveTo(3, headY - 27, 12, headY - 20); ctx.stroke(); }
     }
-    if (maria) {
+    if (reaction) {
+        const shoulder = bodyY + 18;
+        line(-24, shoulder, -36, shoulder + 28, top, 13);
+        line(24, shoulder, 36, shoulder + 26, top, 13);
+        const leftHand = reaction === 'welcoming' ? [-52, -70] : [-46, -94];
+        const rightHand = reaction === 'baffled' && dad ? [23, headY - 15] : reaction === 'surprised' && mom ? [10, headY + 22] : [49, -100];
+        line(-36, shoulder + 28, leftHand[0], leftHand[1], skin, 9);
+        line(36, shoulder + 26, rightHand[0], rightHand[1], skin, 9);
+        for (const [hx, hy] of [leftHand, rightHand]) {
+            ellipse(ctx, hx, hy, 6, 7, skin);
+            if (rich) for (let i = 0; i < 3; i++) line(hx - 3 + i * 2, hy - 5, hx - 3 + i * 2, hy, '#c49176', .6);
+        }
+    } else if (maria) {
         line(-20, -93, -34, -64, top, 13); line(20, -93, 30, -62, top, 13);
         const turn = (t % 8) > 6.5 ? Math.sin((t % 8 - 6.5) / 1.5 * Math.PI) : 0;
         ctx.fillStyle = '#496f65'; ctx.beginPath(); ctx.moveTo(-35, -70); ctx.lineTo(-2, -65); ctx.lineTo(34, -73); ctx.lineTo(31, -43); ctx.lineTo(0, -38); ctx.lineTo(-33, -43); ctx.closePath(); ctx.fill();
