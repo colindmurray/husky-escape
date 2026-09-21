@@ -19,3 +19,6 @@
 .home-dialog .journal-chapter{font:italic 17px Georgia;color:#78694f;margin:18px 0}.home-journal article{margin:16px 0}.home-journal h3{font-size:15px;font-weight:600;margin:0}.home-journal article p{font-size:13px;margin:5px 0;color:#6e5b47}.home-journal summary{cursor:pointer;font-size:14px;font-weight:600;padding:7px 0}.home-dialog details{margin:14px 0}.completed-quests p{font-size:13px}.completed-quests small{color:#61735a;letter-spacing:0}.dog-locations{margin-top:8px}.dog-locations button{font-size:13px;text-align:left}
 
 .boy-conversation{padding:18px;background:#ead9b8;border-radius:14px}.boy-conversation>span{font-size:40px}.boy-conversation h2{line-height:1.5}
+
+.family-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.family-conversation h2{font-size:20px;line-height:1.45}.family-conversation p{font-size:14px}.family-conversation .dog-portrait{max-width:28%;width:150px;box-shadow:none}
+@media(max-width:540px){.family-conversation{align-items:flex-start}.family-conversation h2{font-size:17px}.family-conversation p{font-size:13px}.family-actions button{width:100%}}

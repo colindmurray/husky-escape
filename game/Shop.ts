@@ -23,6 +23,8 @@ export const SHOP_GOODS = {
     hush: { name: 'Quiet-time cookie', icon: '💤', price: 10, description: 'Enemies and their projectiles pause for 5 seconds. They still hurt on contact.' },
     leap: { name: 'Sky biscuit', icon: '☁', price: 8, description: 'An instant upward bounce on land, even in midair, with two fresh jumps.' },
     trailmix: { name: 'Trail mix', icon: '🥜', price: 12, description: 'Higher jumps and faster running together for 15 seconds on land.' },
+    book: { name: 'Little storybook', icon: '📖', price: 0, description: 'Maria’s gift: a little leather book satchel, cream pages, and a ribbon bookmark. Read with Maria to unlock it.' },
+    spin: { name: 'Spin treat', icon: '🌀', price: 0, description: 'Belle’s gift: 6 seconds of happy twirls that pull nearby bones toward you. Works at home too; hazards still hurt.' },
     goose: { name: 'Mischievous goose', icon: '🪿', price: 16, description: 'White feathers, a long neck, orange feet, and absolutely no manners.' },
     scarf: { name: 'Snowday scarf', icon: '🧣', price: 10, description: 'A golden scarf with a fluttering tail. Only at Snowdrift.' },
     sailor: { name: 'Sailor cap', icon: '⚓', price: 10, description: 'A crisp white cap with a blue ribbon. Only at the Lighthouse.' },
@@ -36,10 +38,10 @@ export const SHOP_GOODS = {
     collar: { name: 'Moonstone collar', icon: '💎', price: 8, description: 'A violet collar with a shining pendant.' },
 } as const;
 export type ShopGood = keyof typeof SHOP_GOODS;
-export const SUPPLIES = ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush', 'leap', 'trailmix'] as const;
+export const SUPPLIES = ['shield', 'magnet', 'time', 'spring', 'sprint', 'feather', 'feast', 'hush', 'leap', 'trailmix', 'spin'] as const;
 export type Supply = typeof SUPPLIES[number];
 export type Skin = 'cat' | 'fox' | 'goose';
-export type Accessory = 'hat' | 'crown' | 'coat' | 'collar' | 'scarf' | 'sailor' | 'chef' | 'bow' | Skin;
+export type Accessory = 'book' | 'hat' | 'crown' | 'coat' | 'collar' | 'scarf' | 'sailor' | 'chef' | 'bow' | Skin;
 export const isSkin = (id: ShopGood): id is Skin => id === 'cat' || id === 'fox' || id === 'goose';
 export const isSupply = (id: ShopGood): id is Supply => (SUPPLIES as readonly string[]).includes(id);
 
@@ -47,7 +49,7 @@ export const SHOP_COSMETICS: Record<number, Accessory> = { 3: 'goose', 6: 'scarf
 export function shopStock(level: number, belongings: Belongings): ShopGood[] {
     if (!Object.hasOwn(SHOP_COSMETICS, level)) return [];
     if (!belongings.shopSupplies[level]) {
-        const supplies = [...SUPPLIES];
+        const supplies = SUPPLIES.filter(id => id !== 'spin');
         for (let i = supplies.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [supplies[i], supplies[j]] = [supplies[j], supplies[i]];
@@ -56,11 +58,12 @@ export function shopStock(level: number, belongings: Belongings): ShopGood[] {
     }
     return [SHOP_COSMETICS[level], ...belongings.shopSupplies[level], 'hat', 'crown', 'cat', 'fox', 'coat', 'collar'];
 }
-const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
+export const HEADWEAR: Accessory[] = ['hat', 'crown', 'sailor', 'chef', 'bow'];
 
 export class Belongings {
     public homeUnlocked = false;
     public houseIntroSeen = false;
+    public familyGifts: ('maria' | 'belle')[] = [];
     public companions = new Set<string>();
     public quests: Record<string, QuestStatus> = {};
     public slots: (Supply | null)[] = [null, null, null];
@@ -236,6 +239,17 @@ export function drawAccessories(ctx: CanvasRenderingContext2D, x: number, y: num
         ctx.fillStyle = '#a95170'; ctx.beginPath(); ctx.ellipse(x + 18, y + 25, 15, 10, 0, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#f7dfb5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 5, y + 24); ctx.lineTo(x + 11, y + 28); ctx.lineTo(x + 17, y + 24); ctx.lineTo(x + 23, y + 28); ctx.lineTo(x + 29, y + 24); ctx.stroke();
         if (rich) { ctx.strokeStyle = '#ce819080'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x + 18, y + 25, 12, 7, 0, 0, Math.PI * 2); ctx.stroke(); }
+    }
+    if (equipped.has('book')) {
+        ctx.strokeStyle = '#73513c'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(x + 12, y + 13); ctx.lineTo(x + 24, y + 28); ctx.stroke();
+        ctx.fillStyle = '#4a746c'; ctx.beginPath(); ctx.roundRect(x + 10, y + 23, 19, 15, 2); ctx.fill();
+        ctx.fillStyle = '#eee0b7'; ctx.fillRect(x + 13, y + 25, 16, 10);
+        ctx.strokeStyle = '#c4ad83'; ctx.lineWidth = .7;
+        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(x + 15, y + 27 + i * 3); ctx.lineTo(x + 27, y + 27 + i * 3); ctx.stroke(); }
+        ctx.fillStyle = '#396158'; ctx.fillRect(x + 10, y + 23, 4, 15);
+        ctx.fillStyle = '#c56968'; ctx.beginPath(); ctx.moveTo(x + 24, y + 24); ctx.lineTo(x + 27, y + 24); ctx.lineTo(x + 27, y + 41); ctx.lineTo(x + 25.5, y + 39); ctx.lineTo(x + 24, y + 41); ctx.fill();
+        if (rich) { ctx.strokeStyle = '#e5c385'; ctx.lineWidth = .7; ctx.strokeRect(x + 11, y + 24, 17, 13); }
     }
     if (equipped.has('collar')) {
         ctx.strokeStyle = '#8854ae'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 23, y + 18); ctx.lineTo(x + 36, y + 19); ctx.stroke();

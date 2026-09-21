@@ -102,6 +102,9 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         box(ctx, 340, floor - 302, 140, 85, '#886749', 3); box(ctx, 348, floor - 294, 124, 69, '#e7d7b6');
         label(ctx, 'A HOUSE FULL', 410, floor - 266, '#626e5b', 15); label(ctx, 'OF GOOD DOGS', 410, floor - 244, '#626e5b', 15);
         box(ctx, 525, floor - 291, 127, 68, '#9a7659', 3); box(ctx, 532, floor - 284, 113, 54, '#c7c4a5'); label(ctx, 'HOME ♥', 588, floor - 253, '#556d63', 20);
+        box(ctx, 755, floor - 65, 90, 9, '#927153', 5); for (const x of [765,826]) box(ctx, x, floor - 56, 8, 56, '#74553f');
+        box(ctx, 770, floor - 84, 22, 19, '#ecd8b3', 5); ctx.strokeStyle='#ecd8b3';ctx.lineWidth=3;ctx.strokeRect(790,floor-79,9,9);
+        box(ctx, 804, floor - 69, 34, 4, '#b19871', 1);
         box(ctx, 67, floor - 183, 95, 183, '#775b46', [40, 40, 0, 0]); box(ctx, 77, floor - 150, 75, 65, '#a5c1b3', 25);
     } else if (room === 'kitchen') {
         windowArt(ctx, 500, floor - 316, 210, 155, true);
@@ -126,9 +129,15 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         windowArt(ctx, 610, floor - 338, 182, 182, true);
         box(ctx, 344, floor - 165, 195, 165, '#80684f', 8); box(ctx, 355, floor - 125, 174, 107, '#ac9abb', 12); cushion(ctx, 369, floor - 147, 133, '#efe4d2');
         for (let x = 366; x < 520; x += 19) { ctx.strokeStyle = '#ddcde278'; ctx.beginPath(); ctx.moveTo(x, floor - 108); ctx.lineTo(x, floor - 28); ctx.stroke(); }
-        box(ctx, 880, floor - 74, 105, 70, '#a38568', 4); box(ctx, 888, floor - 65, 89, 31, '#b99c7c', 4); oval(ctx, 933, floor - 48, 4, 3, '#e1c591'); lamp(ctx, 948, floor - 76);
+        bookshelf(ctx, 898, floor - 223, 139); lamp(ctx, 592, floor);
+        box(ctx, 654, floor - 65, 227, 52, '#627f80', 14); box(ctx, 660, floor - 40, 215, 27, '#9fb5ac', 10);
+        for (const x of [668, 855]) box(ctx, x, floor - 14, 10, 14, '#7c674e');
+        cushion(ctx, 654, floor - 87, 50, '#e3c9a0');
+        box(ctx, 754, floor - 35, 72, 33, '#b89aae', 6);
+        for (let x=760;x<825;x+=9) { ctx.strokeStyle='#ead6dd80';ctx.beginPath();ctx.moveTo(x,floor-33);ctx.lineTo(x,floor-1);ctx.stroke(); }
+        for (let i=0;i<3;i++) box(ctx, 867, floor - 9 - i * 9, 36 + i % 2 * 5, 8, ['#9b746f','#bcad83','#79988c'][i], 1);
         rug(ctx, 738, floor, 470, '#a58b9b');
-        if (progress.cushion === 'complete') cushion(ctx, 748, floor - 20, 105, '#d29aa4');
+        cushion(ctx, 815, floor - 20, 105, progress.cushion === 'complete' ? '#d29aa4' : '#b6b9a1');
         sunbeam(ctx, 610, floor - 155, 182, floor, t, progress.sun === 'complete');
         if (progress.sun === 'complete') { ctx.strokeStyle = '#e5cb85'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(755, floor - 338); ctx.lineTo(755, floor - 244); ctx.stroke(); oval(ctx, 755, floor - 231, 11, 16, '#e1d5edbb'); }
         plant(ctx, 1020, floor, .8);
@@ -158,6 +167,10 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         box(ctx, 568, floor - 64, 187, 14, '#b59a6e', 7); for (const x of [580, 730]) box(ctx, x, floor - 50, 10, 50, '#8c7551');
         const gx = 980 + Math.sin(t * .65) * 67;
         ctx.save(); ctx.translate(gx + 20, floor); ctx.scale(Math.cos(t * .65) >= 0 ? 1.3 : -1.3, 1.3); drawGoose(ctx, -20, -40, t, true); ctx.restore();
+        box(ctx, 564, floor - 104, 88, 78, '#8c7390', 14); box(ctx, 550, floor - 57, 116, 30, '#a990a5', 11); for (const x of [565,646]) box(ctx,x,floor-27,8,27,'#826f51');
+        box(ctx, 426, floor - 63, 87, 9, '#a6855f', 4); for (const x of [433,499]) box(ctx,x,floor-54,7,54,'#8b6f51');
+        for (let i=0;i<3;i++) box(ctx,440,floor-73-i*8,43,7,['#768d8b','#b18a80','#c6b28e'][i],1);
+        box(ctx,487,floor-86,18,21,'#c6b1cc',4);
         sunbeam(ctx, 565, floor - 120, 175, floor, t, false);
     } else if (room === 'attic') {
         ctx.strokeStyle = '#655346'; ctx.lineWidth = 18; ctx.beginPath(); ctx.moveTo(80, floor - 70); ctx.lineTo(700, Math.max(105, floor - 440)); ctx.lineTo(1430, floor - 70); ctx.stroke();
@@ -167,7 +180,9 @@ export function drawHome(ctx: CanvasRenderingContext2D, width: number, height: n
         ctx.fillStyle = '#4e637a'; ctx.beginPath(); ctx.moveTo(827, floor); ctx.lineTo(895, floor - 105); ctx.lineTo(962, floor); ctx.fill();
         for (let i = 0; i < 10; i++) { const x = 800 + i * 22, y = floor - 20 - Math.sin(i / 9 * Math.PI) * 104; label(ctx, '✦', x, y, '#e6d59e', 12); }
         for (let i = 0; i < 13; i++) { const x = 420 + i * 51, y = floor - 230 + Math.sin(i / 12 * Math.PI) * 45; oval(ctx, x, y, 5, 7, i % 2 ? '#efd09a' : '#ddab9c'); }
-        rug(ctx, 775, floor, 580, '#a38676'); cushion(ctx, 554, floor - 28, 115, '#b6a076'); plant(ctx, 1370, floor, .7);
+        rug(ctx, 775, floor, 580, '#a38676'); cushion(ctx, 444, floor - 28, 90, '#b6a076');
+        for (const [i,color] of ['#cb8b8f','#8ca9b4','#d9bb7f'].entries()) { ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(527+i*15,floor+17);ctx.bezierCurveTo(568,floor-2-i*5,611,floor+32,669+i*14,floor+13);ctx.stroke(); }
+        box(ctx, 415, floor - 113, 54, 26, '#b49ac1', 5); label(ctx, '★', 442, floor - 94, '#fff0bf', 18); plant(ctx, 1370, floor, .7);
     } else {
         bookshelf(ctx, 70, floor - 205, 165);
         box(ctx, 330, floor - 233, 250, 155, '#967650', 5); box(ctx, 340, floor - 223, 230, 134, '#3c5a4d', 3);

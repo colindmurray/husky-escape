@@ -105,9 +105,9 @@ try {
             if (q.id === 'cushion') check(!questAvailable(QUESTS.find(q => q.id === 'ribbon'), w.belongings.quests), 'Chapter three waits for every chapter-two quest');
             if (q.id === 'lunch') check(houseChapter(w.belongings.quests) === 2 && dogRoom('opal', w.belongings.quests) === 'sunroom' && dogRoom('ruby', w.belongings.quests) === 'attic', 'All three returns unlock the goose, attic and baking adventures');
         }
-        check(houseChapter(w.belongings.quests) === 3 && COMPANIONS.every(d => dogRoom(d.id, w.belongings.quests) === 'kitchen'), 'Final returns bring everybody to the kitchen celebration');
+        check(houseChapter(w.belongings.quests) === 3 && dogRoom('samwise', w.belongings.quests) === 'kitchen' && dogRoom('opal', w.belongings.quests) === 'kitchen' && dogRoom('ruby', w.belongings.quests) === 'bedroom', 'Final returns unlock biscuits and a quiet reading nook');
         check(w.player.bonesCollected >= rewards, 'All seven rewards survive room and level travel');
-        w.changeHomeFloor('kitchen'); check(w.props.filter(p => p instanceof HomeDog).length === 3, 'Kitchen party contains all three dogs');
+        w.changeHomeFloor('kitchen'); check(w.props.filter(p => p instanceof HomeDog).length === 2 && dogRoom('ruby', w.belongings.quests) === 'bedroom', 'Opal and Samwise share kitchen biscuits while Ruby curls up in the reading nook');
         const time = w.timeLeft; for (let i = 0; i < 130; i++) w.update(); check(w.timeLeft === time, 'House has no countdown');
         w.belongings.slots[0] = 'hush'; check(!w.useInventorySlot(0), 'House never wastes trail treats');
         w.practice = true; w.belongings.quests.recipe = 'accepted'; w.loadLevel(12); check(!w.props.some(p => p instanceof QuestPickup), 'Practice cannot collect real quest items'); w.practice = false; w.belongings.quests.recipe = 'complete';
@@ -152,8 +152,8 @@ try {
     assert.equal(await page.locator('.home-journal').getByText('Opal · Lammy the lamb',{exact:false}).count(),1);
     assert.equal(await page.locator('.home-journal').getByText('turquoise ribbon',{exact:false}).count(),0);
     await page.getByText('Find a friend', {exact:true}).click();
-    await page.getByRole('button',{name:'Ruby · Second floor · Bedroom',exact:true}).click();
-    await page.evaluate(()=>{const e=window.__husky.engine;e.stop();e.world.player.x=750;e.world.player.y=e.world.height-140;e.world.update();e.world.cameraX=200;e.renderer.drawGame(e.world);});
+    await page.getByRole('button',{name:'Ruby · Second floor · Reading nook',exact:true}).click();
+    await page.evaluate(()=>{const e=window.__husky.engine;e.stop();e.world.player.x=827;e.world.player.y=e.world.height-140;e.world.update();e.world.cameraX=200;e.renderer.drawGame(e.world);});
     await page.screenshot({path:'.playwright-mcp/living-bedroom.png'});
     await page.getByRole('button',{name:'Talk to Ruby',exact:true}).click();
     await page.getByRole('button',{name:'I’ll find it!'}).click();
@@ -194,8 +194,8 @@ try {
     await page.screenshot({path:'.playwright-mcp/quiet-trail.png'});
     await page.getByRole('button',{name:'Return home',exact:true}).click();
     await page.evaluate(()=>{const e=window.__husky.engine;e.stop();const w=e.world;w.changeHomeFloor('kitchen');w.player.x=722;w.player.y=w.height-140;w.update();});
-    await page.getByRole('button',{name:'Talk to the little boy',exact:true}).click();
-    assert.equal(await page.getByRole('heading',{name:'The little boy',exact:true}).count(),1);
+    await page.getByRole('button',{name:'Talk to Xander',exact:true}).click();
+    assert.equal(await page.getByRole('heading',{name:'Xander',exact:true}).count(),1);
     assert.match(await page.locator('.boy-conversation').innerText(),/Rocket League/);
     assert.match(await page.locator('.boy-conversation').innerText(),/demo/i);
     await page.screenshot({path:'.playwright-mcp/quiet-boy-dialog.png'});

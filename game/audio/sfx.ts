@@ -257,7 +257,7 @@ export function playTownSound(type: SoundType, ctx: AudioContext, masterGain: Ga
         }
         return true;
     }
-    if (type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET && type !== SoundType.ROADWORK) return false;
+    if (type !== SoundType.DOOR_SCRATCH && type !== SoundType.BIKE_BELL && type !== SoundType.DOG_BARK && type !== SoundType.WATER_JET && type !== SoundType.ROADWORK) return false;
     const t = ctx.currentTime;
     if (type === SoundType.ROADWORK) {
         for (let i = 0; i < (enhanced ? 3 : 2); i++) {
@@ -272,17 +272,18 @@ export function playTownSound(type: SoundType, ctx: AudioContext, masterGain: Ga
         }
         return true;
     }
-    if (type === SoundType.WATER_JET) {
-        const length = Math.floor(ctx.sampleRate * 0.35);
+    if (type === SoundType.WATER_JET || type === SoundType.DOOR_SCRATCH) {
+        const scratch = type === SoundType.DOOR_SCRATCH, duration = scratch ? .16 : .35;
+        const length = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
         const source = ctx.createBufferSource(); source.buffer = buffer;
         const filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(enhanced ? 2400 : 1500, t);
-        filter.frequency.exponentialRampToValueAtTime(700, t + 0.3);
-        const gain = ctx.createGain(); gain.gain.setValueAtTime(0.07, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-        source.connect(filter).connect(gain).connect(masterGain); source.start(t); source.stop(t + 0.36);
+        filter.frequency.setValueAtTime(scratch ? 850 : enhanced ? 2400 : 1500, t);
+        filter.frequency.exponentialRampToValueAtTime(scratch ? 320 : 700, t + (scratch ? duration * .85 : .3));
+        const gain = ctx.createGain(); gain.gain.setValueAtTime(scratch ? .14 : .07, t); gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        source.connect(filter).connect(gain).connect(masterGain); source.start(t); source.stop(t + duration + .01);
         return true;
     }
     const bell = type === SoundType.BIKE_BELL;

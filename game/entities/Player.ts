@@ -1,6 +1,7 @@
 
 import { drawGoose } from '../engine/FamilyArt';
-import { drawAccessories, type Accessory } from "../Shop";
+import { drawCurledHusky } from '../engine/HuskyArt';
+import { drawAccessories, HEADWEAR, type Accessory } from "../Shop";
 import { Entity, GRAVITY, FRICTION, JUMP_FORCE } from "./Entity";
 import { InputState, SoundType } from "../../types";
 import { CollapsingAwning, TownPlatform } from "./Town";
@@ -34,6 +35,9 @@ export class Player extends Entity {
 
     public accessories = new Set<Accessory>();
     public magnetTimer = 0;
+    public spinTimer = 0;
+    public isReading = false;
+    public readingTime = 0;
     public springTimer = 0;
     public sprintTimer = 0;
     public featherTimer = 0;
@@ -56,8 +60,13 @@ export class Player extends Entity {
         const previousBottom = this.y + this.h;
         if (this.invincibleTimer > 0) this.invincibleTimer--;
         if (this.magnetTimer > 0) this.magnetTimer--;
-        for (const key of ['springTimer', 'sprintTimer', 'featherTimer', 'feastTimer'] as const) if (this[key] > 0) this[key]--;
+        for (const key of ['spinTimer', 'springTimer', 'sprintTimer', 'featherTimer', 'feastTimer'] as const) if (this[key] > 0) this[key]--;
         if (this.townBumpFrames > 0) this.townBumpFrames--;
+
+        if (this.isReading) {
+            if (currentLevel !== 15 || input.ArrowLeft || input.ArrowRight || input.ArrowUp || input.ArrowDown || input.Space) this.isReading = false;
+            else { this.readingTime += 1 / 60; this.velX = this.velY = 0; return; }
+        }
 
         // --- LEVEL 8: UNDERWATER PHYSICS ---
         if (currentLevel === 8) {
@@ -331,8 +340,29 @@ export class Player extends Entity {
 
         const x = this.x - camX;
         const y = this.y;
+
+        if (this.isReading) {
+            const skin = this.accessories.has('goose') ? 'goose' : this.accessories.has('cat') ? 'cat' : this.accessories.has('fox') ? 'fox' : 'onyx';
+            ctx.save(); ctx.translate(x + 20, y + 40); ctx.scale(.85, .85);
+            if (skin === 'goose') { ctx.scale(1, .7); drawGoose(ctx, -20, -40, this.readingTime, false); drawAccessories(ctx, -20, -40, this.accessories); }
+            else drawCurledHusky(ctx, skin, -20, -40, this.readingTime, gfxSettings.visualMode === 'classic');
+            ctx.restore();
+            if (skin !== 'goose') {
+                const head = new Set<Accessory>(), body = new Set<Accessory>();
+                for (const item of this.accessories) (HEADWEAR.includes(item) || item === 'collar' || item === 'scarf' ? head : body).add(item);
+                drawAccessories(ctx, x - 9, y - 1, body); drawAccessories(ctx, x + 3, y + 11, head);
+            }
+            return;
+        }
         
         ctx.save();
+        if (this.spinTimer > 0) {
+            const phase = (360 - this.spinTimer) / 60 * Math.PI * 2;
+            ctx.strokeStyle = '#edc975'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.ellipse(x + 20, y + 38, 29, 6, 0, phase, phase + 4.7); ctx.stroke();
+            for (let i = 0; i < 3; i++) { const a = phase + i * 2.1; ctx.fillStyle = ['#ebc878', '#78b5ad', '#daa4b9'][i]; ctx.beginPath(); ctx.arc(x + 20 + Math.cos(a) * 29, y + 16 + Math.sin(a) * 14, 2, 0, Math.PI * 2); ctx.fill(); }
+            ctx.translate(x + 20, y + 40); ctx.scale(Math.cos(phase), 1); ctx.translate(-x - 20, -y - 40);
+        }
         if (!this.facingRight) {
             ctx.translate(x + this.w / 2, y);
             ctx.scale(-1, 1);

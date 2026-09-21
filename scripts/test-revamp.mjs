@@ -80,6 +80,48 @@ try {
             for (const level of [1, 6, 8, 9]) { goose.hasUmbrella = level === 9; goose.draw(ctx, 0, level); check(goose.w === 40 && goose.h === 40, `Goose keeps its normal hitbox in ${mode}, level ${level}`); }
         }
         check(art.size === 6, 'All three dogs have distinct Classic and Enhanced portraits');
+        const { CutsceneManager } = await import('/game/engine/CutsceneManager.ts');
+        const { drawHomecoming } = await import('/game/engine/HomecomingArt.ts');
+        const { SoundType } = await import('/types.ts');
+        const { playSoundEffect } = await import('/game/audio/sfx.ts');
+        const { playSoundEffectEnhanced } = await import('/game/audio/enhancedSfx.ts');
+        const cues = [], playSFX = audioManager.playSFX;
+        const reunion = new CutsceneManager(() => {}, () => {});
+        audioManager.playSFX = type => cues.push(type);
+        try {
+            reunion.start('homecoming');
+            for (let i = 0; i < 50; i++) reunion.update();
+            check(cues.join() === Array(3).fill(SoundType.DOOR_SCRATCH).join(), 'Three paw scratches precede the howl');
+            reunion.setPaused(true);
+            for (let i = 0; i < 100; i++) reunion.update();
+            check(reunion.frame === 50 && cues.length === 3, 'Pausing freezes homecoming animation and sound cues');
+            reunion.setPaused(false);
+            for (let i = 0; i < 22; i++) reunion.update();
+            check(cues.length === 4 && cues[3] === SoundType.WOLF_HOWL, 'The howl starts when Onyx lifts her muzzle');
+            reunion.setPaused(true);
+            for (const mode of ['classic', 'enhanced']) {
+                gfxSettings.setVisualMode(mode);
+                c.width = 960; c.height = 720;
+                const frames = new Set();
+                for (const [step, frame] of [[1, 20], [1, 120], [2, 0], [2, 60], [4, 60], [5, 145]]) {
+                    drawHomecoming(ctx, 960, 720, step, frame); frames.add(c.toDataURL());
+                    const pixels = ctx.getImageData(0, 0, 960, 720).data;
+                    check(pixels.every((v, i) => i % 4 !== 3 || v === 255), `${mode} homecoming step ${step}/${frame} has no transparent void`);
+                    check(ctx.getTransform().isIdentity && ctx.globalAlpha === 1, `${mode} homecoming restores canvas state`);
+                }
+                check(frames.size === 6, `${mode} scratching, howling, door opening, surprise and welcome are distinct`);
+                for (const sound of [SoundType.DOOR_SCRATCH, SoundType.WOLF_HOWL]) {
+                    const offline = new OfflineAudioContext(1, 3 * 22050, 22050), gain = offline.createGain(); gain.connect(offline.destination);
+                    if (mode !== 'enhanced' || !playSoundEffectEnhanced(sound, offline, gain)) playSoundEffect(sound, offline, gain);
+                    const samples = (await offline.startRendering()).getChannelData(0);
+                    check(samples.every(Number.isFinite) && samples.some(v => Math.abs(v) > .001), `${sound} produces valid audible ${mode} audio`);
+                }
+            }
+            check(cues.length === 4, 'Rendering print frames never triggers sound cues');
+            reunion.skip(); reunion.start('intro');
+            for (let i = 0; i < 100; i++) reunion.update();
+            check(cues.length === 4, 'Scratching and howling do not leak into other stories');
+        } finally { reunion.skip(); audioManager.playSFX = playSFX; }
         engine.startLevel(14); engine.stop(); engine.world.triggerLevelComplete();
         check(engine.gameState === 'CUTSCENE' && engine.cutsceneManager.currentType === 'homecoming', 'Finishing level 14 starts the owner reunion');
         engine.cutsceneManager.setPaused(true);
@@ -115,6 +157,15 @@ try {
     await page.screenshot({ path: '.playwright-mcp/revamp-shop.png' });
     await page.evaluate(() => { const e = window.__husky.engine; e.world.closeShop(); e.startLevel(14); e.stop(); e.world.triggerLevelComplete(); e.cutsceneManager.setPaused(true); e.cutsceneManager.step = 4; e.renderer.drawCutscene(e.cutsceneManager, 1100, 720); });
     await page.screenshot({ path: '.playwright-mcp/revamp-reunion.png' });
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForFunction(() => window.__husky.engine.world.width === 844);
+    for (const mode of ['classic', 'enhanced']) {
+        await page.evaluate(mode => { const { engine: e, gfxSettings } = window.__husky; gfxSettings.setVisualMode(mode); const m = e.cutsceneManager; m.step = 4; m.frame = 60; m.onTextChange(m.getLines('homecoming')[3].text); e.renderer.drawCutscene(m, 844, 390); }, mode);
+        await page.getByRole('heading', { name: /twenty minutes/ }).waitFor();
+        const caption = await page.locator('[data-story="homecoming"] > div').boundingBox();
+        assert(caption.y > 390 * .64 + 10, `${mode} landscape captions stay below the actors`);
+        await page.screenshot({ path: `.playwright-mcp/revamp-reunion-landscape-${mode}.png` });
+    }
     await page.evaluate(() => window.__husky.engine.skipCutscene());
     assert.deepEqual(errors, []); console.log(checks.join('\n')); console.log(`PASS: ${checks.length} revamp checks plus quest, shop, reunion and mobile UI.`);
 } finally { await browser?.close(); server.kill('SIGTERM'); }

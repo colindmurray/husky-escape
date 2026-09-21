@@ -22,11 +22,11 @@ export class CutsceneManager {
             { text: 'First quest: fetch the blue biscuit tin from the kitchen and bring it to Samwise. Peace first. Adventures next!', sound: SoundType.COLLECT },
         ],
         'homecoming': [
-            { text: 'The backyard falls quiet. Then a familiar voice: “Onyx? ONYX!”', sound: SoundType.WIN_SHORT },
-            { text: 'Your owner kneels down. “There you are, my brave girl. I missed you so much.”', sound: null },
-            { text: 'You tumble into the biggest hug. No more cages. No more running. You are home.', sound: SoundType.DOG_BARK },
-            { text: '“Come inside. Everyone’s waiting—and someone seems to have eaten the little boy’s sandwich.”', sound: null },
-            { text: 'Opal grumbles. Ruby bleps. Samwise looks innocent. Your next adventure starts at home.', sound: SoundType.WIN_SHORT },
+            { text: 'Scratch, scratch… Awooooo!', sound: null },
+            { text: 'Dad: “Onyx?! Wait… ONYX?!”', sound: null },
+            { text: 'Mom: “The pound called! We’re picking you up Monday!”', sound: null },
+            { text: 'Dad: “That’s twenty minutes down the highway. HOW?!”', sound: null },
+            { text: 'Mom: “Well… come in, you absolute mystery.”', sound: SoundType.DOG_BARK },
         ],
         'raccoon_intro': [
             { text: "Home at last… why is that trash can rattling?", sound: SoundType.RACCOON_CHATTER },
@@ -126,7 +126,12 @@ export class CutsceneManager {
     }
 
     update() {
+        if (this.paused) return;
         this.frame++;
+        if (this.currentType === 'homecoming' && this.step === 1) {
+            if ([1, 25, 49].includes(this.frame)) audioManager.playSFX(SoundType.DOOR_SCRATCH);
+            if (this.frame === 72) audioManager.playSFX(SoundType.WOLF_HOWL);
+        }
     }
 
     skip() {
@@ -170,6 +175,6 @@ export class CutsceneManager {
         this.step++;
 
         if (this.timer) clearTimeout(this.timer);
-        this.scheduleLine(3000);
+        this.scheduleLine(this.currentType === 'homecoming' && this.step === 1 ? 4000 : 3000);
     }
 }
