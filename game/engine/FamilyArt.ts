@@ -174,8 +174,10 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
         } else { ellipse(ctx, ex, headY + 6, 1.7, 2.4, maria ? '#586b70' : '#554839'); ellipse(ctx, ex + .4, headY + 5, .55, .7, '#fff'); }
     }
     line(0, headY + 10, -1, headY + 14, '#cc9c7f', 1);
-    ctx.strokeStyle = '#a56e61'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-5, headY + 18); ctx.quadraticCurveTo(1, headY + 22, 6, headY + 17); ctx.stroke();
     if (reaction && reaction !== 'welcoming') ellipse(ctx, 0, headY + 19, 3.5, reaction === 'surprised' ? 5 : 3, '#855b53');
+    else {
+        ctx.strokeStyle = '#a56e61'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-5, headY + 18); ctx.quadraticCurveTo(1, headY + 22, 6, headY + 17); ctx.stroke();
+    }
     if (dad) {
         for (const sign of [-1, 1]) {
             ctx.strokeStyle = '#929596'; ctx.lineWidth = 2;
@@ -186,11 +188,13 @@ export function drawFamilyPerson(ctx: CanvasRenderingContext2D, id: string, x: n
     if (reaction) {
         const shoulder = bodyY + 18;
         line(-24, shoulder, -36, shoulder + 28, top, 13);
-        line(24, shoulder, 36, shoulder + 26, top, 13);
+        const handOnHead = reaction === 'baffled' && dad, handOnMouth = reaction === 'surprised' && mom;
+        const rightElbow = handOnHead ? [45, shoulder - 30] : handOnMouth ? [35, shoulder - 23] : [36, shoulder + 26];
+        line(24, shoulder, rightElbow[0], rightElbow[1], top, 13);
         const leftHand = reaction === 'welcoming' ? [-52, -70] : [-46, -94];
-        const rightHand = reaction === 'baffled' && dad ? [23, headY - 15] : reaction === 'surprised' && mom ? [10, headY + 22] : [49, -100];
+        const rightHand = handOnHead ? [23, headY - 10] : handOnMouth ? [10, headY + 22] : [49, -100];
         line(-36, shoulder + 28, leftHand[0], leftHand[1], skin, 9);
-        line(36, shoulder + 26, rightHand[0], rightHand[1], skin, 9);
+        line(rightElbow[0], rightElbow[1], rightHand[0], rightHand[1], skin, 9);
         for (const [hx, hy] of [leftHand, rightHand]) {
             ellipse(ctx, hx, hy, 6, 7, skin);
             if (rich) for (let i = 0; i < 3; i++) line(hx - 3 + i * 2, hy - 5, hx - 3 + i * 2, hy, '#c49176', .6);
